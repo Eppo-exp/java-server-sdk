@@ -1,0 +1,30 @@
+public class Constants {
+    /**
+     * Base URL
+     */
+    public static final String DEFAULT_BASE_URL = "http://localhost:4000/api";
+    public static  final int REQUEST_TIMEOUT_MILLIS = 1000;
+
+    /**
+     * Poller Settings
+     */
+
+
+    private static final  long MILLISECOND_IN_ONE_SECOND = 1000;
+    private static final long SECONDS_IN_ONE_MINUTE = 60;
+
+    public static final long
+            TIME_INTERVAL_IN_MILLIS = 5 * SECONDS_IN_ONE_MINUTE * MILLISECOND_IN_ONE_SECOND; // time interval
+    public static final long
+            JITTER_INTERVAL_IN_MILLIS = 30 * MILLISECOND_IN_ONE_SECOND;
+
+    /**
+     * Cache Settings
+     */
+    public static final int MAX_CACHE_ENTRIES = 1000;
+
+    /**
+     * RAC settings
+     */
+    public static final String RAC_ENDPOINT = "/randomized_assignment/config";
+}
