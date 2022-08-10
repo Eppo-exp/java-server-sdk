@@ -1,5 +1,8 @@
+package helpers;
+
 import dto.ExperimentConfiguration;
 import dto.ExperimentConfigurationResponse;
+import exception.ExperimentConfigurationNotFound;
 import exception.NetworkException;
 import exception.NetworkRequestNotAllowed;
 import org.ehcache.Cache;
@@ -13,14 +16,14 @@ public class ConfigurationStore {
     static ConfigurationStore instance = null;
 
     public ConfigurationStore(
-        Cache<String, ExperimentConfiguration> experimentConfigurationCache,
-        ExperimentConfigurationRequestor experimentConfigurationRequestor
+            Cache<String, ExperimentConfiguration> experimentConfigurationCache,
+            ExperimentConfigurationRequestor experimentConfigurationRequestor
     ) {
         this.experimentConfigurationRequestor = experimentConfigurationRequestor;
         this.experimentConfigurationCache = experimentConfigurationCache;
     }
 
-    final static ConfigurationStore getInstance(
+    public final static ConfigurationStore init(
             Cache<String, ExperimentConfiguration> experimentConfigurationCache,
             ExperimentConfigurationRequestor experimentConfigurationRequestor
     ) {
@@ -31,17 +34,47 @@ public class ConfigurationStore {
         return ConfigurationStore.instance;
     }
 
+    public final static ConfigurationStore getInstance() {
+        return ConfigurationStore.instance;
+    }
+
+    /**
+     * This function is used to set experiment configuration to cache
+     *
+     * @param key
+     * @param experimentConfiguration
+     */
     private void setExperimentConfiguration(String key, ExperimentConfiguration experimentConfiguration) {
         this.experimentConfigurationCache.put(key, experimentConfiguration);
     }
 
-    public ExperimentConfiguration getExperimentConfiguration(String key) throws NetworkException, NetworkRequestNotAllowed {
+    /**
+     * This function is used to fetch experiment configuration
+     *
+     * @param key
+     * @return
+     * @throws NetworkException
+     * @throws NetworkRequestNotAllowed
+     * @throws ExperimentConfigurationNotFound
+     */
+    public ExperimentConfiguration getExperimentConfiguration(String key) throws NetworkException, NetworkRequestNotAllowed, ExperimentConfigurationNotFound {
         if (!this.experimentConfigurationCache.containsKey(key)) {
             this.fetchAndSetExperimentConfiguration();
         }
-        return this.experimentConfigurationCache.get(key);
+        try {
+            return this.experimentConfigurationCache.get(key);
+        } catch (Exception e) {
+            throw new ExperimentConfigurationNotFound("Experiment configuration not found!");
+        }
+
     }
 
+    /**
+     * This function is used to set experiment configuration int the cache
+     *
+     * @throws NetworkException
+     * @throws NetworkRequestNotAllowed
+     */
     public void fetchAndSetExperimentConfiguration() throws NetworkException, NetworkRequestNotAllowed {
         System.out.println(this.isFetchingExperimentConfigurationAllowed());
         if (!this.isFetchingExperimentConfigurationAllowed()) {
@@ -55,6 +88,11 @@ public class ConfigurationStore {
         }
     }
 
+    /**
+     * This function is used to check if it is allowed to fetch experiment configuration from network
+     *
+     * @return
+     */
     public boolean isFetchingExperimentConfigurationAllowed() {
         return this.experimentConfigurationRequestor.isRequestAllowed();
     }

@@ -1,3 +1,4 @@
+package constants;
 public class Constants {
     /**
      * Base URL
@@ -27,4 +28,10 @@ public class Constants {
      * RAC settings
      */
     public static final String RAC_ENDPOINT = "/randomized_assignment/config";
+
+
+    /**
+     * Caching Settings
+     */
+    public static  final String EXPERIMENT_CONFIGURATION_CACHE_KEY = "experiment-configuration";
 }

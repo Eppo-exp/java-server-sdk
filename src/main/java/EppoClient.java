@@ -1,3 +1,4 @@
+import constants.Constants;
 import dto.ExperimentConfiguration;
 import dto.Rule;
 import dto.Variation;
@@ -118,7 +119,7 @@ public class EppoClient {
         Cache<String, ExperimentConfiguration> experimentConfigurationCache = cacheHelper
                 .createExperimentConfigurationCache(Constants.MAX_CACHE_ENTRIES);
         // Create ExperimentConfiguration Store
-        ConfigurationStore configurationStore = ConfigurationStore.getInstance(
+        ConfigurationStore configurationStore = ConfigurationStore.init(
                 experimentConfigurationCache,
                 expConfigRequestor
         );

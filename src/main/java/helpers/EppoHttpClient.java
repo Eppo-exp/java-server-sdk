@@ -1,8 +1,5 @@
 package helpers;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import dto.ExperimentConfigurationResponse;
-
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -43,16 +40,12 @@ public class EppoHttpClient {
     public HttpResponse<String> get(String url, Map<String, String> params, Map<String, String> headers) throws Exception {
         Map<String, String> allParams = Stream.of(params, this.defaultParams)
                 .flatMap(map -> map.entrySet().stream())
-                .collect(Collectors.toMap(
-                        Map.Entry::getKey,
-                        Map.Entry::getValue,
-                        (value1, value2) -> value1));
+                .collect(
+                        Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (value1, value2) -> value1)
+                );
 
         final String newUrl = this.urlBuilder(this.baseURl + url, allParams);
-        HttpRequest.Builder builder = HttpRequest.newBuilder()
-                .GET()
-                .timeout(Duration.ofMillis(requestTimeOutMillis))
-                .uri(new URI(newUrl));
+        HttpRequest.Builder builder = HttpRequest.newBuilder().GET().timeout(Duration.ofMillis(requestTimeOutMillis)).uri(new URI(newUrl));
 
         for (Map.Entry<String, String> entry : headers.entrySet()) {
             builder = builder.setHeader(entry.getKey(), entry.getValue());

@@ -4,9 +4,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 
-
-
-public class Poller extends  TimerTask {
+public class Poller extends TimerTask {
     private IPollerTask task;
     private static Poller instance = null;
     private long intervalInMillis = 0;
