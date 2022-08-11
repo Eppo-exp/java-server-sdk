@@ -3,6 +3,6 @@
 ## Getting Started
 
 ```
-com.eppo.sdk.EppoClient eppoClient = com.eppo.sdk.EppoClient.init("<api-key>");
+EppoClient eppoClient = EppoClient.init("<api-key>");
 eppoClient.getAssignment("<subject-id>, "<experiment-key>");
 ```
