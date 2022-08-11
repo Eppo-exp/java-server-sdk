@@ -51,7 +51,6 @@ public class EppoClient {
 
         // Check if subject has override variations
         String subjectVariationOverride = this.getSubjectVariationOverride(subjectKey, configuration);
-        System.out.println(subjectVariationOverride);
         if (subjectVariationOverride != null) {
             return subjectVariationOverride;
         }

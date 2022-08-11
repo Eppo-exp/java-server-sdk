@@ -29,7 +29,6 @@ public class ExperimentConfigurationRequestor {
         ExperimentConfigurationResponse config = null;
         try {
             HttpResponse<String> response = this.eppoHttpClient.get(Constants.RAC_ENDPOINT);
-            System.out.println(response);
             int statusCode = response.statusCode();
             if (statusCode == 200) {
                 ObjectMapper objectMapper = new ObjectMapper();
