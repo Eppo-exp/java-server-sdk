@@ -8,6 +8,30 @@
     <artifactId>JavaSDK</artifactId>
     <version>1.0-SNAPSHOT</version>
 
+    <name>${project.groupId}:${project.artifactId}</name>
+    <description>This is Eppo Randomization library</description>
+    <url>https://github.com/Eppo-exp/java-server-sdk</url>
+    <packaging>jar</packaging>
+
+    <licenses>
+        <license>
+        <name>MIT License</name>
+        <url>http://www.opensource.org/licenses/mit-license.php</url>
+        </license>
+    </licenses>
+    <developers>
+        <developer>
+            <name>Agam Kumar</name>
+            <email>agam@fluxon.com</email>
+            <organization>Eppo</organization>
+            <organizationUrl>https://www.geteppo.com/</organizationUrl>
+        </developer>
+    </developers>
+    <scm>
+        <connection>scm:git:git://github.com/Eppo-exp/java-server-sdk.git</connection>
+    </scm>
+
+
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
@@ -25,6 +49,17 @@
             <artifactId>ehcache</artifactId>
             <version>3.9.8</version>
         </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>RELEASE</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-all</artifactId>
+            <version>1.9.5</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
-
 </project>
