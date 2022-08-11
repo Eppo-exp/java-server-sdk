@@ -95,7 +95,6 @@ public class ConfigurationStore {
      * @throws NetworkRequestNotAllowed
      */
     public void fetchAndSetExperimentConfiguration() throws NetworkException, NetworkRequestNotAllowed {
-        System.out.println(this.isFetchingExperimentConfigurationAllowed());
         if (!this.isFetchingExperimentConfigurationAllowed()) {
             throw new NetworkRequestNotAllowed("Fetching Experiment Configuration is not allowed");
         }
