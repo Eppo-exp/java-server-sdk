@@ -1,5 +1,8 @@
 package com.eppo.sdk.dto;
 
+/**
+ * Shard Range Class
+ */
 public class ShardRange {
     public int start;
     public int end;

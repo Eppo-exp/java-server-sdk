@@ -6,10 +6,10 @@
 
     <groupId>com.eppo.sdk</groupId>
     <artifactId>JavaSDK</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0.0</version>
 
     <name>${project.groupId}:${project.artifactId}</name>
-    <description>This is Eppo Randomization library</description>
+    <description>Eppo Server-Side SDK for Java</description>
     <url>https://github.com/Eppo-exp/java-server-sdk</url>
     <packaging>jar</packaging>
 
@@ -22,7 +22,7 @@
     <developers>
         <developer>
             <name>Agam Kumar</name>
-            <email>agam@fluxon.com</email>
+            <email>eppo-team@geteppo.com</email>
             <organization>Eppo</organization>
             <organizationUrl>https://www.geteppo.com/</organizationUrl>
         </developer>

@@ -1,5 +1,8 @@
 package com.eppo.sdk.dto;
 
+/**
+ * Experiment's Variation Class
+ */
 public class Variation {
     public String name;
     public ShardRange shardRange;

@@ -1,16 +1,12 @@
 package com.eppo.sdk.helpers;
 
-import com.eppo.sdk.dto.Condition;
-import com.eppo.sdk.dto.OperatorType;
-import com.eppo.sdk.dto.Rule;
+import com.eppo.sdk.dto.*;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 class RuleValidatorTest {
 
@@ -26,12 +22,12 @@ class RuleValidatorTest {
 
     public void addNumericConditionToRule(Rule rule) {
         Condition condition1 = new Condition();
-        condition1.value = "10";
+        condition1.value = EppoValue.valueOf(10);
         condition1.attribute = "price";
         condition1.operator = OperatorType.GTE;
 
         Condition condition2 = new Condition();
-        condition2.value = "20";
+        condition2.value = EppoValue.valueOf(20);
         condition2.attribute = "price";
         condition2.operator = OperatorType.LTE;
 
@@ -41,7 +37,7 @@ class RuleValidatorTest {
 
     public void addRegexConditionToRule(Rule rule) {
         Condition condition = new Condition();
-        condition.value = "[a-z]+";
+        condition.value = EppoValue.valueOf("[a-z]+");
         condition.attribute = "match";
         condition.operator = OperatorType.MATCHES;
 
@@ -50,7 +46,10 @@ class RuleValidatorTest {
 
     public void addOneOfCondition(Rule rule) {
         Condition condition = new Condition();
-        condition.value = "[\"value1\", \"value2\"]";
+        List<String> values = new ArrayList<>();
+        values.add("value1");
+        values.add("value2");
+        condition.value = EppoValue.valueOf(values);
         condition.attribute = "oneOf";
         condition.operator = OperatorType.ONE_OF;
 
@@ -59,19 +58,22 @@ class RuleValidatorTest {
 
     public void addNotOneOfCondition(Rule rule) {
         Condition condition = new Condition();
-        condition.value = "[\"value1\", \"value2\"]";
+        List<String> values = new ArrayList<>();
+        values.add("value1");
+        values.add("value2");
+        condition.value = EppoValue.valueOf(values);
         condition.attribute = "oneOf";
         condition.operator = OperatorType.NOT_ONE_OF;
 
         addConditionToRule(rule, condition);
     }
 
-    public void addNameToSubjectAttribute(Map<String, String> subjectAttributes) {
-        subjectAttributes.put("name", "test");
+    public void addNameToSubjectAttribute(SubjectAttributes subjectAttributes) {
+        subjectAttributes.put("name", EppoValue.valueOf("test"));
     }
 
-    public void addPriceToSubjectAttribute(Map<String, String> subjectAttributes) {
-        subjectAttributes.put("price", "30");
+    public void addPriceToSubjectAttribute(SubjectAttributes subjectAttributes) {
+        subjectAttributes.put("price", EppoValue.valueOf("30"));
     }
 
     @DisplayName("Text RuleValidator.matchesAnyRule() with empty conditions")
@@ -80,7 +82,7 @@ class RuleValidatorTest {
         List<Rule> rules = new ArrayList<>();
         final Rule ruleWithEmptyConditions = createRule(new ArrayList<>());
         rules.add(ruleWithEmptyConditions);
-        Map<String, String> subjectAttributes = new HashMap<>();
+        SubjectAttributes subjectAttributes = new SubjectAttributes();
         addNameToSubjectAttribute(subjectAttributes);
 
         Assertions.assertTrue(RuleValidator.matchesAnyRule(subjectAttributes, rules));
@@ -90,7 +92,7 @@ class RuleValidatorTest {
     @Test
     void testMatchesAnyRuleWithEmptyRules() {
         List<Rule> rules = new ArrayList<>();
-        Map<String, String> subjectAttributes = new HashMap<>();
+        SubjectAttributes subjectAttributes = new SubjectAttributes();
         addNameToSubjectAttribute(subjectAttributes);
 
         Assertions.assertFalse(RuleValidator.matchesAnyRule(subjectAttributes, rules));
@@ -104,7 +106,7 @@ class RuleValidatorTest {
         addNumericConditionToRule(rule);
         rules.add(rule);
 
-        Map<String, String> subjectAttributes = new HashMap<>();
+        SubjectAttributes subjectAttributes = new SubjectAttributes();
         addPriceToSubjectAttribute(subjectAttributes);
 
         Assertions.assertFalse(RuleValidator.matchesAnyRule(subjectAttributes, rules));
@@ -118,8 +120,8 @@ class RuleValidatorTest {
         addNumericConditionToRule(rule);
         rules.add(rule);
 
-        Map<String, String> subjectAttributes = new HashMap<>();
-        subjectAttributes.put("price", "15");
+        SubjectAttributes subjectAttributes = new SubjectAttributes();
+        subjectAttributes.put("price", EppoValue.valueOf(15));
 
         Assertions.assertTrue(RuleValidator.matchesAnyRule(subjectAttributes, rules));
     }
@@ -132,8 +134,8 @@ class RuleValidatorTest {
         addNumericConditionToRule(rule);
         rules.add(rule);
 
-        Map<String, String> subjectAttributes = new HashMap<>();
-        subjectAttributes.put("price", "abcd");
+        SubjectAttributes subjectAttributes = new SubjectAttributes();
+        subjectAttributes.put("price", EppoValue.valueOf("abcd"));
 
         Assertions.assertThrows(
                 RuntimeException.class,
@@ -150,8 +152,8 @@ class RuleValidatorTest {
         addRegexConditionToRule(rule);
         rules.add(rule);
 
-        Map<String, String> subjectAttributes = new HashMap<>();
-        subjectAttributes.put("match", "abcd");
+        SubjectAttributes subjectAttributes = new SubjectAttributes();
+        subjectAttributes.put("match", EppoValue.valueOf("abcd"));
 
         Assertions.assertTrue(RuleValidator.matchesAnyRule(subjectAttributes, rules));
     }
@@ -164,8 +166,8 @@ class RuleValidatorTest {
         addRegexConditionToRule(rule);
         rules.add(rule);
 
-        Map<String, String> subjectAttributes = new HashMap<>();
-        subjectAttributes.put("match", "1223");
+        SubjectAttributes subjectAttributes = new SubjectAttributes();
+        subjectAttributes.put("match", EppoValue.valueOf("123"));
 
         Assertions.assertFalse(RuleValidator.matchesAnyRule(subjectAttributes, rules));
     }
@@ -178,8 +180,8 @@ class RuleValidatorTest {
         addNotOneOfCondition(rule);
         rules.add(rule);
 
-        Map<String, String> subjectAttributes = new HashMap<>();
-        subjectAttributes.put("oneOf", "value3");
+        SubjectAttributes subjectAttributes = new SubjectAttributes();
+        subjectAttributes.put("oneOf", EppoValue.valueOf("value3"));
 
         Assertions.assertTrue(RuleValidator.matchesAnyRule(subjectAttributes, rules));
     }
@@ -192,8 +194,8 @@ class RuleValidatorTest {
         addNotOneOfCondition(rule);
         rules.add(rule);
 
-        Map<String, String> subjectAttributes = new HashMap<>();
-        subjectAttributes.put("oneOf", "value1");
+        SubjectAttributes subjectAttributes = new SubjectAttributes();
+        subjectAttributes.put("oneOf", EppoValue.valueOf("value1"));
 
         Assertions.assertFalse(RuleValidator.matchesAnyRule(subjectAttributes, rules));
     }

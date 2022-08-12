@@ -3,6 +3,9 @@ package com.eppo.sdk.dto;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Experiment Configuration Class
+ */
 public class ExperimentConfiguration {
     public String name;
     public boolean enabled;

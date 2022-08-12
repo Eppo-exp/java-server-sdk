@@ -2,15 +2,14 @@ package com.eppo.sdk;
 
 import com.eppo.sdk.constants.Constants;
 import com.eppo.sdk.dto.ExperimentConfiguration;
+import com.eppo.sdk.dto.SubjectAttributes;
 import com.eppo.sdk.dto.Rule;
 import com.eppo.sdk.dto.Variation;
 import com.eppo.sdk.helpers.*;
 import com.eppo.sdk.exception.*;
 import org.ehcache.Cache;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 public class EppoClient {
@@ -37,10 +36,10 @@ public class EppoClient {
      * @return
      * @throws Exception
      */
-    public String getAssignment(
+    public Optional<String> getAssignment(
             String subjectKey,
             String experimentKey,
-            Map<String, String> subjectAttributes
+            SubjectAttributes subjectAttributes
     ) throws Exception {
         // Validate Input Values
         InputValidator.validateNotBlank(subjectKey, "Invalid argument: subjectKey cannot be blank");
@@ -52,7 +51,7 @@ public class EppoClient {
         // Check if subject has override variations
         String subjectVariationOverride = this.getSubjectVariationOverride(subjectKey, configuration);
         if (subjectVariationOverride != null) {
-            return subjectVariationOverride;
+            return Optional.of(subjectVariationOverride);
         }
 
         // If disabled or not in Experiment Sampler or Rules not satisfied return empty string
@@ -60,12 +59,12 @@ public class EppoClient {
                 !this.isInExperimentSample(subjectKey, experimentKey, configuration) ||
                 !this.subjectAttributesSatisfyRules(subjectAttributes, configuration.rules)
         ) {
-            return "";
+            return Optional.empty();
         }
 
         // Get assigned variation
         Variation assignedVariation = this.getAssignedVariation(subjectKey, experimentKey, configuration);
-        return assignedVariation.name;
+        return Optional.of(assignedVariation.name);
     }
 
     /**
@@ -76,8 +75,8 @@ public class EppoClient {
      * @return
      * @throws Exception
      */
-    public String getAssignment(String subjectKey, String experimentKey) throws Exception {
-        return this.getAssignment(subjectKey, experimentKey, new HashMap<>());
+    public Optional<String> getAssignment(String subjectKey, String experimentKey) throws Exception {
+        return this.getAssignment(subjectKey, experimentKey, new SubjectAttributes());
     }
 
     /**
@@ -135,8 +134,9 @@ public class EppoClient {
     private String getSubjectVariationOverride(
             String subjectKey,
             ExperimentConfiguration experimentConfiguration
-    ) {
-        return experimentConfiguration.overrides.getOrDefault(subjectKey, null);
+    ) throws Exception {
+        String hexedSubjectKey = Shard.getHex(subjectKey);
+        return experimentConfiguration.overrides.getOrDefault(hexedSubjectKey, null);
     }
 
     /**
@@ -148,7 +148,7 @@ public class EppoClient {
      * @throws Exception
      */
     private boolean subjectAttributesSatisfyRules(
-            Map<String, String> subjectAttributes,
+            SubjectAttributes subjectAttributes,
             List<Rule> rules
     ) throws Exception {
         if (rules.size() == 0) {
@@ -162,7 +162,7 @@ public class EppoClient {
      * @param apiKey
      * @return
      */
-    public static EppoClient init(String apiKey) {
+    public static synchronized EppoClient init(String apiKey) {
         return EppoClient.init(apiKey, Constants.DEFAULT_BASE_URL);
     }
 
@@ -172,12 +172,12 @@ public class EppoClient {
      * @param baseUrl
      * @return
      */
-    public static EppoClient init(String apiKey, String baseUrl) {
+    public static synchronized EppoClient init(String apiKey, String baseUrl) {
         // Create eppo http client
         // @to-do: read sdkName and sdkVersion from pom.xml file
         EppoHttpClient eppoHttpClient = new EppoHttpClient(
                 apiKey,
-                "java-server-adk",
+                "java-server-sdk",
                 "1.0.0",
                 baseUrl,
                 Constants.REQUEST_TIMEOUT_MILLIS
@@ -210,6 +210,11 @@ public class EppoClient {
                 Constants.TIME_INTERVAL_IN_MILLIS,
                 Constants.JITTER_INTERVAL_IN_MILLIS
         );
+
+        // Stop polling if the Eppo client is already initialized before
+        if (EppoClient.instance != null) {
+            EppoClient.instance.poller.stop();
+        }
 
         // Create Eppo Client
         EppoClient eppoClient = new EppoClient(configurationStore, poller);

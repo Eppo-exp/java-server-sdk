@@ -1,5 +1,8 @@
 package com.eppo.sdk.dto;
 
+/**
+ * Operation Supported
+ */
 public enum OperatorType {
     MATCHES("MATCHES"),
     GTE("GTE"),

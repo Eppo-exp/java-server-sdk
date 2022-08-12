@@ -1,17 +1,21 @@
 package com.eppo.sdk.constants;
+
+/**
+ * Constants Class
+ */
 public class Constants {
     /**
      * Base URL
      */
-    public static final String DEFAULT_BASE_URL = "http://localhost:4000/api";
-    public static  final int REQUEST_TIMEOUT_MILLIS = 1000;
+    public static final String DEFAULT_BASE_URL = "https://eppo.cloud/api";
+    public static final int REQUEST_TIMEOUT_MILLIS = 1000;
 
     /**
      * Poller Settings
      */
 
 
-    private static final  long MILLISECOND_IN_ONE_SECOND = 1000;
+    private static final long MILLISECOND_IN_ONE_SECOND = 1000;
     private static final long SECONDS_IN_ONE_MINUTE = 60;
 
     public static final long
@@ -33,5 +37,5 @@ public class Constants {
     /**
      * Caching Settings
      */
-    public static  final String EXPERIMENT_CONFIGURATION_CACHE_KEY = "experiment-configuration";
+    public static final String EXPERIMENT_CONFIGURATION_CACHE_KEY = "experiment-configuration";
 }
