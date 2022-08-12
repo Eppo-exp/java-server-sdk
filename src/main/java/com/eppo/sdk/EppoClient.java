@@ -1,10 +1,7 @@
 package com.eppo.sdk;
 
 import com.eppo.sdk.constants.Constants;
-import com.eppo.sdk.dto.ExperimentConfiguration;
-import com.eppo.sdk.dto.SubjectAttributes;
-import com.eppo.sdk.dto.Rule;
-import com.eppo.sdk.dto.Variation;
+import com.eppo.sdk.dto.*;
 import com.eppo.sdk.helpers.*;
 import com.eppo.sdk.exception.*;
 import org.ehcache.Cache;
@@ -21,9 +18,12 @@ public class EppoClient {
 
     private Poller poller;
 
-    private EppoClient(ConfigurationStore configurationStore, Poller poller) {
+    private EppoClientConfig eppoClientConfig;
+
+    private EppoClient(ConfigurationStore configurationStore, Poller poller, EppoClientConfig eppoClientConfig) {
         this.configurationStore = configurationStore;
         this.poller = poller;
+        this.eppoClientConfig = eppoClientConfig;
         poller.run();
     }
 
@@ -64,6 +64,21 @@ public class EppoClient {
 
         // Get assigned variation
         Variation assignedVariation = this.getAssignedVariation(subjectKey, experimentKey, configuration);
+
+        try {
+            if (this.eppoClientConfig.getAssignmentLogger().isPresent()) {
+                this.eppoClientConfig.getAssignmentLogger()
+                        .get()
+                        .logAssignment(new AssignmentLogData(
+                                experimentKey,
+                                assignedVariation.name,
+                                subjectKey,
+                                subjectAttributes
+                        ));
+            }
+        } catch (Exception e){
+            // Ignore Exception
+        }
         return Optional.of(assignedVariation.name);
     }
 
@@ -158,28 +173,18 @@ public class EppoClient {
     }
 
     /***
-     * This function is used to initialize the Eppo Client with default Base URL
-     * @param apiKey
-     * @return
-     */
-    public static synchronized EppoClient init(String apiKey) {
-        return EppoClient.init(apiKey, Constants.DEFAULT_BASE_URL);
-    }
-
-    /***
      * This function is used to initialize the Eppo Client
-     * @param apiKey
-     * @param baseUrl
+     * @param eppoClientConfig
      * @return
      */
-    public static synchronized EppoClient init(String apiKey, String baseUrl) {
+    public static synchronized EppoClient init(EppoClientConfig eppoClientConfig) {
         // Create eppo http client
         // @to-do: read sdkName and sdkVersion from pom.xml file
         EppoHttpClient eppoHttpClient = new EppoHttpClient(
-                apiKey,
+                eppoClientConfig.getApiKey(),
                 "java-server-sdk",
                 "1.0.0",
-                baseUrl,
+                eppoClientConfig.getBaseURL(),
                 Constants.REQUEST_TIMEOUT_MILLIS
         );
 
@@ -217,7 +222,7 @@ public class EppoClient {
         }
 
         // Create Eppo Client
-        EppoClient eppoClient = new EppoClient(configurationStore, poller);
+        EppoClient eppoClient = new EppoClient(configurationStore, poller, eppoClientConfig);
         EppoClient.instance = eppoClient;
 
         return eppoClient;
