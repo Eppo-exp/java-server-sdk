@@ -5,6 +5,8 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -137,11 +139,8 @@ class RuleValidatorTest {
         SubjectAttributes subjectAttributes = new SubjectAttributes();
         subjectAttributes.put("price", EppoValue.valueOf("abcd"));
 
-        Assertions.assertThrows(
-                RuntimeException.class,
-                () -> RuleValidator.matchesAnyRule(subjectAttributes, rules),
-                "Invalid subject attribute : abcd"
-        );
+
+        assertFalse(RuleValidator.matchesAnyRule(subjectAttributes, rules));
     }
 
     @DisplayName("Text RuleValidator.matchesAnyRule() with regex condition")

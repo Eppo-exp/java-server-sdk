@@ -40,7 +40,7 @@ public class EppoClient {
             String subjectKey,
             String experimentKey,
             SubjectAttributes subjectAttributes
-    ) throws Exception {
+    ) {
         // Validate Input Values
         InputValidator.validateNotBlank(subjectKey, "Invalid argument: subjectKey cannot be blank");
         InputValidator.validateNotBlank(experimentKey, "Invalid argument: experimentKey cannot be blank");
@@ -66,16 +66,13 @@ public class EppoClient {
         Variation assignedVariation = this.getAssignedVariation(subjectKey, experimentKey, configuration);
 
         try {
-            if (this.eppoClientConfig.getAssignmentLogger().isPresent()) {
-                this.eppoClientConfig.getAssignmentLogger()
-                        .get()
-                        .logAssignment(new AssignmentLogData(
-                                experimentKey,
-                                assignedVariation.name,
-                                subjectKey,
-                                subjectAttributes
-                        ));
-            }
+            this.eppoClientConfig.getAssignmentLogger()
+                .logAssignment(new AssignmentLogData(
+                        experimentKey,
+                        assignedVariation.name,
+                        subjectKey,
+                        subjectAttributes
+                ));
         } catch (Exception e){
             // Ignore Exception
         }
@@ -90,7 +87,7 @@ public class EppoClient {
      * @return
      * @throws Exception
      */
-    public Optional<String> getAssignment(String subjectKey, String experimentKey) throws Exception {
+    public Optional<String> getAssignment(String subjectKey, String experimentKey) {
         return this.getAssignment(subjectKey, experimentKey, new SubjectAttributes());
     }
 
@@ -101,13 +98,12 @@ public class EppoClient {
      * @param experimentKey
      * @param experimentConfiguration
      * @return
-     * @throws Exception
      */
     private boolean isInExperimentSample(
             String subjectKey,
             String experimentKey,
             ExperimentConfiguration experimentConfiguration
-    ) throws Exception {
+    ) {
         int subjectShards = experimentConfiguration.subjectShards;
         float percentageExposure = experimentConfiguration.percentExposure;
 
@@ -122,13 +118,12 @@ public class EppoClient {
      * @param experimentKey
      * @param experimentConfiguration
      * @return
-     * @throws Exception
      */
     private Variation getAssignedVariation(
             String subjectKey,
             String experimentKey,
             ExperimentConfiguration experimentConfiguration
-    ) throws Exception {
+    ) {
         int subjectShards = experimentConfiguration.subjectShards;
         int shard = Shard.getShard("assignment-" + subjectKey + "-" + experimentKey, subjectShards);
 
@@ -149,7 +144,7 @@ public class EppoClient {
     private String getSubjectVariationOverride(
             String subjectKey,
             ExperimentConfiguration experimentConfiguration
-    ) throws Exception {
+    ) {
         String hexedSubjectKey = Shard.getHex(subjectKey);
         return experimentConfiguration.overrides.getOrDefault(hexedSubjectKey, null);
     }
@@ -165,7 +160,7 @@ public class EppoClient {
     private boolean subjectAttributesSatisfyRules(
             SubjectAttributes subjectAttributes,
             List<Rule> rules
-    ) throws Exception {
+    ) {
         if (rules.size() == 0) {
             return true;
         }
@@ -178,6 +173,10 @@ public class EppoClient {
      * @return
      */
     public static synchronized EppoClient init(EppoClientConfig eppoClientConfig) {
+        InputValidator.validateNotBlank(eppoClientConfig.getApiKey(), "An API key is required");
+        if (eppoClientConfig.getAssignmentLogger() == null) {
+            throw new InvalidInputException("An assignment logging implementation is required");
+        }
         // Create eppo http client
         // @to-do: read sdkName and sdkVersion from pom.xml file
         EppoHttpClient eppoHttpClient = new EppoHttpClient(

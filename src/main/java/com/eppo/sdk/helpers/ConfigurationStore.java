@@ -43,7 +43,7 @@ public class ConfigurationStore {
                     experimentConfigurationRequestor
             );
         }
-
+        instance.experimentConfigurationCache.clear();
         return ConfigurationStore.instance;
     }
 
@@ -77,9 +77,6 @@ public class ConfigurationStore {
      */
     public ExperimentConfiguration getExperimentConfiguration(String key)
             throws NetworkException, NetworkRequestNotAllowed, ExperimentConfigurationNotFound {
-        if (!this.experimentConfigurationCache.containsKey(key)) {
-            this.fetchAndSetExperimentConfiguration();
-        }
         try {
             return this.experimentConfigurationCache.get(key);
         } catch (Exception e) {

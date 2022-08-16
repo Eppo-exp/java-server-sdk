@@ -4,6 +4,7 @@ import com.eppo.sdk.dto.ShardRange;
 
 import java.math.BigInteger;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 /**
  * Shard Class
@@ -17,8 +18,13 @@ public class Shard {
      * @return
      * @throws Exception
      */
-    public static String getHex(String input) throws Exception {
-        MessageDigest md = MessageDigest.getInstance("MD5");
+    public static String getHex(String input) {
+        MessageDigest md;
+        try {
+            md = MessageDigest.getInstance("MD5");
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("Error computing md5 hash", e);
+        }
         byte[] messageDigest = md.digest(input.getBytes());
         BigInteger no = new BigInteger(1, messageDigest);
         String hashText = no.toString(16);
@@ -37,7 +43,7 @@ public class Shard {
      * @return
      * @throws Exception
      */
-    public static int getShard(String input, int maxShardValue) throws Exception {
+    public static int getShard(String input, int maxShardValue) {
         String hashText = Shard.getHex(input);
         while (hashText.length() < 32) {
             hashText = "0" + hashText;

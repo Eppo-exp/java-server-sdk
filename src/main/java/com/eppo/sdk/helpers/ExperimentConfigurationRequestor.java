@@ -38,7 +38,7 @@ public class ExperimentConfigurationRequestor {
             // Set if next request is allowed or not
             this.setIsRequestAllowed(statusCode);
         } catch (Exception e) {
-            throw new NetworkException("Unable to Fetch Experiment Configuration");
+            throw new NetworkException("Unable to Fetch Experiment Configuration: " + e.getMessage());
         }
 
         return Optional.ofNullable(config);

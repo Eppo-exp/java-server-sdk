@@ -31,13 +31,13 @@ public class EppoHttpClient {
             String apikey,
             String sdkName,
             String sdkVersion,
-            String baseURl,
+            String baseUrl,
             int requestTimeOutMillis
     ) {
         this.defaultParams.put("apiKey", apikey);
         this.defaultParams.put("sdkName", sdkName);
         this.defaultParams.put("sdkVersion", sdkVersion);
-        this.baseURl = baseURl;
+        this.baseURl = baseUrl;
         this.requestTimeOutMillis = requestTimeOutMillis;
     }
 

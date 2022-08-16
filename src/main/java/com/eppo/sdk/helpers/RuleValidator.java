@@ -134,7 +134,7 @@ public class RuleValidator {
                         return !Compare.isOneOf(value.stringValue(), condition.value.arrayValue());
                 }
             } catch (Exception e) {
-                throw new InvalidSubjectAttribute("Invalid subject attribute : " + value);
+                return false;
             }
 
         }
