@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.eppo.sdk</groupId>
-    <artifactId>JavaSDK</artifactId>
+    <artifactId>eppo-server-sdk</artifactId>
     <version>1.0.0</version>
 
     <name>${project.groupId}:${project.artifactId}</name>
