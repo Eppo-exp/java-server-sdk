@@ -29,7 +29,7 @@ build: test-data
 	mvn --batch-mode --update-snapshots package
 
 ## test-data
-testDataDir := src/test/java/com/eppo/sdk/resources/
+testDataDir := src/test/resources/
 .PHONY: test-data
 test-data: 
 	rm -rf $(testDataDir)

@@ -1,5 +1,5 @@
 .idea/
 target/
 out/
-src/test/java/com/eppo/sdk/resources/assignment
-src/test/java/com/eppo/sdk/resources/rac-experiments.json
+src/test/resources/assignment
+src/test/resources/rac-experiments.json

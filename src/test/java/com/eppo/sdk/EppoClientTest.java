@@ -95,7 +95,7 @@ public class EppoClientTest {
   }
 
   private static Stream<Arguments> getAssignmentTestData() throws IOException {
-    File testCaseFolder = new File(EppoClientTest.class.getResource("resources/assignment/").getFile());
+    File testCaseFolder = new File("src/test/resources/assignment/");
     File[] testCaseFiles = testCaseFolder.listFiles();
     List<Arguments> arguments = new ArrayList<>();
     for (int i = 0; i < testCaseFiles.length; i++) {
@@ -107,7 +107,7 @@ public class EppoClientTest {
   }
 
   private static String getMockRandomizedAssignmentResponse() {
-    File mockRacResponse = new File(EppoClientTest.class.getResource("resources/rac-experiments.json").getFile());
+    File mockRacResponse = new File("src/test/resources/rac-experiments.json");
     try {
     return FileUtils.readFileToString(mockRacResponse, "UTF8");
     } catch (Exception e) {
