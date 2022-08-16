@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.io.FileUtils;
@@ -81,7 +82,7 @@ public class EppoClientTest {
   @ParameterizedTest
   @MethodSource("getAssignmentTestData")
   void testAssignments(AssignmentTestCase testCase) throws IOException {
-    List<String> assignments = testCase.subjects.stream().map(subject -> getAssignment(subject, testCase)).toList();
+    List<String> assignments = testCase.subjects.stream().map(subject -> getAssignment(subject, testCase)).collect(Collectors.toList());
     assertEquals(testCase.expectedAssignments, assignments);
   }
 
