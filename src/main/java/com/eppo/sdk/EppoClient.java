@@ -205,7 +205,7 @@ public class EppoClient {
         }
 
         // Start polling for experiment configurations
-        Timer poller = new Timer();
+        Timer poller = new Timer(true);
         FetchConfigurationsTask fetchConfigurationsTask = new FetchConfigurationsTask(configurationStore, poller, Constants.TIME_INTERVAL_IN_MILLIS, Constants.JITTER_INTERVAL_IN_MILLIS);
         fetchConfigurationsTask.run();
 
