@@ -8,6 +8,7 @@ import org.ehcache.Cache;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Timer;
 
 public class EppoClient {
     /**
@@ -16,15 +17,14 @@ public class EppoClient {
     private static EppoClient instance = null;
     private ConfigurationStore configurationStore;
 
-    private Poller poller;
+    private Timer poller;
 
     private EppoClientConfig eppoClientConfig;
 
-    private EppoClient(ConfigurationStore configurationStore, Poller poller, EppoClientConfig eppoClientConfig) {
+    private EppoClient(ConfigurationStore configurationStore, Timer poller, EppoClientConfig eppoClientConfig) {
         this.configurationStore = configurationStore;
         this.poller = poller;
         this.eppoClientConfig = eppoClientConfig;
-        poller.run();
     }
 
     /**
@@ -199,26 +199,15 @@ public class EppoClient {
                 expConfigRequestor
         );
 
-        // Create Poller
-        Poller poller = Poller.init(
-                () -> {
-                    try {
-                        if (configurationStore.isFetchingExperimentConfigurationAllowed()) {
-                            configurationStore.fetchAndSetExperimentConfiguration();
-                            return true;
-                        }
-                    } catch (Exception e) {
-                    }
-                    return false;
-                },
-                Constants.TIME_INTERVAL_IN_MILLIS,
-                Constants.JITTER_INTERVAL_IN_MILLIS
-        );
-
-        // Stop polling if the Eppo client is already initialized before
+        // Stop the polling process of any previously initialized client 
         if (EppoClient.instance != null) {
-            EppoClient.instance.poller.stop();
+            EppoClient.instance.poller.cancel();
         }
+
+        // Start polling for experiment configurations
+        Timer poller = new Timer(true);
+        FetchConfigurationsTask fetchConfigurationsTask = new FetchConfigurationsTask(configurationStore, poller, Constants.TIME_INTERVAL_IN_MILLIS, Constants.JITTER_INTERVAL_IN_MILLIS);
+        fetchConfigurationsTask.run();
 
         // Create Eppo Client
         EppoClient eppoClient = new EppoClient(configurationStore, poller, eppoClientConfig);

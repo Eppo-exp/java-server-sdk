@@ -6,7 +6,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -44,9 +43,15 @@ public class EppoClientTest {
   }
 
   @Data
+  static class SubjectWithAttributes {
+    String subjectKey;
+    SubjectAttributes subjectAttributes;
+  }
+
+  @Data
   static class AssignmentTestCase {
     String experiment;
-    Map<String, SubjectAttributes> subjectAttributes;
+    List<SubjectWithAttributes> subjectsWithAttributes;
     List<String> subjects;
     List<String> expectedAssignments;
   }
@@ -82,20 +87,24 @@ public class EppoClientTest {
   @ParameterizedTest
   @MethodSource("getAssignmentTestData")
   void testAssignments(AssignmentTestCase testCase) throws IOException {
-    List<String> assignments = testCase.subjects.stream().map(subject -> getAssignment(subject, testCase)).collect(Collectors.toList());
+    List<String> assignments = getAssignments(testCase);
     assertEquals(testCase.expectedAssignments, assignments);
   }
 
-  private String getAssignment(String subject, AssignmentTestCase testCase) {
+  private List<String> getAssignments(AssignmentTestCase testCase) {
     EppoClient client = EppoClient.getInstance();
-    if (testCase.subjectAttributes != null && testCase.subjectAttributes.containsKey(subject)) {
-      return client.getAssignment(subject, testCase.experiment, testCase.subjectAttributes.get(subject)).orElse(null);
+    if (testCase.subjectsWithAttributes != null) {
+      return testCase.subjectsWithAttributes.stream()
+        .map(subject -> client.getAssignment(subject.subjectKey, testCase.experiment, subject.subjectAttributes)
+        .orElse(null)).collect(Collectors.toList());
     }
-    return client.getAssignment(subject, testCase.experiment).orElse(null);
+    return testCase.subjects.stream()
+      .map(subject -> client.getAssignment(subject, testCase.experiment)
+      .orElse(null)).collect(Collectors.toList());
   }
 
   private static Stream<Arguments> getAssignmentTestData() throws IOException {
-    File testCaseFolder = new File("src/test/resources/assignment/");
+    File testCaseFolder = new File("src/test/resources/assignment-v2/");
     File[] testCaseFiles = testCaseFolder.listFiles();
     List<Arguments> arguments = new ArrayList<>();
     for (int i = 0; i < testCaseFiles.length; i++) {

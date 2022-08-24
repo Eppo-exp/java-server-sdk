@@ -1,5 +1,5 @@
 .idea/
 target/
 out/
-src/test/resources/assignment
+src/test/resources/assignment-v2
 src/test/resources/rac-experiments.json
