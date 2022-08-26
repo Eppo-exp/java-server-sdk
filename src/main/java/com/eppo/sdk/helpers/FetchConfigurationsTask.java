@@ -15,11 +15,9 @@ public class FetchConfigurationsTask extends TimerTask {
 
   @Override
   public void run() {
-    if (configurationStore.isFetchingExperimentConfigurationAllowed()) {
-      configurationStore.fetchAndSetExperimentConfiguration();
-      long delay = this.intervalInMillis - ((long) Math.random() * this.jitterInMillis);
-      FetchConfigurationsTask nextTask = new FetchConfigurationsTask(configurationStore, timer, intervalInMillis, jitterInMillis);
-      timer.schedule(nextTask, delay);
-    }
+    configurationStore.fetchAndSetExperimentConfiguration();
+    long delay = this.intervalInMillis - ((long) Math.random() * this.jitterInMillis);
+    FetchConfigurationsTask nextTask = new FetchConfigurationsTask(configurationStore, timer, intervalInMillis, jitterInMillis);
+    timer.schedule(nextTask, delay);
   }
 }

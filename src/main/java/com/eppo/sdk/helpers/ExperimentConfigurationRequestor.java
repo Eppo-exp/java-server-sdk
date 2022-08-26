@@ -1,19 +1,24 @@
 package com.eppo.sdk.helpers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import lombok.extern.slf4j.Slf4j;
+
 import com.eppo.sdk.constants.Constants;
 import com.eppo.sdk.dto.ExperimentConfigurationResponse;
+import com.eppo.sdk.exception.InvalidApiKeyException;
 import com.eppo.sdk.exception.NetworkException;
 
 import java.net.http.HttpResponse;
+import java.net.http.HttpTimeoutException;
 import java.util.Optional;
 
 /**
  * Experiment Configuration Requestor Class
  */
+@Slf4j
 public class ExperimentConfigurationRequestor {
     private EppoHttpClient eppoHttpClient;
-    private boolean isRequestAllowedVar = true;
 
     public ExperimentConfigurationRequestor(EppoHttpClient eppoHttpClient) {
         this.eppoHttpClient = eppoHttpClient;
@@ -23,9 +28,8 @@ public class ExperimentConfigurationRequestor {
      * This function is used to fetch Experiment Configuration
      *
      * @return
-     * @throws NetworkException
      */
-    public Optional<ExperimentConfigurationResponse> fetchExperimentConfiguration() throws NetworkException {
+    public Optional<ExperimentConfigurationResponse> fetchExperimentConfiguration() {
         ExperimentConfigurationResponse config = null;
         try {
             HttpResponse<String> response = this.eppoHttpClient.get(Constants.RAC_ENDPOINT);
@@ -34,35 +38,17 @@ public class ExperimentConfigurationRequestor {
                 ObjectMapper objectMapper = new ObjectMapper();
                 config = objectMapper.readValue(response.body(), ExperimentConfigurationResponse.class);
             }
-
-            // Set if next request is allowed or not
-            this.setIsRequestAllowed(statusCode);
-        } catch (Exception e) {
+            if (statusCode == 401) { // unauthorized - invalid API key
+                throw new InvalidApiKeyException("Unauthorized: invalid Eppo API key.");
+            }
+        } catch (HttpTimeoutException e) { // non-fatal error
+            log.error("Request time out while fetching experiment configurations: " + e.getMessage(), e);
+        } catch (InvalidApiKeyException e) {
+            throw e;
+        } catch (Exception e) { // fatal error that will stop the polling process
             throw new NetworkException("Unable to Fetch Experiment Configuration: " + e.getMessage());
         }
 
         return Optional.ofNullable(config);
-    }
-
-    /**
-     * This function is used to set isRequestAllowedVar parameter
-     *
-     * @param statusCode
-     */
-    private void setIsRequestAllowed(int statusCode) {
-        if (statusCode >= 400 && statusCode < 500) {
-            // 429 - Too many request 408 - Request timeout
-            this.isRequestAllowedVar = statusCode == 429 || statusCode == 408;
-        } else {
-            this.isRequestAllowedVar = true;
-        }
-    }
-
-    /***
-     * This function is used to fetch iSRequestAllowedVar
-     * @return
-     */
-    public boolean isRequestAllowed() {
-        return this.isRequestAllowedVar;
     }
 }

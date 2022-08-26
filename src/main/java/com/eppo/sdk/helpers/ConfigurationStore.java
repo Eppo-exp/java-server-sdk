@@ -92,9 +92,6 @@ public class ConfigurationStore {
      * @throws NetworkRequestNotAllowed
      */
     public void fetchAndSetExperimentConfiguration() throws NetworkException, NetworkRequestNotAllowed {
-        if (!this.isFetchingExperimentConfigurationAllowed()) {
-            throw new NetworkRequestNotAllowed("Fetching Experiment Configuration is not allowed");
-        }
         Optional<ExperimentConfigurationResponse> response = this.experimentConfigurationRequestor
                 .fetchExperimentConfiguration();
 
@@ -103,14 +100,5 @@ public class ConfigurationStore {
                 this.setExperimentConfiguration(entry.getKey(), entry.getValue());
             }
         }
-    }
-
-    /**
-     * This function is used to check if it is allowed to fetch experiment configuration from network
-     *
-     * @return
-     */
-    public boolean isFetchingExperimentConfigurationAllowed() {
-        return this.experimentConfigurationRequestor.isRequestAllowed();
     }
 }
