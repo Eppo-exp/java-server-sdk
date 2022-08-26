@@ -3,6 +3,9 @@ package com.eppo.sdk;
 import com.eppo.sdk.constants.Constants;
 import com.eppo.sdk.dto.*;
 import com.eppo.sdk.helpers.*;
+
+import lombok.extern.slf4j.Slf4j;
+
 import com.eppo.sdk.exception.*;
 import org.ehcache.Cache;
 
@@ -10,6 +13,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Timer;
 
+@Slf4j
 public class EppoClient {
     /**
      * Static Instance
@@ -47,6 +51,10 @@ public class EppoClient {
 
         // Fetch Experiment Configuration
         ExperimentConfiguration configuration = this.configurationStore.getExperimentConfiguration(experimentKey);
+        if (configuration == null) {
+            log.warn("No configuration found for experiment key: " + experimentKey);
+            return Optional.empty();
+        }
 
         // Check if subject has override variations
         String subjectVariationOverride = this.getSubjectVariationOverride(subjectKey, configuration);
