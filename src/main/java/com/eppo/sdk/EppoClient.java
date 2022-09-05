@@ -38,13 +38,13 @@ public class EppoClient {
      * @param experimentKey
      * @param subjectAttributes
      * @return
-     * @throws Exception
+     * @throws RuntimeException
      */
     public Optional<String> getAssignment(
             String subjectKey,
             String experimentKey,
             SubjectAttributes subjectAttributes
-    ) {
+    ) throws RuntimeException {
         // Validate Input Values
         InputValidator.validateNotBlank(subjectKey, "Invalid argument: subjectKey cannot be blank");
         InputValidator.validateNotBlank(experimentKey, "Invalid argument: experimentKey cannot be blank");
@@ -95,7 +95,7 @@ public class EppoClient {
      * @return
      * @throws Exception
      */
-    public Optional<String> getAssignment(String subjectKey, String experimentKey) {
+    public Optional<String> getAssignment(String subjectKey, String experimentKey) throws Exception {
         return this.getAssignment(subjectKey, experimentKey, new SubjectAttributes());
     }
 
@@ -152,7 +152,7 @@ public class EppoClient {
     private String getSubjectVariationOverride(
             String subjectKey,
             ExperimentConfiguration experimentConfiguration
-    ) {
+    ) throws RuntimeException {
         String hexedSubjectKey = Shard.getHex(subjectKey);
         return experimentConfiguration.overrides.getOrDefault(hexedSubjectKey, null);
     }

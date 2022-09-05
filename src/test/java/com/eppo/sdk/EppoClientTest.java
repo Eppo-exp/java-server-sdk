@@ -95,12 +95,24 @@ public class EppoClientTest {
     EppoClient client = EppoClient.getInstance();
     if (testCase.subjectsWithAttributes != null) {
       return testCase.subjectsWithAttributes.stream()
-        .map(subject -> client.getAssignment(subject.subjectKey, testCase.experiment, subject.subjectAttributes)
-        .orElse(null)).collect(Collectors.toList());
+        .map(subject -> {
+          try {
+            return client.getAssignment(subject.subjectKey, testCase.experiment, subject.subjectAttributes)
+            .orElse(null);
+          } catch (Exception e) {
+            throw new RuntimeException(e);
+          }
+        }).collect(Collectors.toList());
     }
     return testCase.subjects.stream()
-      .map(subject -> client.getAssignment(subject, testCase.experiment)
-      .orElse(null)).collect(Collectors.toList());
+      .map(subject -> {
+        try {
+          return client.getAssignment(subject, testCase.experiment)
+          .orElse(null);
+        } catch (Exception e) {
+          throw new RuntimeException(e);
+        }
+      }).collect(Collectors.toList());
   }
 
   private static Stream<Arguments> getAssignmentTestData() throws IOException {
