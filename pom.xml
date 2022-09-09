@@ -6,7 +6,7 @@
 
     <groupId>cloud.eppo</groupId>
     <artifactId>eppo-server-sdk</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
 
     <name>${project.groupId}:${project.artifactId}</name>
     <description>Eppo Server-Side SDK for Java</description>
@@ -88,6 +88,12 @@
                 <filtering>true</filtering>
             </testResource>
         </testResources>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

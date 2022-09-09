@@ -16,9 +16,8 @@ public class Shard {
      *
      * @param input
      * @return
-     * @throws RuntimeException
      */
-    public static String getHex(String input) throws RuntimeException {
+    public static String getHex(String input) {
         MessageDigest md;
         try {
             md = MessageDigest.getInstance("MD5");
@@ -41,9 +40,8 @@ public class Shard {
      * @param input
      * @param maxShardValue
      * @return
-     * @throws RuntimeException
      */
-    public static int getShard(String input, int maxShardValue) throws RuntimeException {
+    public static int getShard(String input, int maxShardValue) {
         String hashText = Shard.getHex(input);
         while (hashText.length() < 32) {
             hashText = "0" + hashText;
