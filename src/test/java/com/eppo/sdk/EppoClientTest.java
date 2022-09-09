@@ -1,6 +1,7 @@
 package com.eppo.sdk;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,6 +13,7 @@ import java.util.stream.Stream;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -91,16 +93,22 @@ public class EppoClientTest {
     assertEquals(testCase.expectedAssignments, assignments);
   }
 
+  @Test
+  void testBoolAssignment() {
+    EppoClient client = EppoClient.getInstance();
+    boolean isCupedEnabled = client.getBoolAssignment("user-1", "typed_experiment", new SubjectAttributes());
+    assertTrue(isCupedEnabled);
+  }
+
   private List<String> getAssignments(AssignmentTestCase testCase) {
     EppoClient client = EppoClient.getInstance();
     if (testCase.subjectsWithAttributes != null) {
       return testCase.subjectsWithAttributes.stream()
-        .map(subject -> client.getAssignment(subject.subjectKey, testCase.experiment, subject.subjectAttributes)
-        .orElse(null)).collect(Collectors.toList());
+        .map(subject -> client.getAssignment(subject.subjectKey, testCase.experiment, subject.subjectAttributes).stringValue()
+        ).collect(Collectors.toList());
     }
     return testCase.subjects.stream()
-      .map(subject -> client.getAssignment(subject, testCase.experiment)
-      .orElse(null)).collect(Collectors.toList());
+      .map(subject -> client.getAssignment(subject, testCase.experiment).stringValue()).collect(Collectors.toList());
   }
 
   private static Stream<Arguments> getAssignmentTestData() throws IOException {

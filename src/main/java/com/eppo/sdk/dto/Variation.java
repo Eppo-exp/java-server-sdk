@@ -4,7 +4,7 @@ package com.eppo.sdk.dto;
  * Experiment's Variation Class
  */
 public class Variation {
-    public String name;
+    public EppoValue name;
     public ShardRange shardRange;
 
     @Override

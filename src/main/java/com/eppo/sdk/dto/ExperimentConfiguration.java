@@ -12,7 +12,7 @@ public class ExperimentConfiguration {
     public int subjectShards;
     public float percentExposure;
     public List<Variation> variations;
-    public Map<String, String> overrides;
+    public Map<String, EppoValue> overrides;
     public List<Rule> rules;
 
     @Override

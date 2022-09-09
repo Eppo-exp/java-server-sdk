@@ -31,6 +31,10 @@ public class EppoClient {
         this.eppoClientConfig = eppoClientConfig;
     }
 
+    public boolean getBoolAssignment(String subjectKey, String experimentKey, SubjectAttributes subjectAttributes) {
+        return getAssignment(subjectKey, experimentKey, subjectAttributes).boolValue();
+    }
+
     /**
      * This function is used to get assignment Value
      *
@@ -40,7 +44,7 @@ public class EppoClient {
      * @return
      * @throws Exception
      */
-    public Optional<String> getAssignment(
+    public EppoValue getAssignment(
             String subjectKey,
             String experimentKey,
             SubjectAttributes subjectAttributes
@@ -53,13 +57,13 @@ public class EppoClient {
         ExperimentConfiguration configuration = this.configurationStore.getExperimentConfiguration(experimentKey);
         if (configuration == null) {
             log.warn("No configuration found for experiment key: " + experimentKey);
-            return Optional.empty();
+            return EppoValue.valueOf();
         }
 
         // Check if subject has override variations
-        String subjectVariationOverride = this.getSubjectVariationOverride(subjectKey, configuration);
+        EppoValue subjectVariationOverride = this.getSubjectVariationOverride(subjectKey, configuration);
         if (subjectVariationOverride != null) {
-            return Optional.of(subjectVariationOverride);
+            return subjectVariationOverride;
         }
 
         // If disabled or not in Experiment Sampler or Rules not satisfied return empty string
@@ -67,7 +71,7 @@ public class EppoClient {
                 !this.isInExperimentSample(subjectKey, experimentKey, configuration) ||
                 !this.subjectAttributesSatisfyRules(subjectAttributes, configuration.rules)
         ) {
-            return Optional.empty();
+            return EppoValue.valueOf();
         }
 
         // Get assigned variation
@@ -77,14 +81,14 @@ public class EppoClient {
             this.eppoClientConfig.getAssignmentLogger()
                 .logAssignment(new AssignmentLogData(
                         experimentKey,
-                        assignedVariation.name,
+                        assignedVariation.name.stringValue(),
                         subjectKey,
                         subjectAttributes
                 ));
         } catch (Exception e){
             // Ignore Exception
         }
-        return Optional.of(assignedVariation.name);
+        return assignedVariation.name;
     }
 
     /**
@@ -95,7 +99,7 @@ public class EppoClient {
      * @return
      * @throws Exception
      */
-    public Optional<String> getAssignment(String subjectKey, String experimentKey) {
+    public EppoValue getAssignment(String subjectKey, String experimentKey) {
         return this.getAssignment(subjectKey, experimentKey, new SubjectAttributes());
     }
 
@@ -149,7 +153,7 @@ public class EppoClient {
      * @param experimentConfiguration
      * @return
      */
-    private String getSubjectVariationOverride(
+    private EppoValue getSubjectVariationOverride(
             String subjectKey,
             ExperimentConfiguration experimentConfiguration
     ) {
