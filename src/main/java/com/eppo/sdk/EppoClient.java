@@ -38,13 +38,12 @@ public class EppoClient {
      * @param experimentKey
      * @param subjectAttributes
      * @return
-     * @throws RuntimeException
      */
     public Optional<String> getAssignment(
             String subjectKey,
             String experimentKey,
             SubjectAttributes subjectAttributes
-    ) throws RuntimeException {
+    ) {
         // Validate Input Values
         InputValidator.validateNotBlank(subjectKey, "Invalid argument: subjectKey cannot be blank");
         InputValidator.validateNotBlank(experimentKey, "Invalid argument: experimentKey cannot be blank");
@@ -152,7 +151,7 @@ public class EppoClient {
     private String getSubjectVariationOverride(
             String subjectKey,
             ExperimentConfiguration experimentConfiguration
-    ) throws RuntimeException {
+    ) {
         String hexedSubjectKey = Shard.getHex(subjectKey);
         return experimentConfiguration.overrides.getOrDefault(hexedSubjectKey, null);
     }
@@ -186,11 +185,11 @@ public class EppoClient {
             throw new InvalidInputException("An assignment logging implementation is required");
         }
         // Create eppo http client
-        // @to-do: read sdkName and sdkVersion from pom.xml file
+        AppDetails appDetails = AppDetails.getInstance();
         EppoHttpClient eppoHttpClient = new EppoHttpClient(
                 eppoClientConfig.getApiKey(),
-                "java-server-sdk",
-                "1.0.0",
+                appDetails.getName(),
+                appDetails.getVersion(),
                 eppoClientConfig.getBaseURL(),
                 Constants.REQUEST_TIMEOUT_MILLIS
         );

@@ -1,7 +1,8 @@
 package com.eppo.sdk.helpers;
 
-import java.io.*;
-import java.util.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
 
 public class AppDetails {
 
@@ -34,7 +35,7 @@ public class AppDetails {
     public String getName() {
         return this.name;
     }
-    
+
     public static Properties readPropertiesFile(String fileName) throws IOException {
         ClassLoader loader = Thread.currentThread().getContextClassLoader();
         Properties props = new Properties();
