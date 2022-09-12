@@ -92,9 +92,8 @@ public class EppoClient {
      * @param subjectKey
      * @param experimentKey
      * @return
-     * @throws Exception
      */
-    public Optional<String> getAssignment(String subjectKey, String experimentKey) throws Exception {
+    public Optional<String> getAssignment(String subjectKey, String experimentKey) {
         return this.getAssignment(subjectKey, experimentKey, new SubjectAttributes());
     }
 
