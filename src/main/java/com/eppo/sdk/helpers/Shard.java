@@ -16,7 +16,6 @@ public class Shard {
      *
      * @param input
      * @return
-     * @throws Exception
      */
     public static String getHex(String input) {
         MessageDigest md;
@@ -41,7 +40,6 @@ public class Shard {
      * @param input
      * @param maxShardValue
      * @return
-     * @throws Exception
      */
     public static int getShard(String input, int maxShardValue) {
         String hashText = Shard.getHex(input);

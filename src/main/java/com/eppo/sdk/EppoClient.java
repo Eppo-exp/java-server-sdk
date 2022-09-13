@@ -38,7 +38,6 @@ public class EppoClient {
      * @param experimentKey
      * @param subjectAttributes
      * @return
-     * @throws Exception
      */
     public Optional<String> getAssignment(
             String subjectKey,
@@ -93,7 +92,6 @@ public class EppoClient {
      * @param subjectKey
      * @param experimentKey
      * @return
-     * @throws Exception
      */
     public Optional<String> getAssignment(String subjectKey, String experimentKey) {
         return this.getAssignment(subjectKey, experimentKey, new SubjectAttributes());
@@ -186,11 +184,11 @@ public class EppoClient {
             throw new InvalidInputException("An assignment logging implementation is required");
         }
         // Create eppo http client
-        // @to-do: read sdkName and sdkVersion from pom.xml file
+        AppDetails appDetails = AppDetails.getInstance();
         EppoHttpClient eppoHttpClient = new EppoHttpClient(
                 eppoClientConfig.getApiKey(),
-                "java-server-sdk",
-                "1.0.0",
+                appDetails.getName(),
+                appDetails.getVersion(),
                 eppoClientConfig.getBaseURL(),
                 Constants.REQUEST_TIMEOUT_MILLIS
         );
