@@ -72,26 +72,6 @@ public class RuleValidator {
      * @param subjectAttributes
      * @param rules
      * @return
-     * @throws InvalidSubjectAttribute
-     */
-    public static boolean matchesAnyRule(
-            SubjectAttributes subjectAttributes,
-            List<Rule> rules
-    ) throws InvalidSubjectAttribute {
-        for (Rule rule : rules) {
-            if (RuleValidator.matchesRule(subjectAttributes, rule)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * This function is used to check if any rule is matched
-     *
-     * @param subjectAttributes
-     * @param rules
-     * @return
      */
     public static Optional<Rule> findMatchingRule(
             SubjectAttributes subjectAttributes,
