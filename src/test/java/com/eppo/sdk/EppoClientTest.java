@@ -128,7 +128,7 @@ public class EppoClientTest {
   }
 
   private static String getMockRandomizedAssignmentResponse() {
-    File mockRacResponse = new File("src/test/resources/rac-experiments.json");
+    File mockRacResponse = new File("src/test/resources/rac-experiments-v2.json");
     try {
     return FileUtils.readFileToString(mockRacResponse, "UTF8");
     } catch (Exception e) {

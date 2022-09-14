@@ -96,7 +96,7 @@ public class ConfigurationStore {
                 .fetchExperimentConfiguration();
 
         if (!response.isEmpty()) {
-            for (Map.Entry<String, ExperimentConfiguration> entry : response.get().experiments.entrySet()) {
+            for (Map.Entry<String, ExperimentConfiguration> entry : response.get().getFlags().entrySet()) {
                 this.setExperimentConfiguration(entry.getKey(), entry.getValue());
             }
         }

@@ -31,7 +31,7 @@ public class Constants {
     /**
      * RAC settings
      */
-    public static final String RAC_ENDPOINT = "/randomized_assignment/config";
+    public static final String RAC_ENDPOINT = "/randomized_assignment/v2/config";
 
 
     /**

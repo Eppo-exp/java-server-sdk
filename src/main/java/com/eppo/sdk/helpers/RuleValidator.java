@@ -7,6 +7,7 @@ import com.eppo.sdk.dto.Condition;
 import com.eppo.sdk.dto.Rule;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -86,6 +87,25 @@ public class RuleValidator {
     }
 
     /**
+     * This function is used to check if any rule is matched
+     *
+     * @param subjectAttributes
+     * @param rules
+     * @return
+     */
+    public static Optional<Rule> findMatchingRule(
+            SubjectAttributes subjectAttributes,
+            List<Rule> rules
+    ) {
+        for (Rule rule : rules) {
+            if (RuleValidator.matchesRule(subjectAttributes, rule)) {
+                return Optional.of(rule);
+            }
+        }
+        return Optional.empty();
+    }
+
+    /**
      * This function is used to check if rule is matched
      *
      * @param subjectAttributes
@@ -97,7 +117,7 @@ public class RuleValidator {
             SubjectAttributes subjectAttributes,
             Rule rule
     ) throws InvalidSubjectAttribute {
-        List<Boolean> conditionEvaluations = RuleValidator.evaluateRuleConditions(subjectAttributes, rule.conditions);
+        List<Boolean> conditionEvaluations = RuleValidator.evaluateRuleConditions(subjectAttributes, rule.getConditions());
         return !conditionEvaluations.contains(false);
     }
 

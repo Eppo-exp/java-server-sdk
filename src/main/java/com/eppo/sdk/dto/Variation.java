@@ -1,14 +1,12 @@
 package com.eppo.sdk.dto;
 
+import lombok.Data;
+
 /**
  * Experiment's Variation Class
  */
+@Data
 public class Variation {
-    public String name;
-    public ShardRange shardRange;
-
-    @Override
-    public String toString() {
-        return "[Name: " + name + "| ShareRange: " + shardRange.toString() + "]";
-    }
+    private EppoValue value;
+    private ShardRange shardRange;
 }
