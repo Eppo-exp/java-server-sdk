@@ -17,8 +17,8 @@ jobs:
           server-password: MAVEN_PASSWORD
       - name: 'Set up GCP SDK for downloading test data'
         uses: 'google-github-actions/setup-gcloud@v0'
-      - name: 'Download test data'
-        uses: 'make test-data'
+      - name: Download test data
+        run: make test-data
       - name: Deploy package
         run: mvn clean deploy
         env:
