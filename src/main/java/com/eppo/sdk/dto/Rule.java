@@ -2,14 +2,13 @@ package com.eppo.sdk.dto;
 
 import java.util.List;
 
+import lombok.Data;
+
 /**
  * Rule Class
  */
+@Data
 public class Rule {
-    public List<Condition> conditions;
-
-    @Override
-    public String toString() {
-        return "[Conditions: " + conditions + "]";
-    }
+    private String allocationKey;
+    private List<Condition> conditions;
 }

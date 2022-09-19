@@ -1,12 +1,28 @@
 package com.eppo.sdk;
 
 import com.eppo.sdk.constants.Constants;
-import com.eppo.sdk.dto.*;
-import com.eppo.sdk.helpers.*;
+import com.eppo.sdk.dto.Allocation;
+import com.eppo.sdk.dto.AssignmentLogData;
+import com.eppo.sdk.dto.EppoClientConfig;
+import com.eppo.sdk.dto.EppoValue;
+import com.eppo.sdk.dto.ExperimentConfiguration;
+import com.eppo.sdk.dto.Rule;
+import com.eppo.sdk.dto.SubjectAttributes;
+import com.eppo.sdk.dto.Variation;
+import com.eppo.sdk.exception.EppoClientIsNotInitializedException;
+import com.eppo.sdk.exception.InvalidInputException;
+import com.eppo.sdk.helpers.AppDetails;
+import com.eppo.sdk.helpers.CacheHelper;
+import com.eppo.sdk.helpers.ConfigurationStore;
+import com.eppo.sdk.helpers.EppoHttpClient;
+import com.eppo.sdk.helpers.ExperimentConfigurationRequestor;
+import com.eppo.sdk.helpers.FetchConfigurationsTask;
+import com.eppo.sdk.helpers.InputValidator;
+import com.eppo.sdk.helpers.RuleValidator;
+import com.eppo.sdk.helpers.Shard;
 
 import lombok.extern.slf4j.Slf4j;
 
-import com.eppo.sdk.exception.*;
 import org.ehcache.Cache;
 
 import java.util.List;
@@ -35,55 +51,67 @@ public class EppoClient {
      * This function is used to get assignment Value
      *
      * @param subjectKey
-     * @param experimentKey
+     * @param flagKey
      * @param subjectAttributes
      * @return
      */
     public Optional<String> getAssignment(
             String subjectKey,
-            String experimentKey,
+            String flagKey,
             SubjectAttributes subjectAttributes
     ) {
         // Validate Input Values
         InputValidator.validateNotBlank(subjectKey, "Invalid argument: subjectKey cannot be blank");
-        InputValidator.validateNotBlank(experimentKey, "Invalid argument: experimentKey cannot be blank");
+        InputValidator.validateNotBlank(flagKey, "Invalid argument: flagKey cannot be blank");
 
         // Fetch Experiment Configuration
-        ExperimentConfiguration configuration = this.configurationStore.getExperimentConfiguration(experimentKey);
+        ExperimentConfiguration configuration = this.configurationStore.getExperimentConfiguration(flagKey);
         if (configuration == null) {
-            log.warn("No configuration found for experiment key: " + experimentKey);
+            log.warn("[Eppo SDK] No configuration found for key: " + flagKey);
             return Optional.empty();
         }
 
         // Check if subject has override variations
-        String subjectVariationOverride = this.getSubjectVariationOverride(subjectKey, configuration);
-        if (subjectVariationOverride != null) {
-            return Optional.of(subjectVariationOverride);
+        EppoValue subjectVariationOverride = this.getSubjectVariationOverride(subjectKey, configuration);
+        if (!subjectVariationOverride.isNull()) {
+            return Optional.of(subjectVariationOverride.stringValue());
         }
 
-        // If disabled or not in Experiment Sampler or Rules not satisfied return empty string
-        if (!configuration.enabled ||
-                !this.isInExperimentSample(subjectKey, experimentKey, configuration) ||
-                !this.subjectAttributesSatisfyRules(subjectAttributes, configuration.rules)
-        ) {
+        // Check if disabled
+        if (!configuration.isEnabled()) {
+            log.info("[Eppo SDK] No assigned variation because the experiment or feature flag {} is disabled", flagKey);
+            return Optional.empty();
+        }
+
+        // Find matched rule
+        Optional<Rule> rule = RuleValidator.findMatchingRule(subjectAttributes, configuration.getRules());
+        if (rule.isEmpty()) {
+            log.info("[Eppo SDK] No assigned variation. The subject attributes did not match any targeting rules");
+            return Optional.empty();
+        }
+
+        // Check if in experiment sample
+        Allocation allocation = configuration.getAllocation(rule.get().getAllocationKey());
+        if (!this.isInExperimentSample(subjectKey, flagKey, configuration.getSubjectShards(), allocation.getPercentExposure())) {
+            log.info("[Eppo SDK] No assigned variation. The subject is not part of the sample population");
             return Optional.empty();
         }
 
         // Get assigned variation
-        Variation assignedVariation = this.getAssignedVariation(subjectKey, experimentKey, configuration);
+        Variation assignedVariation = this.getAssignedVariation(subjectKey, flagKey, configuration.getSubjectShards(), allocation.getVariations());
 
         try {
             this.eppoClientConfig.getAssignmentLogger()
                 .logAssignment(new AssignmentLogData(
-                        experimentKey,
-                        assignedVariation.name,
+                        flagKey,
+                        assignedVariation.getValue().stringValue(),
                         subjectKey,
                         subjectAttributes
                 ));
         } catch (Exception e){
             // Ignore Exception
         }
-        return Optional.of(assignedVariation.name);
+        return Optional.of(assignedVariation.getValue().stringValue());
     }
 
     /**
@@ -108,11 +136,9 @@ public class EppoClient {
     private boolean isInExperimentSample(
             String subjectKey,
             String experimentKey,
-            ExperimentConfiguration experimentConfiguration
+            int subjectShards,
+            float percentageExposure
     ) {
-        int subjectShards = experimentConfiguration.subjectShards;
-        float percentageExposure = experimentConfiguration.percentExposure;
-
         int shard = Shard.getShard("exposure-" + subjectKey + "-" + experimentKey, subjectShards);
         return shard <= percentageExposure * subjectShards;
     }
@@ -128,13 +154,13 @@ public class EppoClient {
     private Variation getAssignedVariation(
             String subjectKey,
             String experimentKey,
-            ExperimentConfiguration experimentConfiguration
+            int subjectShards,
+            List<Variation> variations
     ) {
-        int subjectShards = experimentConfiguration.subjectShards;
         int shard = Shard.getShard("assignment-" + subjectKey + "-" + experimentKey, subjectShards);
 
-        Optional<Variation> variation = experimentConfiguration.variations.stream()
-                .filter(config -> Shard.isShardInRange(shard, config.shardRange))
+        Optional<Variation> variation = variations.stream()
+                .filter(config -> Shard.isShardInRange(shard, config.getShardRange()))
                 .findFirst();
 
         return variation.get();
@@ -147,30 +173,12 @@ public class EppoClient {
      * @param experimentConfiguration
      * @return
      */
-    private String getSubjectVariationOverride(
+    private EppoValue getSubjectVariationOverride(
             String subjectKey,
             ExperimentConfiguration experimentConfiguration
     ) {
         String hexedSubjectKey = Shard.getHex(subjectKey);
-        return experimentConfiguration.overrides.getOrDefault(hexedSubjectKey, null);
-    }
-
-    /**
-     * This function is used to test if subject attributes are satisfying rules or not
-     *
-     * @param subjectAttributes
-     * @param rules
-     * @return
-     * @throws Exception
-     */
-    private boolean subjectAttributesSatisfyRules(
-            SubjectAttributes subjectAttributes,
-            List<Rule> rules
-    ) {
-        if (rules.size() == 0) {
-            return true;
-        }
-        return RuleValidator.matchesAnyRule(subjectAttributes, rules);
+        return experimentConfiguration.getOverrides().getOrDefault(hexedSubjectKey, new EppoValue());
     }
 
     /***

@@ -5,8 +5,6 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,12 +12,12 @@ class RuleValidatorTest {
 
     public Rule createRule(List<Condition> conditions) {
         final Rule rule = new Rule();
-        rule.conditions = conditions;
+        rule.setConditions(conditions);
         return rule;
     }
 
     public void addConditionToRule(Rule rule, Condition condition) {
-        rule.conditions.add(condition);
+        rule.getConditions().add(condition);
     }
 
     public void addNumericConditionToRule(Rule rule) {
@@ -78,7 +76,7 @@ class RuleValidatorTest {
         subjectAttributes.put("price", EppoValue.valueOf("30"));
     }
 
-    @DisplayName("Text RuleValidator.matchesAnyRule() with empty conditions")
+    @DisplayName("findMatchingRule() with empty conditions")
     @Test
     void testMatchesAnyRuleWithEmptyConditions() {
         List<Rule> rules = new ArrayList<>();
@@ -87,20 +85,20 @@ class RuleValidatorTest {
         SubjectAttributes subjectAttributes = new SubjectAttributes();
         addNameToSubjectAttribute(subjectAttributes);
 
-        Assertions.assertTrue(RuleValidator.matchesAnyRule(subjectAttributes, rules));
+        Assertions.assertEquals(ruleWithEmptyConditions, RuleValidator.findMatchingRule(subjectAttributes, rules).get());
     }
 
-    @DisplayName("Text RuleValidator.matchesAnyRule() with empty rules")
+    @DisplayName("findMatchingRule() with empty rules")
     @Test
     void testMatchesAnyRuleWithEmptyRules() {
         List<Rule> rules = new ArrayList<>();
         SubjectAttributes subjectAttributes = new SubjectAttributes();
         addNameToSubjectAttribute(subjectAttributes);
 
-        Assertions.assertFalse(RuleValidator.matchesAnyRule(subjectAttributes, rules));
+        Assertions.assertTrue(RuleValidator.findMatchingRule(subjectAttributes, rules).isEmpty());
     }
 
-    @DisplayName("Text RuleValidator.matchesAnyRule() when no rule matches")
+    @DisplayName("findMatchingRule() when no rule matches")
     @Test
     void testMatchesAnyRuleWhenNoRuleMatches() {
         List<Rule> rules = new ArrayList<>();
@@ -111,10 +109,10 @@ class RuleValidatorTest {
         SubjectAttributes subjectAttributes = new SubjectAttributes();
         addPriceToSubjectAttribute(subjectAttributes);
 
-        Assertions.assertFalse(RuleValidator.matchesAnyRule(subjectAttributes, rules));
+        Assertions.assertTrue(RuleValidator.findMatchingRule(subjectAttributes, rules).isEmpty());
     }
 
-    @DisplayName("Text RuleValidator.matchesAnyRule() when rule matches")
+    @DisplayName("findMatchingRule() when rule matches")
     @Test
     void testMatchesAnyRuleWhenRuleMatches() {
         List<Rule> rules = new ArrayList<>();
@@ -125,10 +123,10 @@ class RuleValidatorTest {
         SubjectAttributes subjectAttributes = new SubjectAttributes();
         subjectAttributes.put("price", EppoValue.valueOf(15));
 
-        Assertions.assertTrue(RuleValidator.matchesAnyRule(subjectAttributes, rules));
+        Assertions.assertEquals(rule, RuleValidator.findMatchingRule(subjectAttributes, rules).get());
     }
 
-    @DisplayName("Text RuleValidator.matchesAnyRule() throw InvalidSubjectAttribute")
+    @DisplayName("findMatchingRule() throw InvalidSubjectAttribute")
     @Test
     void testMatchesAnyRuleWhenThrowInvalidSubjectAttribute() {
         List<Rule> rules = new ArrayList<>();
@@ -140,10 +138,10 @@ class RuleValidatorTest {
         subjectAttributes.put("price", EppoValue.valueOf("abcd"));
 
 
-        assertFalse(RuleValidator.matchesAnyRule(subjectAttributes, rules));
+        Assertions.assertTrue(RuleValidator.findMatchingRule(subjectAttributes, rules).isEmpty());
     }
 
-    @DisplayName("Text RuleValidator.matchesAnyRule() with regex condition")
+    @DisplayName("findMatchingRule() with regex condition")
     @Test
     void testMatchesAnyRuleWithRegexCondition() {
         List<Rule> rules = new ArrayList<>();
@@ -154,10 +152,10 @@ class RuleValidatorTest {
         SubjectAttributes subjectAttributes = new SubjectAttributes();
         subjectAttributes.put("match", EppoValue.valueOf("abcd"));
 
-        Assertions.assertTrue(RuleValidator.matchesAnyRule(subjectAttributes, rules));
+        Assertions.assertEquals(rule, RuleValidator.findMatchingRule(subjectAttributes, rules).get());
     }
 
-    @DisplayName("Text RuleValidator.matchesAnyRule() with regex condition not matched")
+    @DisplayName("findMatchingRule() with regex condition not matched")
     @Test
     void testMatchesAnyRuleWithRegexConditionNotMatched() {
         List<Rule> rules = new ArrayList<>();
@@ -168,10 +166,10 @@ class RuleValidatorTest {
         SubjectAttributes subjectAttributes = new SubjectAttributes();
         subjectAttributes.put("match", EppoValue.valueOf("123"));
 
-        Assertions.assertFalse(RuleValidator.matchesAnyRule(subjectAttributes, rules));
+        Assertions.assertTrue(RuleValidator.findMatchingRule(subjectAttributes, rules).isEmpty());
     }
 
-    @DisplayName("Text RuleValidator.matchesAnyRule() with not oneOf rule")
+    @DisplayName("findMatchingRule() with not oneOf rule")
     @Test
     void testMatchesAnyRuleWithNotOneOfRule() {
         List<Rule> rules = new ArrayList<>();
@@ -182,10 +180,10 @@ class RuleValidatorTest {
         SubjectAttributes subjectAttributes = new SubjectAttributes();
         subjectAttributes.put("oneOf", EppoValue.valueOf("value3"));
 
-        Assertions.assertTrue(RuleValidator.matchesAnyRule(subjectAttributes, rules));
+        Assertions.assertEquals(rule, RuleValidator.findMatchingRule(subjectAttributes, rules).get());
     }
 
-    @DisplayName("Text RuleValidator.matchesAnyRule() with not oneOf rule not passed")
+    @DisplayName("findMatchingRule() with not oneOf rule not passed")
     @Test
     void testMatchesAnyRuleWithNotOneOfRuleNotPassed() {
         List<Rule> rules = new ArrayList<>();
@@ -196,7 +194,7 @@ class RuleValidatorTest {
         SubjectAttributes subjectAttributes = new SubjectAttributes();
         subjectAttributes.put("oneOf", EppoValue.valueOf("value1"));
 
-        Assertions.assertFalse(RuleValidator.matchesAnyRule(subjectAttributes, rules));
+        Assertions.assertTrue(RuleValidator.findMatchingRule(subjectAttributes, rules).isEmpty());
     }
 
 }
