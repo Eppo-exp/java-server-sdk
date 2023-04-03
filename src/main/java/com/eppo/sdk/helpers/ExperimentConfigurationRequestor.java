@@ -43,7 +43,7 @@ public class ExperimentConfigurationRequestor {
                 throw new InvalidApiKeyException("Unauthorized: invalid Eppo API key.");
             }
         } catch (HttpTimeoutException e) { // non-fatal error
-            log.error("Request time out while fetching experiment configurations: " + e.getMessage(), e);
+            log.warn("Request time out while fetching experiment configurations: " + e.getMessage());
         } catch (InvalidApiKeyException e) {
             throw e;
         } catch (Exception e) { // fatal error that will stop the polling process
