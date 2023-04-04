@@ -42,12 +42,10 @@ public class ExperimentConfigurationRequestor {
             if (statusCode == 401) { // unauthorized - invalid API key
                 throw new InvalidApiKeyException("Unauthorized: invalid Eppo API key.");
             }
-        } catch (HttpTimeoutException e) { // non-fatal error
-            log.warn("Request time out while fetching experiment configurations: " + e.getMessage());
         } catch (InvalidApiKeyException e) {
             throw e;
-        } catch (Exception e) { // fatal error that will stop the polling process
-            throw new NetworkException("Unable to Fetch Experiment Configuration: " + e.getMessage());
+        } catch (Exception e) {
+            log.warn("Unable to Fetch Experiment Configuration: " + e.getMessage());
         }
 
         return Optional.ofNullable(config);
