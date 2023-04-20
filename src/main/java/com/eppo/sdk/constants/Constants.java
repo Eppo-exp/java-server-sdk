@@ -7,7 +7,7 @@ public class Constants {
     /**
      * Base URL
      */
-    public static final String DEFAULT_BASE_URL = "https://eppo.cloud/api";
+    public static final String DEFAULT_BASE_URL = "https://fscdn.eppo.cloud/api";
     public static final int REQUEST_TIMEOUT_MILLIS = 1000;
 
     /**
@@ -31,7 +31,7 @@ public class Constants {
     /**
      * RAC settings
      */
-    public static final String RAC_ENDPOINT = "/randomized_assignment/v2/config";
+    public static final String RAC_ENDPOINT = "/randomized_assignment/v3/config";
 
 
     /**
