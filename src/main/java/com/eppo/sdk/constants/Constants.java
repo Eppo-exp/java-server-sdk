@@ -16,12 +16,11 @@ public class Constants {
 
 
     private static final long MILLISECOND_IN_ONE_SECOND = 1000;
-    private static final long SECONDS_IN_ONE_MINUTE = 60;
 
     public static final long
-            TIME_INTERVAL_IN_MILLIS = 5 * SECONDS_IN_ONE_MINUTE * MILLISECOND_IN_ONE_SECOND; // time interval
+            TIME_INTERVAL_IN_MILLIS = 30 * MILLISECOND_IN_ONE_SECOND; // time interval
     public static final long
-            JITTER_INTERVAL_IN_MILLIS = 30 * MILLISECOND_IN_ONE_SECOND;
+            JITTER_INTERVAL_IN_MILLIS = 5 * MILLISECOND_IN_ONE_SECOND;
 
     /**
      * Cache Settings
