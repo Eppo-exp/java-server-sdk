@@ -5,6 +5,7 @@ import com.eppo.sdk.dto.Allocation;
 import com.eppo.sdk.dto.AssignmentLogData;
 import com.eppo.sdk.dto.EppoClientConfig;
 import com.eppo.sdk.dto.EppoValue;
+import com.eppo.sdk.dto.EppoValueType;
 import com.eppo.sdk.dto.ExperimentConfiguration;
 import com.eppo.sdk.dto.Rule;
 import com.eppo.sdk.dto.SubjectAttributes;
@@ -156,7 +157,7 @@ public class EppoClient {
      * @param type
      * @return
      */
-    public Optional<?> getTypedAssignment(String subjectKey, String experimentKey, EppoValueType type) {
+    private Optional<?> getTypedAssignment(String subjectKey, String experimentKey, EppoValueType type) {
         return this.getTypedAssignment(subjectKey, experimentKey, type, new SubjectAttributes());
     }
 
