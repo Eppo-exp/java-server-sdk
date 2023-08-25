@@ -51,10 +51,10 @@ class EppoValueDeserializerTest {
         Assertions.assertTrue(object.value == null);
     }
 
-    @DisplayName("Test deserializing null")
+    @DisplayName("Test deserializing random object")
     @Test
-    void testDeserializingRandomValue() throws Exception {
+    void testDeserializingRandomObject() throws Exception {
         SingleEppoValue object = mapper.readValue("{\"value\": {\"test\" : \"test\"}}", SingleEppoValue.class);
-        Assertions.assertTrue(object.value.isNull());
+        Assertions.assertTrue(object.value.jsonNodeValue().get("test").textValue().compareTo("test") == 0);
     }
 }

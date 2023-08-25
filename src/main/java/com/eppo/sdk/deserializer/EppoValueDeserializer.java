@@ -77,6 +77,9 @@ public class EppoValueDeserializer extends StdDeserializer<EppoValue> {
                 return EppoValue.valueOf(node.asText());
             case BOOLEAN:
                 return EppoValue.valueOf(node.asBoolean());
+            case OBJECT:
+            case POJO:
+                return EppoValue.valueOf(node);
             default:
                 return EppoValue.valueOf();
         }
