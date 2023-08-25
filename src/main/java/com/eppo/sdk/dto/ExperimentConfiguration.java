@@ -13,7 +13,7 @@ public class ExperimentConfiguration {
     private String name;
     private boolean enabled;
     private int subjectShards;
-    private Map<String, EppoValue> overrides;
+    private Map<String, EppoValue> typedOverrides;
     private Map<String, Allocation> allocations;
     private List<Rule> rules;
 

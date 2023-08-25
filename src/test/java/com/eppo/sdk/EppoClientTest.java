@@ -97,7 +97,7 @@ public class EppoClientTest {
       return testCase.subjectsWithAttributes.stream()
         .map(subject -> {
           try {
-            return client.getAssignment(subject.subjectKey, testCase.experiment, subject.subjectAttributes)
+            return client.getStringAssignment(subject.subjectKey, testCase.experiment, subject.subjectAttributes)
             .orElse(null);
           } catch (Exception e) {
             throw new RuntimeException(e);
@@ -107,7 +107,7 @@ public class EppoClientTest {
     return testCase.subjects.stream()
       .map(subject -> {
         try {
-          return client.getAssignment(subject, testCase.experiment)
+          return client.getStringAssignment(subject, testCase.experiment)
           .orElse(null);
         } catch (Exception e) {
           throw new RuntimeException(e);
@@ -128,7 +128,7 @@ public class EppoClientTest {
   }
 
   private static String getMockRandomizedAssignmentResponse() {
-    File mockRacResponse = new File("src/test/resources/rac-experiments-v2.json");
+    File mockRacResponse = new File("src/test/resources/rac-experiments-v3.json");
     try {
     return FileUtils.readFileToString(mockRacResponse, "UTF8");
     } catch (Exception e) {

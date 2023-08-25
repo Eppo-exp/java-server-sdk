@@ -55,7 +55,7 @@ public class EppoClient {
      * @param subjectAttributes
      * @return
      */
-    public Optional<String> getAssignment(
+    private Optional<EppoValue> getAssignment(
             String subjectKey,
             String flagKey,
             SubjectAttributes subjectAttributes
@@ -74,7 +74,7 @@ public class EppoClient {
         // Check if subject has override variations
         EppoValue subjectVariationOverride = this.getSubjectVariationOverride(subjectKey, configuration);
         if (!subjectVariationOverride.isNull()) {
-            return Optional.of(subjectVariationOverride.stringValue());
+            return Optional.of(subjectVariationOverride);
         }
 
         // Check if disabled
@@ -104,14 +104,14 @@ public class EppoClient {
             this.eppoClientConfig.getAssignmentLogger()
                 .logAssignment(new AssignmentLogData(
                         flagKey,
-                        assignedVariation.getValue().stringValue(),
+                        assignedVariation.getTypedValue().stringValue(),
                         subjectKey,
                         subjectAttributes
                 ));
         } catch (Exception e){
             // Ignore Exception
         }
-        return Optional.of(assignedVariation.getValue().stringValue());
+        return Optional.of(assignedVariation.getTypedValue());
     }
 
     /**
@@ -121,8 +121,127 @@ public class EppoClient {
      * @param experimentKey
      * @return
      */
-    public Optional<String> getAssignment(String subjectKey, String experimentKey) {
+    private Optional<EppoValue> getAssignment(String subjectKey, String experimentKey) {
         return this.getAssignment(subjectKey, experimentKey, new SubjectAttributes());
+    }
+
+    /**
+     * This function will return typed assignment value
+     * @param subjectKey
+     * @param experimentKey
+     * @param type
+     * @param subjectAttributes
+     * @return
+     */
+    private Optional<?> getTypedAssignment(String subjectKey, String experimentKey, EppoValueType type, SubjectAttributes subjectAttributes) {
+        Optional<EppoValue> value = this.getAssignment(subjectKey, experimentKey, subjectAttributes);
+        if (value.isEmpty()) {
+            return Optional.empty();
+        }
+
+        switch (type) {
+            case BOOLEAN:
+                return Optional.of(value.get().boolValue());
+            case NUMBER:
+                return Optional.of(value.get().longValue());
+            default:
+                return Optional.of(value.get().stringValue());
+        }
+    }
+
+    /**
+     * This function will return typed assignment value without subject attribute
+     * @param subjectKey
+     * @param experimentKey
+     * @param type
+     * @return
+     */
+    public Optional<?> getTypedAssignment(String subjectKey, String experimentKey, EppoValueType type) {
+        return this.getTypedAssignment(subjectKey, experimentKey, type, new SubjectAttributes());
+    }
+
+    /**
+     * This function will return string assignment value
+     * @param subjectKey
+     * @param experimentKey
+     * @param subjectAttributes
+     * @return
+     */
+    public Optional<String> getStringAssignment(String subjectKey, String experimentKey, SubjectAttributes subjectAttributes) {
+       return (Optional<String>) this.getTypedAssignment(subjectKey, experimentKey, EppoValueType.STRING, subjectAttributes);
+    }
+
+    /**
+     * This function will return string assignment value without passing subjectAttributes
+     * @param subjectKey
+     * @param experimentKey
+     * @return
+     */
+    public Optional<String> getStringAssignment(String subjectKey, String experimentKey) {
+        return this.getStringAssignment(subjectKey, experimentKey, new SubjectAttributes());
+    }
+
+    /**
+     * This function will return boolean assignment value
+     * @param subjectKey
+     * @param experimentKey
+     * @param subjectAttributes
+     * @return
+     */
+    public Optional<Boolean> getBooleanAssignment(String subjectKey, String experimentKey, SubjectAttributes subjectAttributes) {
+        return (Optional<Boolean>) this.getTypedAssignment(subjectKey, experimentKey, EppoValueType.BOOLEAN, subjectAttributes);
+    }
+
+    /**
+     * This function will return boolean assignment value without passing subjectAttributes
+     * @param subjectKey
+     * @param experimentKey
+     * @return
+     */
+    public Optional<Boolean> getBooleanAssignment(String subjectKey, String experimentKey) {
+        return this.getBooleanAssignment(subjectKey, experimentKey, new SubjectAttributes());
+    }
+
+    /**
+     * This function will return long assignment value
+     * @param subjectKey
+     * @param experimentKey
+     * @param subjectAttributes
+     * @return
+     */
+    public Optional<Long> getLongAssignment(String subjectKey, String experimentKey, SubjectAttributes subjectAttributes) {
+        return (Optional<Long>) this.getTypedAssignment(subjectKey, experimentKey, EppoValueType.NUMBER, subjectAttributes);
+    }
+
+    /**
+     * This function will return long assignment value without passing subjectAttributes
+     * @param subjectKey
+     * @param experimentKey
+     * @return
+     */
+    public Optional<Long> getLongAssignment(String subjectKey, String experimentKey) {
+        return this.getLongAssignment(subjectKey, experimentKey, new SubjectAttributes());
+    }
+
+    /**
+     * This function will return json string assignment value
+     * @param subjectKey
+     * @param experimentKey
+     * @param subjectAttributes
+     * @return
+     */
+    public Optional<String> getJSONAssignment(String subjectKey, String experimentKey, SubjectAttributes subjectAttributes) {
+        return this.getStringAssignment(subjectKey, experimentKey, subjectAttributes);
+    }
+
+    /**
+     * This function will return json string assignment value without passing subjectAttributes
+     * @param subjectKey
+     * @param experimentKey
+     * @return
+     */
+    public Optional<String> getJSONAssignment(String subjectKey, String experimentKey) {
+        return this.getJSONAssignment(subjectKey, experimentKey, new SubjectAttributes());
     }
 
     /**
@@ -130,7 +249,8 @@ public class EppoClient {
      *
      * @param subjectKey
      * @param experimentKey
-     * @param experimentConfiguration
+     * @param subjectShards
+     * @param percentageExposure
      * @return
      */
     private boolean isInExperimentSample(
@@ -148,7 +268,8 @@ public class EppoClient {
      *
      * @param subjectKey
      * @param experimentKey
-     * @param experimentConfiguration
+     * @param subjectShards
+     * @param subjectShards
      * @return
      */
     private Variation getAssignedVariation(
@@ -178,7 +299,7 @@ public class EppoClient {
             ExperimentConfiguration experimentConfiguration
     ) {
         String hexedSubjectKey = Shard.getHex(subjectKey);
-        return experimentConfiguration.getOverrides().getOrDefault(hexedSubjectKey, new EppoValue());
+        return experimentConfiguration.getTypedOverrides().getOrDefault(hexedSubjectKey, new EppoValue());
     }
 
     /***

@@ -7,6 +7,6 @@ import lombok.Data;
  */
 @Data
 public class Variation {
-    private EppoValue value;
+    private EppoValue typedValue;
     private ShardRange shardRange;
 }

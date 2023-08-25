@@ -77,10 +77,8 @@ public class EppoValueDeserializer extends StdDeserializer<EppoValue> {
                 return EppoValue.valueOf(node.asText());
             case BOOLEAN:
                 return EppoValue.valueOf(node.asBoolean());
-            case NULL:
-                return EppoValue.valueOf();
             default:
-                throw new UnsupportedEppoValue("Unsupported Eppo Values");
+                return EppoValue.valueOf();
         }
     }
 }
