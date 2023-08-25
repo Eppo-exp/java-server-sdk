@@ -30,6 +30,7 @@ public class EppoValue {
 
     public EppoValue(JsonNode node) {
         this.node = node;
+        this.value = node.toString();
         this.type = EppoValueType.JSON_NODE;
     }
 
