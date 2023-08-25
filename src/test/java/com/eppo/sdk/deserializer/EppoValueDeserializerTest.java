@@ -48,7 +48,7 @@ class EppoValueDeserializerTest {
     @Test
     void testDeserializingNull() throws Exception {
         SingleEppoValue object = mapper.readValue("{\"value\": null}", SingleEppoValue.class);
-        Assertions.assertTrue(object.value.isNull());
+        Assertions.assertTrue(object.value == null);
     }
 
     @DisplayName("Test deserializing null")
