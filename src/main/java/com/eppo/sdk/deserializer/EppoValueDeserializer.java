@@ -72,15 +72,16 @@ public class EppoValueDeserializer extends StdDeserializer<EppoValue> {
                 }
                 return EppoValue.valueOf(array);
             case NUMBER:
-                return EppoValue.valueOf(node.asLong());
+                return EppoValue.valueOf(node.asDouble());
             case STRING:
                 return EppoValue.valueOf(node.asText());
             case BOOLEAN:
                 return EppoValue.valueOf(node.asBoolean());
-            case NULL:
-                return EppoValue.valueOf();
+            case OBJECT:
+            case POJO:
+                return EppoValue.valueOf(node);
             default:
-                throw new UnsupportedEppoValue("Unsupported Eppo Values");
+                return EppoValue.valueOf();
         }
     }
 }

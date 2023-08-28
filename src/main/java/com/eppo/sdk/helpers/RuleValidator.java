@@ -32,7 +32,7 @@ class Compare {
      * @param conditionFunc
      * @return
      */
-    public static boolean compareNumber(long a, long b, IConditionFunc<Long> conditionFunc) {
+    public static boolean compareNumber(double a, double b, IConditionFunc<Double> conditionFunc) {
         return conditionFunc.check(a, b);
     }
 
@@ -118,14 +118,14 @@ public class RuleValidator {
             try {
                 switch (condition.operator) {
                     case GTE:
-                        return Compare.compareNumber(value.longValue(), condition.value.longValue()
+                        return Compare.compareNumber(value.doubleValue(), condition.value.doubleValue()
                                 , (a, b) -> a >= b);
                     case GT:
-                        return Compare.compareNumber(value.longValue(), condition.value.longValue(), (a, b) -> a > b);
+                        return Compare.compareNumber(value.doubleValue(), condition.value.doubleValue(), (a, b) -> a > b);
                     case LTE:
-                        return Compare.compareNumber(value.longValue(), condition.value.longValue(), (a, b) -> a <= b);
+                        return Compare.compareNumber(value.doubleValue(), condition.value.doubleValue(), (a, b) -> a <= b);
                     case LT:
-                        return Compare.compareNumber(value.longValue(), condition.value.longValue(), (a, b) -> a < b);
+                        return Compare.compareNumber(value.doubleValue(), condition.value.doubleValue(), (a, b) -> a < b);
                     case MATCHES:
                         return Compare.compareRegex(value.stringValue(), Pattern.compile(condition.value.stringValue()));
                     case ONE_OF:

@@ -16,11 +16,11 @@ class EppoValueDeserializerTest {
 
     private ObjectMapper mapper = new ObjectMapper();
 
-    @DisplayName("Test deserializing integer")
+    @DisplayName("Test deserializing double")
     @Test
-    void testDeserializingInteger() throws Exception {
+    void testDeserializingDouble() throws Exception {
         SingleEppoValue object = mapper.readValue("{\"value\": 1}", SingleEppoValue.class);
-        Assertions.assertEquals(object.value.intValue(), 1);
+        Assertions.assertEquals(object.value.doubleValue(), 1);
     }
 
     @DisplayName("Test deserializing boolean")
@@ -49,5 +49,12 @@ class EppoValueDeserializerTest {
     void testDeserializingNull() throws Exception {
         SingleEppoValue object = mapper.readValue("{\"value\": null}", SingleEppoValue.class);
         Assertions.assertTrue(object.value == null);
+    }
+
+    @DisplayName("Test deserializing random object")
+    @Test
+    void testDeserializingRandomObject() throws Exception {
+        SingleEppoValue object = mapper.readValue("{\"value\": {\"test\" : \"test\"}}", SingleEppoValue.class);
+        Assertions.assertTrue(object.value.jsonNodeValue().get("test").textValue().compareTo("test") == 0);
     }
 }
