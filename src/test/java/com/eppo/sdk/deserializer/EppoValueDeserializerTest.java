@@ -16,11 +16,11 @@ class EppoValueDeserializerTest {
 
     private ObjectMapper mapper = new ObjectMapper();
 
-    @DisplayName("Test deserializing integer")
+    @DisplayName("Test deserializing double")
     @Test
-    void testDeserializingInteger() throws Exception {
+    void testDeserializingDouble() throws Exception {
         SingleEppoValue object = mapper.readValue("{\"value\": 1}", SingleEppoValue.class);
-        Assertions.assertEquals(object.value.intValue(), 1);
+        Assertions.assertEquals(object.value.doubleValue(), 1);
     }
 
     @DisplayName("Test deserializing boolean")

@@ -144,21 +144,10 @@ public class EppoClient {
             case BOOLEAN:
                 return Optional.of(value.get().boolValue());
             case NUMBER:
-                return Optional.of(value.get().longValue());
+                return Optional.of(value.get().doubleValue());
             default:
                 return Optional.of(value.get().stringValue());
         }
-    }
-
-    /**
-     * This function will return typed assignment value without subject attribute
-     * @param subjectKey
-     * @param experimentKey
-     * @param type
-     * @return
-     */
-    private Optional<?> getTypedAssignment(String subjectKey, String experimentKey, EppoValueType type) {
-        return this.getTypedAssignment(subjectKey, experimentKey, type, new SubjectAttributes());
     }
 
     /**
@@ -204,14 +193,14 @@ public class EppoClient {
     }
 
     /**
-     * This function will return long assignment value
+     * This function will return double assignment value
      * @param subjectKey
      * @param experimentKey
      * @param subjectAttributes
      * @return
      */
-    public Optional<Long> getLongAssignment(String subjectKey, String experimentKey, SubjectAttributes subjectAttributes) {
-        return (Optional<Long>) this.getTypedAssignment(subjectKey, experimentKey, EppoValueType.NUMBER, subjectAttributes);
+    public Optional<Double> getDoubleAssignment(String subjectKey, String experimentKey, SubjectAttributes subjectAttributes) {
+        return (Optional<Double>) this.getTypedAssignment(subjectKey, experimentKey, EppoValueType.NUMBER, subjectAttributes);
     }
 
     /**
@@ -220,8 +209,8 @@ public class EppoClient {
      * @param experimentKey
      * @return
      */
-    public Optional<Long> getLongAssignment(String subjectKey, String experimentKey) {
-        return this.getLongAssignment(subjectKey, experimentKey, new SubjectAttributes());
+    public Optional<Double> getDoubleAssignment(String subjectKey, String experimentKey) {
+        return this.getDoubleAssignment(subjectKey, experimentKey, new SubjectAttributes());
     }
 
     /**

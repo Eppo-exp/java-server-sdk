@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.eppo.sdk.helpers.Converter;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -51,6 +52,7 @@ public class EppoClientTest {
   @Data
   static class AssignmentTestCase {
     String experiment;
+    String valueType = "string";
     List<SubjectWithAttributes> subjectsWithAttributes;
     List<String> subjects;
     List<String> expectedAssignments;
@@ -87,18 +89,48 @@ public class EppoClientTest {
   @ParameterizedTest
   @MethodSource("getAssignmentTestData")
   void testAssignments(AssignmentTestCase testCase) throws IOException {
-    List<String> assignments = getAssignments(testCase);
-    assertEquals(testCase.expectedAssignments, assignments);
+    switch (testCase.valueType) {
+      case "numeric":
+        List<Double> expectedDoubleAssignments = Converter.convertToDecimal(testCase.expectedAssignments);
+        List<Double> actualDoubleAssignments = this.getDoubleAssignments(testCase);
+        assertEquals(expectedDoubleAssignments, actualDoubleAssignments);
+        break;
+      case "boolean":
+        List<Boolean> expectedBooleanAssignments = Converter.convertToBoolean(testCase.expectedAssignments);
+        List<Boolean> actualBooleanAssignments = this.getBooleanAssignments(testCase);
+        assertEquals(expectedBooleanAssignments, actualBooleanAssignments);
+        break;
+      case "json":
+        List<String> actualJSONAssignments = this.getJSONAssignments(testCase);
+        assertEquals(testCase.expectedAssignments, actualJSONAssignments);
+        break;
+      default:
+        List<String> actualStringAssignments = this.getStringAssignments(testCase);
+        assertEquals(testCase.expectedAssignments, actualStringAssignments);
+    }
+
   }
 
-  private List<String> getAssignments(AssignmentTestCase testCase) {
+  private List<?> getAssignments(AssignmentTestCase testCase, String valueType) {
     EppoClient client = EppoClient.getInstance();
     if (testCase.subjectsWithAttributes != null) {
       return testCase.subjectsWithAttributes.stream()
         .map(subject -> {
           try {
-            return client.getStringAssignment(subject.subjectKey, testCase.experiment, subject.subjectAttributes)
-            .orElse(null);
+            switch (valueType) {
+              case "numeric":
+                return client.getDoubleAssignment(subject.subjectKey, testCase.experiment, subject.subjectAttributes)
+                        .orElse(null);
+              case "boolean":
+                return client.getBooleanAssignment(subject.subjectKey, testCase.experiment, subject.subjectAttributes)
+                        .orElse(null);
+              case "json":
+                return client.getJSONAssignment(subject.subjectKey, testCase.experiment, subject.subjectAttributes)
+                        .orElse(null);
+              default:
+                return client.getStringAssignment(subject.subjectKey, testCase.experiment, subject.subjectAttributes)
+                        .orElse(null);
+            }
           } catch (Exception e) {
             throw new RuntimeException(e);
           }
@@ -107,12 +139,40 @@ public class EppoClientTest {
     return testCase.subjects.stream()
       .map(subject -> {
         try {
-          return client.getStringAssignment(subject, testCase.experiment)
-          .orElse(null);
+          switch (valueType) {
+            case "numeric":
+              return client.getDoubleAssignment(subject, testCase.experiment)
+                      .orElse(null);
+            case "boolean":
+              return client.getBooleanAssignment(subject, testCase.experiment)
+                      .orElse(null);
+            case "json":
+              return client.getJSONAssignment(subject, testCase.experiment)
+                      .orElse(null);
+            default:
+              return client.getStringAssignment(subject, testCase.experiment)
+                      .orElse(null);
+          }
         } catch (Exception e) {
           throw new RuntimeException(e);
         }
       }).collect(Collectors.toList());
+  }
+
+  private List<String> getStringAssignments(AssignmentTestCase testCase) {
+    return (List<String>) this.getAssignments(testCase, "string");
+  }
+
+  private List<Double> getDoubleAssignments(AssignmentTestCase testCase) {
+    return (List<Double>) this.getAssignments(testCase, "numeric");
+  }
+
+  private List<Boolean> getBooleanAssignments(AssignmentTestCase testCase) {
+    return (List<Boolean>) this.getAssignments(testCase, "boolean");
+  }
+
+  private List<String> getJSONAssignments(AssignmentTestCase testCase) {
+    return (List<String>) this.getAssignments(testCase, "json");
   }
 
   private static Stream<Arguments> getAssignmentTestData() throws IOException {

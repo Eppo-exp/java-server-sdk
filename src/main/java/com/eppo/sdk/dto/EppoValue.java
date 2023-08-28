@@ -16,7 +16,8 @@ public class EppoValue {
     private EppoValueType type = EppoValueType.NULL;
     private List<String> array;
 
-    public EppoValue() {}
+    public EppoValue() {
+    }
 
     public EppoValue(String value, EppoValueType type) {
         this.value = value;
@@ -42,12 +43,8 @@ public class EppoValue {
         return new EppoValue(value, EppoValueType.STRING);
     }
 
-    public static EppoValue valueOf(int value) {
-        return new EppoValue(Integer.toString(value), EppoValueType.NUMBER);
-    }
-
-    public static EppoValue valueOf(long value) {
-        return new EppoValue(Long.toString(value), EppoValueType.NUMBER);
+    public static EppoValue valueOf(double value) {
+        return new EppoValue(Double.toString(value), EppoValueType.NUMBER);
     }
 
     public static EppoValue valueOf(boolean value) {
@@ -66,12 +63,8 @@ public class EppoValue {
         return new EppoValue(EppoValueType.NULL);
     }
 
-    public int intValue() {
-        return Integer.parseInt(value, 10);
-    }
-
-    public long longValue() {
-        return Long.parseLong(value, 10);
+    public double doubleValue() {
+        return Double.parseDouble(value);
     }
 
     public String stringValue() {
@@ -92,7 +85,7 @@ public class EppoValue {
 
     public boolean isNumeric() {
         try {
-            Long.parseLong(value, 10);
+            Double.parseDouble(value);
             return true;
         } catch (Exception e) {
             return false;

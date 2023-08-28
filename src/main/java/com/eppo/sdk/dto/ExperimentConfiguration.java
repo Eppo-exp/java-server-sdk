@@ -1,5 +1,6 @@
 package com.eppo.sdk.dto;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -13,7 +14,7 @@ public class ExperimentConfiguration {
     private String name;
     private boolean enabled;
     private int subjectShards;
-    private Map<String, EppoValue> typedOverrides;
+    private Map<String, EppoValue> typedOverrides = new HashMap<>();
     private Map<String, Allocation> allocations;
     private List<Rule> rules;
 
