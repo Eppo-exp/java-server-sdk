@@ -3,3 +3,4 @@ target/
 out/
 src/test/resources/assignment-v2
 src/test/resources/rac-experiments-v*.json
+.DS_Store
