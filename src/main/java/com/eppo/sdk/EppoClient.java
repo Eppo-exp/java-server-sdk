@@ -56,7 +56,7 @@ public class EppoClient {
      * @param subjectAttributes
      * @return
      */
-    private Optional<EppoValue> getAssignment(
+    private Optional<EppoValue> getAssignmentValue(
             String subjectKey,
             String flagKey,
             SubjectAttributes subjectAttributes
@@ -93,49 +93,41 @@ public class EppoClient {
 
         // Check if in experiment sample
         Allocation allocation = configuration.getAllocation(rule.get().getAllocationKey());
-        if (!this.isInExperimentSample(subjectKey, flagKey, configuration.getSubjectShards(), allocation.getPercentExposure())) {
+        if (!this.isInExperimentSample(subjectKey, flagKey, configuration.getSubjectShards(),
+                allocation.getPercentExposure())) {
             log.info("[Eppo SDK] No assigned variation. The subject is not part of the sample population");
             return Optional.empty();
         }
 
         // Get assigned variation
-        Variation assignedVariation = this.getAssignedVariation(subjectKey, flagKey, configuration.getSubjectShards(), allocation.getVariations());
+        Variation assignedVariation = this.getAssignedVariation(subjectKey, flagKey, configuration.getSubjectShards(),
+                allocation.getVariations());
 
         try {
             this.eppoClientConfig.getAssignmentLogger()
-                .logAssignment(new AssignmentLogData(
-                        flagKey,
-                        assignedVariation.getTypedValue().stringValue(),
-                        subjectKey,
-                        subjectAttributes
-                ));
-        } catch (Exception e){
+                    .logAssignment(new AssignmentLogData(
+                            flagKey,
+                            assignedVariation.getTypedValue().stringValue(),
+                            subjectKey,
+                            subjectAttributes));
+        } catch (Exception e) {
             // Ignore Exception
         }
         return Optional.of(assignedVariation.getTypedValue());
     }
 
     /**
-     * This function is used to get assignment without passing subject attribute
-     *
-     * @param subjectKey
-     * @param experimentKey
-     * @return
-     */
-    private Optional<EppoValue> getAssignment(String subjectKey, String experimentKey) {
-        return this.getAssignment(subjectKey, experimentKey, new SubjectAttributes());
-    }
-
-    /**
      * This function will return typed assignment value
+     * 
      * @param subjectKey
      * @param experimentKey
      * @param type
      * @param subjectAttributes
      * @return
      */
-    private Optional<?> getTypedAssignment(String subjectKey, String experimentKey, EppoValueType type, SubjectAttributes subjectAttributes) {
-        Optional<EppoValue> value = this.getAssignment(subjectKey, experimentKey, subjectAttributes);
+    private Optional<?> getTypedAssignment(String subjectKey, String experimentKey, EppoValueType type,
+            SubjectAttributes subjectAttributes) {
+        Optional<EppoValue> value = this.getAssignmentValue(subjectKey, experimentKey, subjectAttributes);
         if (value.isEmpty()) {
             return Optional.empty();
         }
@@ -152,17 +144,47 @@ public class EppoClient {
 
     /**
      * This function will return string assignment value
+     * 
      * @param subjectKey
      * @param experimentKey
      * @param subjectAttributes
      * @return
      */
-    public Optional<String> getStringAssignment(String subjectKey, String experimentKey, SubjectAttributes subjectAttributes) {
-       return (Optional<String>) this.getTypedAssignment(subjectKey, experimentKey, EppoValueType.STRING, subjectAttributes);
+    public Optional<String> getAssignment(String subjectKey, String experimentKey,
+            SubjectAttributes subjectAttributes) {
+        return this.getStringAssignment(subjectKey, experimentKey, subjectAttributes);
     }
 
     /**
-     * This function will return string assignment value without passing subjectAttributes
+     * This function will return string assignment value without passing
+     * subjectAttributes
+     * 
+     * @param subjectKey
+     * @param experimentKey
+     * @return
+     */
+    public Optional<String> getAssignment(String subjectKey, String experimentKey) {
+        return this.getStringAssignment(subjectKey, experimentKey, new SubjectAttributes());
+    }
+
+    /**
+     * This function will return string assignment value
+     * 
+     * @param subjectKey
+     * @param experimentKey
+     * @param subjectAttributes
+     * @return
+     */
+    public Optional<String> getStringAssignment(String subjectKey, String experimentKey,
+            SubjectAttributes subjectAttributes) {
+        return (Optional<String>) this.getTypedAssignment(subjectKey, experimentKey, EppoValueType.STRING,
+                subjectAttributes);
+    }
+
+    /**
+     * This function will return string assignment value without passing
+     * subjectAttributes
+     * 
      * @param subjectKey
      * @param experimentKey
      * @return
@@ -173,17 +195,22 @@ public class EppoClient {
 
     /**
      * This function will return boolean assignment value
+     * 
      * @param subjectKey
      * @param experimentKey
      * @param subjectAttributes
      * @return
      */
-    public Optional<Boolean> getBooleanAssignment(String subjectKey, String experimentKey, SubjectAttributes subjectAttributes) {
-        return (Optional<Boolean>) this.getTypedAssignment(subjectKey, experimentKey, EppoValueType.BOOLEAN, subjectAttributes);
+    public Optional<Boolean> getBooleanAssignment(String subjectKey, String experimentKey,
+            SubjectAttributes subjectAttributes) {
+        return (Optional<Boolean>) this.getTypedAssignment(subjectKey, experimentKey, EppoValueType.BOOLEAN,
+                subjectAttributes);
     }
 
     /**
-     * This function will return boolean assignment value without passing subjectAttributes
+     * This function will return boolean assignment value without passing
+     * subjectAttributes
+     * 
      * @param subjectKey
      * @param experimentKey
      * @return
@@ -194,17 +221,22 @@ public class EppoClient {
 
     /**
      * This function will return double assignment value
+     * 
      * @param subjectKey
      * @param experimentKey
      * @param subjectAttributes
      * @return
      */
-    public Optional<Double> getDoubleAssignment(String subjectKey, String experimentKey, SubjectAttributes subjectAttributes) {
-        return (Optional<Double>) this.getTypedAssignment(subjectKey, experimentKey, EppoValueType.NUMBER, subjectAttributes);
+    public Optional<Double> getDoubleAssignment(String subjectKey, String experimentKey,
+            SubjectAttributes subjectAttributes) {
+        return (Optional<Double>) this.getTypedAssignment(subjectKey, experimentKey, EppoValueType.NUMBER,
+                subjectAttributes);
     }
 
     /**
-     * This function will return long assignment value without passing subjectAttributes
+     * This function will return long assignment value without passing
+     * subjectAttributes
+     * 
      * @param subjectKey
      * @param experimentKey
      * @return
@@ -215,17 +247,21 @@ public class EppoClient {
 
     /**
      * This function will return json string assignment value
+     * 
      * @param subjectKey
      * @param experimentKey
      * @param subjectAttributes
      * @return
      */
-    public Optional<String> getJSONAssignment(String subjectKey, String experimentKey, SubjectAttributes subjectAttributes) {
+    public Optional<String> getJSONAssignment(String subjectKey, String experimentKey,
+            SubjectAttributes subjectAttributes) {
         return this.getStringAssignment(subjectKey, experimentKey, subjectAttributes);
     }
 
     /**
-     * This function will return json string assignment value without passing subjectAttributes
+     * This function will return json string assignment value without passing
+     * subjectAttributes
+     * 
      * @param subjectKey
      * @param experimentKey
      * @return
@@ -247,8 +283,7 @@ public class EppoClient {
             String subjectKey,
             String experimentKey,
             int subjectShards,
-            float percentageExposure
-    ) {
+            float percentageExposure) {
         int shard = Shard.getShard("exposure-" + subjectKey + "-" + experimentKey, subjectShards);
         return shard <= percentageExposure * subjectShards;
     }
@@ -266,8 +301,7 @@ public class EppoClient {
             String subjectKey,
             String experimentKey,
             int subjectShards,
-            List<Variation> variations
-    ) {
+            List<Variation> variations) {
         int shard = Shard.getShard("assignment-" + subjectKey + "-" + experimentKey, subjectShards);
 
         Optional<Variation> variation = variations.stream()
@@ -286,14 +320,14 @@ public class EppoClient {
      */
     private EppoValue getSubjectVariationOverride(
             String subjectKey,
-            ExperimentConfiguration experimentConfiguration
-    ) {
+            ExperimentConfiguration experimentConfiguration) {
         String hexedSubjectKey = Shard.getHex(subjectKey);
         return experimentConfiguration.getTypedOverrides().getOrDefault(hexedSubjectKey, new EppoValue());
     }
 
     /***
      * This function is used to initialize the Eppo Client
+     * 
      * @param eppoClientConfig
      * @return
      */
@@ -309,8 +343,7 @@ public class EppoClient {
                 appDetails.getName(),
                 appDetails.getVersion(),
                 eppoClientConfig.getBaseURL(),
-                Constants.REQUEST_TIMEOUT_MILLIS
-        );
+                Constants.REQUEST_TIMEOUT_MILLIS);
 
         // Create wrapper for fetching experiment configuration
         ExperimentConfigurationRequestor expConfigRequestor = new ExperimentConfigurationRequestor(eppoHttpClient);
@@ -321,17 +354,17 @@ public class EppoClient {
         // Create ExperimentConfiguration Store
         ConfigurationStore configurationStore = ConfigurationStore.init(
                 experimentConfigurationCache,
-                expConfigRequestor
-        );
+                expConfigRequestor);
 
-        // Stop the polling process of any previously initialized client 
+        // Stop the polling process of any previously initialized client
         if (EppoClient.instance != null) {
             EppoClient.instance.poller.cancel();
         }
 
         // Start polling for experiment configurations
         Timer poller = new Timer(true);
-        FetchConfigurationsTask fetchConfigurationsTask = new FetchConfigurationsTask(configurationStore, poller, Constants.TIME_INTERVAL_IN_MILLIS, Constants.JITTER_INTERVAL_IN_MILLIS);
+        FetchConfigurationsTask fetchConfigurationsTask = new FetchConfigurationsTask(configurationStore, poller,
+                Constants.TIME_INTERVAL_IN_MILLIS, Constants.JITTER_INTERVAL_IN_MILLIS);
         fetchConfigurationsTask.run();
 
         // Create Eppo Client
