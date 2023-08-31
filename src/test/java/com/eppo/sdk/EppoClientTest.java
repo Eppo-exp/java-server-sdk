@@ -112,8 +112,6 @@ public class EppoClientTest {
         throw new RuntimeException("Invalid assignment value type");
       }
 
-      System.out.println(value.value() + '|' + node.asText());
-
       return value;
     }
   }
