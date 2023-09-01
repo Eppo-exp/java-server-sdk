@@ -7,9 +7,7 @@ import java.util.Date;
  */
 public class AssignmentLogData {
     public String experiment;
-
     public String featureFlag;
-
     public String allocation;
     public String variation;
     public Date timestamp;
