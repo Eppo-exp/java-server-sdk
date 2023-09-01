@@ -29,7 +29,7 @@ build: test-data
 	mvn --batch-mode --update-snapshots package
 
 ## test-data
-testDataDir := src/test/resources/
+testDataDir := src/test/resources
 tempDir := ${testDataDir}/temp
 gitDataDir := ${tempDir}/sdk-test-data
 branchName := main
