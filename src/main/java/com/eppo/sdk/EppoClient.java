@@ -17,6 +17,7 @@ import com.eppo.sdk.helpers.CacheHelper;
 import com.eppo.sdk.helpers.ConfigurationStore;
 import com.eppo.sdk.helpers.EppoHttpClient;
 import com.eppo.sdk.helpers.ExperimentConfigurationRequestor;
+import com.eppo.sdk.helpers.ExperimentHelper;
 import com.eppo.sdk.helpers.FetchConfigurationsTask;
 import com.eppo.sdk.helpers.InputValidator;
 import com.eppo.sdk.helpers.RuleValidator;
@@ -92,7 +93,8 @@ public class EppoClient {
         }
 
         // Check if in experiment sample
-        Allocation allocation = configuration.getAllocation(rule.get().getAllocationKey());
+        String allocationKey = rule.get().getAllocationKey();
+        Allocation allocation = configuration.getAllocation(allocationKey);
         if (!this.isInExperimentSample(subjectKey, flagKey, configuration.getSubjectShards(),
                 allocation.getPercentExposure())) {
             log.info("[Eppo SDK] No assigned variation. The subject is not part of the sample population");
@@ -104,9 +106,12 @@ public class EppoClient {
                 allocation.getVariations());
 
         try {
+            String experimentKey = ExperimentHelper.generateKey(flagKey, allocationKey);
             this.eppoClientConfig.getAssignmentLogger()
                     .logAssignment(new AssignmentLogData(
+                            experimentKey,
                             flagKey,
+                            allocationKey,
                             assignedVariation.getTypedValue().stringValue(),
                             subjectKey,
                             subjectAttributes));
