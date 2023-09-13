@@ -278,7 +278,7 @@ public class EppoClient {
     }
 
     /**
-     * This function will return json assignment value
+     * This function will return JSON assignment value
      * 
      * @param subjectKey
      * @param experimentKey
@@ -292,7 +292,7 @@ public class EppoClient {
     }
 
     /**
-     * This function will return json string assignment value without passing
+     * This function will return JSON assignment value without passing
      * subjectAttributes
      * 
      * @param subjectKey
