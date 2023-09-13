@@ -22,6 +22,7 @@ import com.eppo.sdk.helpers.FetchConfigurationsTask;
 import com.eppo.sdk.helpers.InputValidator;
 import com.eppo.sdk.helpers.RuleValidator;
 import com.eppo.sdk.helpers.Shard;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -60,8 +61,7 @@ public class EppoClient {
     private Optional<EppoValue> getAssignmentValue(
             String subjectKey,
             String flagKey,
-            SubjectAttributes subjectAttributes
-    ) {
+            SubjectAttributes subjectAttributes) {
         // Validate Input Values
         InputValidator.validateNotBlank(subjectKey, "Invalid argument: subjectKey cannot be blank");
         InputValidator.validateNotBlank(flagKey, "Invalid argument: flagKey cannot be blank");
@@ -142,6 +142,8 @@ public class EppoClient {
                 return Optional.of(value.get().boolValue());
             case NUMBER:
                 return Optional.of(value.get().doubleValue());
+            case JSON_NODE:
+                return Optional.of(value.get().jsonNodeValue());
             default:
                 return Optional.of(value.get().stringValue());
         }
@@ -258,7 +260,7 @@ public class EppoClient {
      * @param subjectAttributes
      * @return
      */
-    public Optional<String> getJSONAssignment(String subjectKey, String experimentKey,
+    public Optional<String> getJSONStringAssignment(String subjectKey, String experimentKey,
             SubjectAttributes subjectAttributes) {
         return this.getStringAssignment(subjectKey, experimentKey, subjectAttributes);
     }
@@ -271,8 +273,34 @@ public class EppoClient {
      * @param experimentKey
      * @return
      */
-    public Optional<String> getJSONAssignment(String subjectKey, String experimentKey) {
-        return this.getJSONAssignment(subjectKey, experimentKey, new SubjectAttributes());
+    public Optional<String> getJSONStringAssignment(String subjectKey, String experimentKey) {
+        return this.getJSONStringAssignment(subjectKey, experimentKey, new SubjectAttributes());
+    }
+
+    /**
+     * This function will return JSON assignment value
+     * 
+     * @param subjectKey
+     * @param experimentKey
+     * @param subjectAttributes
+     * @return
+     */
+    public Optional<JsonNode> getParsedJSONAssignment(String subjectKey, String experimentKey,
+            SubjectAttributes subjectAttributes) {
+        return (Optional<JsonNode>) this.getTypedAssignment(subjectKey, experimentKey, EppoValueType.JSON_NODE,
+                subjectAttributes);
+    }
+
+    /**
+     * This function will return JSON assignment value without passing
+     * subjectAttributes
+     * 
+     * @param subjectKey
+     * @param experimentKey
+     * @return
+     */
+    public Optional<JsonNode> getParsedJSONAssignment(String subjectKey, String experimentKey) {
+        return this.getParsedJSONAssignment(subjectKey, experimentKey, new SubjectAttributes());
     }
 
     /**

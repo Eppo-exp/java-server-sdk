@@ -11,7 +11,6 @@ import java.util.stream.Stream;
 
 import com.eppo.sdk.dto.*;
 import com.eppo.sdk.helpers.Converter;
-import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -30,7 +29,6 @@ import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 
 import lombok.Data;
-
 
 @ExtendWith(WireMockExtension.class)
 public class EppoClientTest {
@@ -120,15 +118,15 @@ public class EppoClientTest {
   void init() {
     setupMockRacServer();
     EppoClientConfig config = EppoClientConfig.builder()
-      .apiKey("mock-api-key")
-      .baseURL("http://localhost:4001")
-      .assignmentLogger(new IAssignmentLogger() {
-        @Override
-        public void logAssignment(AssignmentLogData logData) {
-          // Auto-generated method stub
-        }
-      })
-      .build();
+        .apiKey("mock-api-key")
+        .baseURL("http://localhost:4001")
+        .assignmentLogger(new IAssignmentLogger() {
+          @Override
+          public void logAssignment(AssignmentLogData logData) {
+            // Auto-generated method stub
+          }
+        })
+        .build();
     EppoClient.init(config);
   }
 
@@ -136,7 +134,8 @@ public class EppoClientTest {
     this.mockServer = new WireMockServer(TEST_PORT);
     this.mockServer.start();
     String racResponseJson = getMockRandomizedAssignmentResponse();
-    this.mockServer.stubFor(WireMock.get(WireMock.urlMatching(".*randomized_assignment.*")).willReturn(WireMock.okJson(racResponseJson)));
+    this.mockServer.stubFor(
+        WireMock.get(WireMock.urlMatching(".*randomized_assignment.*")).willReturn(WireMock.okJson(racResponseJson)));
   }
 
   @AfterEach
@@ -159,8 +158,14 @@ public class EppoClientTest {
         assertEquals(expectedBooleanAssignments, actualBooleanAssignments);
         break;
       case JSON:
-        List<String> actualJSONAssignments = this.getJSONAssignments(testCase);
-        assertEquals(testCase.expectedAssignments, actualJSONAssignments);
+        List<JsonNode> actualJSONAssignments = this.getJSONAssignments(testCase);
+        for (JsonNode node : actualJSONAssignments) {
+          assertEquals(JsonNodeType.OBJECT, node.getNodeType());
+        }
+
+        assertEquals(testCase.expectedAssignments, actualJSONAssignments.stream()
+            .map(node -> node.toString())
+            .collect(Collectors.toList()));
         break;
       default:
         List<String> actualStringAssignments = this.getStringAssignments(testCase);
@@ -173,48 +178,49 @@ public class EppoClientTest {
     EppoClient client = EppoClient.getInstance();
     if (testCase.subjectsWithAttributes != null) {
       return testCase.subjectsWithAttributes.stream()
+          .map(subject -> {
+            try {
+              switch (valueType) {
+                case NUMERIC:
+                  return client.getDoubleAssignment(subject.subjectKey, testCase.experiment, subject.subjectAttributes)
+                      .orElse(null);
+                case BOOLEAN:
+                  return client.getBooleanAssignment(subject.subjectKey, testCase.experiment, subject.subjectAttributes)
+                      .orElse(null);
+                case JSON:
+                  return client
+                      .getParsedJSONAssignment(subject.subjectKey, testCase.experiment, subject.subjectAttributes)
+                      .orElse(null);
+                default:
+                  return client.getStringAssignment(subject.subjectKey, testCase.experiment, subject.subjectAttributes)
+                      .orElse(null);
+              }
+            } catch (Exception e) {
+              throw new RuntimeException(e);
+            }
+          }).collect(Collectors.toList());
+    }
+    return testCase.subjects.stream()
         .map(subject -> {
           try {
             switch (valueType) {
               case NUMERIC:
-                return client.getDoubleAssignment(subject.subjectKey, testCase.experiment, subject.subjectAttributes)
-                        .orElse(null);
+                return client.getDoubleAssignment(subject, testCase.experiment)
+                    .orElse(null);
               case BOOLEAN:
-                return client.getBooleanAssignment(subject.subjectKey, testCase.experiment, subject.subjectAttributes)
-                        .orElse(null);
+                return client.getBooleanAssignment(subject, testCase.experiment)
+                    .orElse(null);
               case JSON:
-                return client.getJSONAssignment(subject.subjectKey, testCase.experiment, subject.subjectAttributes)
-                        .orElse(null);
+                return client.getParsedJSONAssignment(subject, testCase.experiment)
+                    .orElse(null);
               default:
-                return client.getStringAssignment(subject.subjectKey, testCase.experiment, subject.subjectAttributes)
-                        .orElse(null);
+                return client.getStringAssignment(subject, testCase.experiment)
+                    .orElse(null);
             }
           } catch (Exception e) {
             throw new RuntimeException(e);
           }
         }).collect(Collectors.toList());
-    }
-    return testCase.subjects.stream()
-      .map(subject -> {
-        try {
-          switch (valueType) {
-            case NUMERIC:
-              return client.getDoubleAssignment(subject, testCase.experiment)
-                      .orElse(null);
-            case BOOLEAN:
-              return client.getBooleanAssignment(subject, testCase.experiment)
-                      .orElse(null);
-            case JSON:
-              return client.getJSONAssignment(subject, testCase.experiment)
-                      .orElse(null);
-            default:
-              return client.getStringAssignment(subject, testCase.experiment)
-                      .orElse(null);
-          }
-        } catch (Exception e) {
-          throw new RuntimeException(e);
-        }
-      }).collect(Collectors.toList());
   }
 
   private List<String> getStringAssignments(AssignmentTestCase testCase) {
@@ -229,8 +235,8 @@ public class EppoClientTest {
     return (List<Boolean>) this.getAssignments(testCase, AssignmentValueType.BOOLEAN);
   }
 
-  private List<String> getJSONAssignments(AssignmentTestCase testCase) {
-    return (List<String>) this.getAssignments(testCase, AssignmentValueType.JSON);
+  private List<JsonNode> getJSONAssignments(AssignmentTestCase testCase) {
+    return (List<JsonNode>) this.getAssignments(testCase, AssignmentValueType.JSON);
   }
 
   private static Stream<Arguments> getAssignmentTestData() throws IOException {
@@ -248,7 +254,7 @@ public class EppoClientTest {
   private static String getMockRandomizedAssignmentResponse() {
     File mockRacResponse = new File("src/test/resources/rac-experiments-v3.json");
     try {
-    return FileUtils.readFileToString(mockRacResponse, "UTF8");
+      return FileUtils.readFileToString(mockRacResponse, "UTF8");
     } catch (Exception e) {
       throw new RuntimeException("Error reading mock RAC data", e);
     }
