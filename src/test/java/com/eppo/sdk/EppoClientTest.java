@@ -1,11 +1,11 @@
 package com.eppo.sdk;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -19,6 +19,7 @@ import com.fasterxml.jackson.databind.node.JsonNodeType;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -29,6 +30,8 @@ import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 
 import lombok.Data;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(WireMockExtension.class)
 public class EppoClientTest {
@@ -116,7 +119,7 @@ public class EppoClientTest {
 
   @BeforeEach
   void init() {
-    setupMockRacServer();
+    setupMockRacServer("src/test/resources/rac-experiments-v3.json");
     EppoClientConfig config = EppoClientConfig.builder()
         .apiKey("mock-api-key")
         .baseURL("http://localhost:4001")
@@ -130,10 +133,10 @@ public class EppoClientTest {
     EppoClient.init(config);
   }
 
-  private void setupMockRacServer() {
+  private void setupMockRacServer(String jsonToReturnFilePath) {
     this.mockServer = new WireMockServer(TEST_PORT);
     this.mockServer.start();
-    String racResponseJson = getMockRandomizedAssignmentResponse();
+    String racResponseJson = getMockRandomizedAssignmentResponse(jsonToReturnFilePath);
     this.mockServer.stubFor(
         WireMock.get(WireMock.urlMatching(".*randomized_assignment.*")).willReturn(WireMock.okJson(racResponseJson)));
   }
@@ -251,12 +254,48 @@ public class EppoClientTest {
     return arguments.stream();
   }
 
-  private static String getMockRandomizedAssignmentResponse() {
-    File mockRacResponse = new File("src/test/resources/rac-experiments-v3.json");
+  private static String getMockRandomizedAssignmentResponse(String jsonToReturnFilePath) {
+    File mockRacResponse = new File(jsonToReturnFilePath);
     try {
       return FileUtils.readFileToString(mockRacResponse, "UTF8");
     } catch (Exception e) {
       throw new RuntimeException("Error reading mock RAC data", e);
     }
+  }
+
+  @Test
+  public void testBandit() {
+    // For now, use our special bandits RAC until we fold it into the shared test case suite
+    String racResponseJson = getMockRandomizedAssignmentResponse("src/test/resources/rac-experiments-bandits-beta.json");
+    this.mockServer.stubFor(
+      WireMock.get(WireMock.urlMatching(".*randomized_assignment.*")).willReturn(WireMock.okJson(racResponseJson))
+    );
+
+    // Re-initialize client with our bandit RAC
+    EppoClientConfig config = EppoClientConfig.builder()
+      .apiKey("mock-api-key")
+      .baseURL("http://localhost:4001")
+      .assignmentLogger(new IAssignmentLogger() {
+        @Override
+        public void logAssignment(AssignmentLogData logData) {
+          /* no-op */
+          // TODO: spy on logged assignment
+        }
+      })
+      .build();
+    EppoClient.init(config);
+
+    Set<String> banditActions = Set.of("option1", "option2", "option3");
+
+    // Attempt to get a bandit assignment
+    Optional<String> stringAssignment = EppoClient.getInstance().getStringAssignment(
+      "subject1",
+      "test-bandit-1",
+      new EppoAttributes(),
+      banditActions
+    );
+
+    assertFalse(stringAssignment.isEmpty());
+    assertTrue(banditActions.contains(stringAssignment.get()));
   }
 }

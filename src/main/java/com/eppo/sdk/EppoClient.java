@@ -28,10 +28,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.ehcache.Cache;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Timer;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class EppoClient {
@@ -207,7 +205,7 @@ public class EppoClient {
      */
     public Optional<String> getStringAssignment(String subjectKey, String flagKey,
             EppoAttributes subjectAttributes) {
-        return this.getStringAssignment(subjectKey, flagKey, subjectAttributes, null);
+        return this.getStringAssignment(subjectKey, flagKey, subjectAttributes, Set.of());
     }
 
     /**
@@ -218,7 +216,34 @@ public class EppoClient {
      * @param subjectAttributes optional attributes associated with the subject, for example name, email,
      *                          account age, etc. The subject attributes are used for evaluating any targeting
      *                          rules as well as weighting assignment choices for bandits.
-     * @param assignmentOptions used by bandits to know the assignment options (i.e., actions) available.
+     * @param assignmentOptions used by bandits to know the assignment options (i.e., actions) available. Options are
+     *                          given without attributes, as a set of option names.
+     * @return the variation string assigned to the subject, or null if an unrecoverable error was encountered.
+     */
+    public Optional<String> getStringAssignment(
+            String subjectKey,
+            String flagKey,
+            EppoAttributes subjectAttributes,
+            Set<String> assignmentOptions
+    ) {
+        Map<String, EppoAttributes> assignmentOptionsWithAttributes = assignmentOptions.stream()
+                .collect(Collectors.toMap(
+                        key -> key,
+                        value -> new EppoAttributes()
+                ));
+        return this.getStringAssignment(subjectKey, flagKey, subjectAttributes, assignmentOptionsWithAttributes);
+    }
+
+    /**
+     * Maps a subject to a variation for a given flag/bandit/experiment.
+     *
+     * @param subjectKey identifier of the experiment subject, for example a user ID.
+     * @param flagKey flagKey feature flag, bandit, or experiment identifier
+     * @param subjectAttributes optional attributes associated with the subject, for example name, email,
+     *                          account age, etc. The subject attributes are used for evaluating any targeting
+     *                          rules as well as weighting assignment choices for bandits.
+     * @param assignmentOptions used by bandits to know the assignment options (i.e., actions) available. Options are
+     *                          given as a mapping of the option name to the attributes associated with that option.
      * @return the variation string assigned to the subject, or null if an unrecoverable error was encountered.
      */
     public Optional<String> getStringAssignment(

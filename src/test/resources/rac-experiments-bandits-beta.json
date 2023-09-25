@@ -1,0 +1,11 @@
+{
+  "flags": {},
+  "bandits": {
+    "test-bandit-1": {
+      "enabled": true
+    },
+    "test-bandit-2": {
+      "enabled": false
+    }
+  }
+}
