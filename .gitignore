@@ -1,6 +1,35 @@
+# Shared test files
+src/test/resources/
+
+### IntelliJ IDEA ###
+*.iml
 .idea/
-target/
 out/
-src/test/resources/assignment-v2
-src/test/resources/rac-experiments-v*.json
+target/
+!**/src/main/**/out/
+!**/src/test/**/out/
+
+### Eclipse ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+bin/
+!**/src/main/**/bin/
+!**/src/test/**/bin/
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+### VS Code ###
+.vscode/
+
+### Mac OS ###
 .DS_Store
