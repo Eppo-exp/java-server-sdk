@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>cloud.eppo</groupId>
-    <artifactId>eppo-server-sdk</artifactId>
+    <artifactId>eppo-server-sdk-bandit-beta</artifactId>
     <version>2.1.0</version>
 
     <name>${project.groupId}:${project.artifactId}</name>
