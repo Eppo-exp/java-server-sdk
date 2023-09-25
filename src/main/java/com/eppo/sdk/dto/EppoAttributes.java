@@ -5,4 +5,4 @@ import java.util.HashMap;
 /**
  * Subject Attributes Class
  */
-public class SubjectAttributes extends HashMap<String, EppoValue> {}
+public class EppoAttributes extends HashMap<String, EppoValue> {}

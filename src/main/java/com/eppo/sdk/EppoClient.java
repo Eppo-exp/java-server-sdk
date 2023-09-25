@@ -8,7 +8,7 @@ import com.eppo.sdk.dto.EppoValue;
 import com.eppo.sdk.dto.EppoValueType;
 import com.eppo.sdk.dto.ExperimentConfiguration;
 import com.eppo.sdk.dto.Rule;
-import com.eppo.sdk.dto.SubjectAttributes;
+import com.eppo.sdk.dto.EppoAttributes;
 import com.eppo.sdk.dto.Variation;
 import com.eppo.sdk.exception.EppoClientIsNotInitializedException;
 import com.eppo.sdk.exception.InvalidInputException;
@@ -29,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.ehcache.Cache;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Timer;
 
@@ -61,7 +62,9 @@ public class EppoClient {
     private Optional<EppoValue> getAssignmentValue(
             String subjectKey,
             String flagKey,
-            SubjectAttributes subjectAttributes) {
+            EppoAttributes subjectAttributes,
+            Map<String, EppoAttributes> assignmentOptions
+    ) {
         // Validate Input Values
         InputValidator.validateNotBlank(subjectKey, "Invalid argument: subjectKey cannot be blank");
         InputValidator.validateNotBlank(flagKey, "Invalid argument: flagKey cannot be blank");
@@ -84,6 +87,8 @@ public class EppoClient {
             log.info("[Eppo SDK] No assigned variation because the experiment or feature flag {} is disabled", flagKey);
             return Optional.empty();
         }
+
+        // TODO: handle bandit assignments
 
         // Find matched rule
         Optional<Rule> rule = RuleValidator.findMatchingRule(subjectAttributes, configuration.getRules());
@@ -130,9 +135,14 @@ public class EppoClient {
      * @param subjectAttributes
      * @return
      */
-    private Optional<?> getTypedAssignment(String subjectKey, String experimentKey, EppoValueType type,
-            SubjectAttributes subjectAttributes) {
-        Optional<EppoValue> value = this.getAssignmentValue(subjectKey, experimentKey, subjectAttributes);
+    private Optional<?> getTypedAssignment(
+            EppoValueType type,
+            String subjectKey,
+            String experimentKey,
+            EppoAttributes subjectAttributes,
+            Map<String, EppoAttributes> assignmentOptions
+    ) {
+        Optional<EppoValue> value = this.getAssignmentValue(subjectKey, experimentKey, subjectAttributes, assignmentOptions);
         if (value.isEmpty()) {
             return Optional.empty();
         }
@@ -158,7 +168,7 @@ public class EppoClient {
      * @return
      */
     public Optional<String> getAssignment(String subjectKey, String experimentKey,
-            SubjectAttributes subjectAttributes) {
+            EppoAttributes subjectAttributes) {
         return this.getStringAssignment(subjectKey, experimentKey, subjectAttributes);
     }
 
@@ -171,33 +181,55 @@ public class EppoClient {
      * @return
      */
     public Optional<String> getAssignment(String subjectKey, String experimentKey) {
-        return this.getStringAssignment(subjectKey, experimentKey, new SubjectAttributes());
+        return this.getStringAssignment(subjectKey, experimentKey, new EppoAttributes());
     }
 
     /**
-     * This function will return string assignment value
-     * 
-     * @param subjectKey
-     * @param experimentKey
-     * @param subjectAttributes
-     * @return
+     * Maps a subject to a variation for a given flag/experiment.
+     *
+     * @param subjectKey identifier of the experiment subject, for example a user ID.
+     * @param flagKey flagKey feature flag, bandit, or experiment identifier
+     * @return the variation string assigned to the subject, or null if an unrecoverable error was encountered.
      */
-    public Optional<String> getStringAssignment(String subjectKey, String experimentKey,
-            SubjectAttributes subjectAttributes) {
-        return (Optional<String>) this.getTypedAssignment(subjectKey, experimentKey, EppoValueType.STRING,
-                subjectAttributes);
+    public Optional<String> getStringAssignment(String subjectKey, String flagKey) {
+        return this.getStringAssignment(subjectKey, flagKey, new EppoAttributes());
     }
 
     /**
-     * This function will return string assignment value without passing
-     * subjectAttributes
-     * 
-     * @param subjectKey
-     * @param experimentKey
-     * @return
+     * Maps a subject to a variation for a given flag/experiment.
+     *
+     * @param subjectKey identifier of the experiment subject, for example a user ID.
+     * @param flagKey flagKey feature flag, bandit, or experiment identifier
+     * @param subjectAttributes optional attributes associated with the subject, for example name, email,
+     *                          account age, etc. The subject attributes are used for evaluating any targeting
+     *                          rules as well as weighting assignment choices for bandits.
+     * @return the variation string assigned to the subject, or null if an unrecoverable error was encountered.
      */
-    public Optional<String> getStringAssignment(String subjectKey, String experimentKey) {
-        return this.getStringAssignment(subjectKey, experimentKey, new SubjectAttributes());
+    public Optional<String> getStringAssignment(String subjectKey, String flagKey,
+            EppoAttributes subjectAttributes) {
+        return this.getStringAssignment(subjectKey, flagKey, subjectAttributes, null);
+    }
+
+    /**
+     * Maps a subject to a variation for a given flag/bandit/experiment.
+     *
+     * @param subjectKey identifier of the experiment subject, for example a user ID.
+     * @param flagKey flagKey feature flag, bandit, or experiment identifier
+     * @param subjectAttributes optional attributes associated with the subject, for example name, email,
+     *                          account age, etc. The subject attributes are used for evaluating any targeting
+     *                          rules as well as weighting assignment choices for bandits.
+     * @param assignmentOptions used by bandits to know the assignment options (i.e., actions) available.
+     * @return the variation string assigned to the subject, or null if an unrecoverable error was encountered.
+     */
+    public Optional<String> getStringAssignment(
+            String subjectKey,
+            String flagKey,
+            EppoAttributes subjectAttributes,
+            Map<String, EppoAttributes> assignmentOptions
+    ) {
+        @SuppressWarnings("unchecked")
+        Optional<String> typedAssignment = (Optional<String>) this.getTypedAssignment(EppoValueType.STRING, subjectKey, flagKey, subjectAttributes, assignmentOptions);
+        return typedAssignment;
     }
 
     /**
@@ -209,9 +241,8 @@ public class EppoClient {
      * @return
      */
     public Optional<Boolean> getBooleanAssignment(String subjectKey, String experimentKey,
-            SubjectAttributes subjectAttributes) {
-        return (Optional<Boolean>) this.getTypedAssignment(subjectKey, experimentKey, EppoValueType.BOOLEAN,
-                subjectAttributes);
+            EppoAttributes subjectAttributes) {
+        return (Optional<Boolean>) this.getTypedAssignment(EppoValueType.BOOLEAN, subjectKey, experimentKey, subjectAttributes, null);
     }
 
     /**
@@ -223,7 +254,7 @@ public class EppoClient {
      * @return
      */
     public Optional<Boolean> getBooleanAssignment(String subjectKey, String experimentKey) {
-        return this.getBooleanAssignment(subjectKey, experimentKey, new SubjectAttributes());
+        return this.getBooleanAssignment(subjectKey, experimentKey, new EppoAttributes());
     }
 
     /**
@@ -235,9 +266,8 @@ public class EppoClient {
      * @return
      */
     public Optional<Double> getDoubleAssignment(String subjectKey, String experimentKey,
-            SubjectAttributes subjectAttributes) {
-        return (Optional<Double>) this.getTypedAssignment(subjectKey, experimentKey, EppoValueType.NUMBER,
-                subjectAttributes);
+            EppoAttributes subjectAttributes) {
+        return (Optional<Double>) this.getTypedAssignment(EppoValueType.NUMBER, subjectKey, experimentKey, subjectAttributes, null);
     }
 
     /**
@@ -249,7 +279,7 @@ public class EppoClient {
      * @return
      */
     public Optional<Double> getDoubleAssignment(String subjectKey, String experimentKey) {
-        return this.getDoubleAssignment(subjectKey, experimentKey, new SubjectAttributes());
+        return this.getDoubleAssignment(subjectKey, experimentKey, new EppoAttributes());
     }
 
     /**
@@ -261,7 +291,7 @@ public class EppoClient {
      * @return
      */
     public Optional<String> getJSONStringAssignment(String subjectKey, String experimentKey,
-            SubjectAttributes subjectAttributes) {
+            EppoAttributes subjectAttributes) {
         return this.getStringAssignment(subjectKey, experimentKey, subjectAttributes);
     }
 
@@ -274,7 +304,7 @@ public class EppoClient {
      * @return
      */
     public Optional<String> getJSONStringAssignment(String subjectKey, String experimentKey) {
-        return this.getJSONStringAssignment(subjectKey, experimentKey, new SubjectAttributes());
+        return this.getJSONStringAssignment(subjectKey, experimentKey, new EppoAttributes());
     }
 
     /**
@@ -286,9 +316,9 @@ public class EppoClient {
      * @return
      */
     public Optional<JsonNode> getParsedJSONAssignment(String subjectKey, String experimentKey,
-            SubjectAttributes subjectAttributes) {
-        return (Optional<JsonNode>) this.getTypedAssignment(subjectKey, experimentKey, EppoValueType.JSON_NODE,
-                subjectAttributes);
+            EppoAttributes subjectAttributes) {
+        return (Optional<JsonNode>) this.getTypedAssignment(EppoValueType.JSON_NODE, subjectKey, experimentKey,
+                subjectAttributes, null);
     }
 
     /**
@@ -300,7 +330,7 @@ public class EppoClient {
      * @return
      */
     public Optional<JsonNode> getParsedJSONAssignment(String subjectKey, String experimentKey) {
-        return this.getParsedJSONAssignment(subjectKey, experimentKey, new SubjectAttributes());
+        return this.getParsedJSONAssignment(subjectKey, experimentKey, new EppoAttributes());
     }
 
     /**

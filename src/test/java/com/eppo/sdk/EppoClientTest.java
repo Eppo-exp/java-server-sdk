@@ -45,7 +45,7 @@ public class EppoClientTest {
   @Data
   static class SubjectWithAttributes {
     String subjectKey;
-    SubjectAttributes subjectAttributes;
+    EppoAttributes subjectAttributes;
   }
 
   @Data
