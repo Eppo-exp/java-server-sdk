@@ -1,11 +1,14 @@
 {
-  "flags": {},
-  "bandits": {
-    "test-bandit-1": {
-      "enabled": true
+  "flags": {
+    "test_bandit_1": {
+      "bandit": true,
+      "enabled": true,
+      "subjectShards": 10000
     },
-    "test-bandit-2": {
-      "enabled": false
+    "test_bandit_2": {
+      "bandit": true,
+      "enabled": false,
+      "subjectShards": 10000
     }
   }
 }

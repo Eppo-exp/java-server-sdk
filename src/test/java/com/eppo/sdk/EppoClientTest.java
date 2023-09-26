@@ -290,7 +290,7 @@ public class EppoClientTest {
     // Attempt to get a bandit assignment
     Optional<String> stringAssignment = EppoClient.getInstance().getStringAssignment(
       "subject1",
-      "test-bandit-1",
+      "test_bandit_1",
       new EppoAttributes(),
       banditActions
     );

@@ -22,6 +22,7 @@ import com.eppo.sdk.helpers.FetchConfigurationsTask;
 import com.eppo.sdk.helpers.InputValidator;
 import com.eppo.sdk.helpers.RuleValidator;
 import com.eppo.sdk.helpers.Shard;
+import com.eppo.sdk.helpers.bandit.BanditEvaluator;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import lombok.extern.slf4j.Slf4j;
@@ -86,27 +87,40 @@ public class EppoClient {
             return Optional.empty();
         }
 
-        // TODO: handle bandit assignments
+        String allocationKey;
+        List<Variation> variations;
+        if (configuration.isBandit()) {
+            allocationKey = "bandit";
+            variations = BanditEvaluator.evaluateBanditVariations(
+              flagKey,
+              "random",
+              assignmentOptions,
+              subjectKey,
+              subjectAttributes,
+              configuration.getSubjectShards()
+            );
+        } else {
+            // Find matched rule
+            Optional<Rule> rule = RuleValidator.findMatchingRule(subjectAttributes, configuration.getRules());
+            if (rule.isEmpty()) {
+                log.info("[Eppo SDK] No assigned variation. The subject attributes did not match any targeting rules");
+                return Optional.empty();
+            }
 
-        // Find matched rule
-        Optional<Rule> rule = RuleValidator.findMatchingRule(subjectAttributes, configuration.getRules());
-        if (rule.isEmpty()) {
-            log.info("[Eppo SDK] No assigned variation. The subject attributes did not match any targeting rules");
-            return Optional.empty();
-        }
+            // Check if in experiment sample
+            allocationKey = rule.get().getAllocationKey();
+            Allocation allocation = configuration.getAllocation(allocationKey);
+            if (!this.isInExperimentSample(subjectKey, flagKey, configuration.getSubjectShards(),
+              allocation.getPercentExposure())) {
+                log.info("[Eppo SDK] No assigned variation. The subject is not part of the sample population");
+                return Optional.empty();
+            }
 
-        // Check if in experiment sample
-        String allocationKey = rule.get().getAllocationKey();
-        Allocation allocation = configuration.getAllocation(allocationKey);
-        if (!this.isInExperimentSample(subjectKey, flagKey, configuration.getSubjectShards(),
-                allocation.getPercentExposure())) {
-            log.info("[Eppo SDK] No assigned variation. The subject is not part of the sample population");
-            return Optional.empty();
+            variations = allocation.getVariations();
         }
 
         // Get assigned variation
-        Variation assignedVariation = this.getAssignedVariation(subjectKey, flagKey, configuration.getSubjectShards(),
-                allocation.getVariations());
+        Variation assignedVariation = this.getAssignedVariation(subjectKey, flagKey, configuration.getSubjectShards(), variations);
 
         try {
             String experimentKey = ExperimentHelper.generateKey(flagKey, allocationKey);
