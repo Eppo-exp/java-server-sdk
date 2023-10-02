@@ -1,7 +1,7 @@
 package com.eppo.sdk.helpers;
 
 import com.eppo.sdk.dto.EppoValue;
-import com.eppo.sdk.dto.SubjectAttributes;
+import com.eppo.sdk.dto.EppoAttributes;
 import com.eppo.sdk.exception.InvalidSubjectAttribute;
 import com.eppo.sdk.dto.Condition;
 import com.eppo.sdk.dto.Rule;
@@ -74,7 +74,7 @@ public class RuleValidator {
      * @return
      */
     public static Optional<Rule> findMatchingRule(
-            SubjectAttributes subjectAttributes,
+            EppoAttributes subjectAttributes,
             List<Rule> rules
     ) {
         for (Rule rule : rules) {
@@ -94,7 +94,7 @@ public class RuleValidator {
      * @throws InvalidSubjectAttribute
      */
     private static boolean matchesRule(
-            SubjectAttributes subjectAttributes,
+            EppoAttributes subjectAttributes,
             Rule rule
     ) throws InvalidSubjectAttribute {
         List<Boolean> conditionEvaluations = RuleValidator.evaluateRuleConditions(subjectAttributes, rule.getConditions());
@@ -110,7 +110,7 @@ public class RuleValidator {
      * @throws InvalidSubjectAttribute
      */
     private static boolean evaluateCondition(
-            SubjectAttributes subjectAttributes,
+            EppoAttributes subjectAttributes,
             Condition condition
     ) throws InvalidSubjectAttribute {
         if (subjectAttributes.containsKey(condition.attribute)) {
@@ -150,7 +150,7 @@ public class RuleValidator {
      * @throws InvalidSubjectAttribute
      */
     private static List<Boolean> evaluateRuleConditions(
-            SubjectAttributes subjectAttributes,
+            EppoAttributes subjectAttributes,
             List<Condition> conditions
     ) throws InvalidSubjectAttribute {
         return conditions.stream()
