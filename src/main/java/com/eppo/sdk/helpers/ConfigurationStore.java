@@ -20,8 +20,7 @@ public class ConfigurationStore {
 
     public ConfigurationStore(
             Cache<String, ExperimentConfiguration> experimentConfigurationCache,
-            ExperimentConfigurationRequestor experimentConfigurationRequestor
-    ) {
+            ExperimentConfigurationRequestor experimentConfigurationRequestor) {
         this.experimentConfigurationRequestor = experimentConfigurationRequestor;
         this.experimentConfigurationCache = experimentConfigurationCache;
     }
@@ -35,13 +34,11 @@ public class ConfigurationStore {
      */
     public final static ConfigurationStore init(
             Cache<String, ExperimentConfiguration> experimentConfigurationCache,
-            ExperimentConfigurationRequestor experimentConfigurationRequestor
-    ) {
+            ExperimentConfigurationRequestor experimentConfigurationRequestor) {
         if (ConfigurationStore.instance == null) {
             ConfigurationStore.instance = new ConfigurationStore(
                     experimentConfigurationCache,
-                    experimentConfigurationRequestor
-            );
+                    experimentConfigurationRequestor);
         }
         instance.experimentConfigurationCache.clear();
         return ConfigurationStore.instance;
@@ -71,12 +68,10 @@ public class ConfigurationStore {
      *
      * @param key
      * @return
-     * @throws NetworkException
-     * @throws NetworkRequestNotAllowed
      * @throws ExperimentConfigurationNotFound
      */
     public ExperimentConfiguration getExperimentConfiguration(String key)
-            throws NetworkException, NetworkRequestNotAllowed, ExperimentConfigurationNotFound {
+            throws ExperimentConfigurationNotFound {
         try {
             return this.experimentConfigurationCache.get(key);
         } catch (Exception e) {

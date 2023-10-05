@@ -58,7 +58,7 @@ public class EppoClient {
      * @param subjectAttributes
      * @return
      */
-    private Optional<EppoValue> getAssignmentValue(
+    protected Optional<EppoValue> getAssignmentValue(
             String subjectKey,
             String flagKey,
             SubjectAttributes subjectAttributes) {
@@ -132,20 +132,29 @@ public class EppoClient {
      */
     private Optional<?> getTypedAssignment(String subjectKey, String experimentKey, EppoValueType type,
             SubjectAttributes subjectAttributes) {
-        Optional<EppoValue> value = this.getAssignmentValue(subjectKey, experimentKey, subjectAttributes);
-        if (value.isEmpty()) {
-            return Optional.empty();
-        }
+        try {
+            Optional<EppoValue> value = this.getAssignmentValue(subjectKey, experimentKey, subjectAttributes);
+            if (value.isEmpty()) {
+                return Optional.empty();
+            }
 
-        switch (type) {
-            case BOOLEAN:
-                return Optional.of(value.get().boolValue());
-            case NUMBER:
-                return Optional.of(value.get().doubleValue());
-            case JSON_NODE:
-                return Optional.of(value.get().jsonNodeValue());
-            default:
-                return Optional.of(value.get().stringValue());
+            switch (type) {
+                case BOOLEAN:
+                    return Optional.of(value.get().boolValue());
+                case NUMBER:
+                    return Optional.of(value.get().doubleValue());
+                case JSON_NODE:
+                    return Optional.of(value.get().jsonNodeValue());
+                default:
+                    return Optional.of(value.get().stringValue());
+            }
+        } catch (Exception e) {
+            // if graceful mode
+            if (this.eppoClientConfig.isGracefulMode()) {
+                log.warn("[Eppo SDK] Error getting assignment value: " + e.getMessage());
+                return Optional.empty();
+            }
+            throw e;
         }
     }
 

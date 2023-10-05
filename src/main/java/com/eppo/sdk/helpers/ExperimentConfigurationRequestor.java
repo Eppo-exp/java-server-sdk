@@ -8,10 +8,8 @@ import lombok.extern.slf4j.Slf4j;
 import com.eppo.sdk.constants.Constants;
 import com.eppo.sdk.dto.ExperimentConfigurationResponse;
 import com.eppo.sdk.exception.InvalidApiKeyException;
-import com.eppo.sdk.exception.NetworkException;
 
 import java.net.http.HttpResponse;
-import java.net.http.HttpTimeoutException;
 import java.util.Optional;
 
 /**
@@ -19,7 +17,8 @@ import java.util.Optional;
  */
 @Slf4j
 public class ExperimentConfigurationRequestor {
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     private EppoHttpClient eppoHttpClient;
 
     public ExperimentConfigurationRequestor(EppoHttpClient eppoHttpClient) {
