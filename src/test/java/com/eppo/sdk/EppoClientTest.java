@@ -1,6 +1,12 @@
 package com.eppo.sdk;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 
 import java.io.File;
 import java.io.IOException;
@@ -10,6 +16,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.eppo.sdk.dto.*;
+import com.eppo.sdk.exception.ExperimentConfigurationNotFound;
 import com.eppo.sdk.helpers.Converter;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.*;
@@ -19,6 +26,7 @@ import com.fasterxml.jackson.databind.node.JsonNodeType;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -141,6 +149,54 @@ public class EppoClientTest {
   @AfterEach
   void teardown() {
     this.mockServer.stop();
+  }
+
+  @Test()
+  void testGracefulModeOn() {
+    EppoClientConfig config = EppoClientConfig.builder()
+        .apiKey("mock-api-key")
+        .baseURL("http://localhost:4001")
+        .isGracefulMode(true)
+        .assignmentLogger(new IAssignmentLogger() {
+          @Override
+          public void logAssignment(AssignmentLogData logData) {
+            // Auto-generated method stub
+          }
+        })
+        .build();
+    EppoClient.init(config);
+    EppoClient realClient = EppoClient.getInstance();
+
+    EppoClient spyClient = spy(realClient);
+
+    doThrow(new ExperimentConfigurationNotFound("Exception thrown by mock")).when(spyClient)
+        .getAssignmentValue(anyString(),
+            anyString(), any(SubjectAttributes.class));
+    assertDoesNotThrow(() -> spyClient.getStringAssignment("subject1", "experiment1"));
+  }
+
+  @Test()
+  void testGracefulModeOff() {
+    EppoClientConfig config = EppoClientConfig.builder()
+        .apiKey("mock-api-key")
+        .baseURL("http://localhost:4001")
+        .isGracefulMode(false)
+        .assignmentLogger(new IAssignmentLogger() {
+          @Override
+          public void logAssignment(AssignmentLogData logData) {
+            // Auto-generated method stub
+          }
+        })
+        .build();
+    EppoClient.init(config);
+    EppoClient realClient = EppoClient.getInstance();
+
+    EppoClient spyClient = spy(realClient);
+
+    doThrow(new ExperimentConfigurationNotFound("Exception thrown by mock")).when(spyClient).getAssignmentValue(
+        anyString(),
+        anyString(), any(SubjectAttributes.class));
+    assertThrows(ExperimentConfigurationNotFound.class, () -> spyClient.getStringAssignment("subject1", "experiment1"));
   }
 
   @ParameterizedTest

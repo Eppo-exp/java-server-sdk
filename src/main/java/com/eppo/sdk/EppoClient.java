@@ -59,7 +59,7 @@ public class EppoClient {
      * @return
      * @throws ConfigurationNotFoundException
      */
-    private Optional<EppoValue> getAssignmentValue(
+    protected Optional<EppoValue> getAssignmentValue(
             String subjectKey,
             String flagKey,
             SubjectAttributes subjectAttributes) {
@@ -152,6 +152,7 @@ public class EppoClient {
         } catch (Exception e) {
             // if graceful mode
             if (this.eppoClientConfig.isGracefulMode()) {
+                log.warn("[Eppo SDK] Error getting assignment value: " + e.getMessage());
                 return Optional.empty();
             }
             throw e;
