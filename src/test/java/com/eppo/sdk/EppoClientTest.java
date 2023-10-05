@@ -31,7 +31,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-
+import java.util.Optional;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
@@ -172,7 +172,18 @@ public class EppoClientTest {
     doThrow(new ExperimentConfigurationNotFound("Exception thrown by mock")).when(spyClient)
         .getAssignmentValue(anyString(),
             anyString(), any(SubjectAttributes.class));
+
+    assertDoesNotThrow(() -> spyClient.getBooleanAssignment("subject1", "experiment1"));
+    assertDoesNotThrow(() -> spyClient.getDoubleAssignment("subject1", "experiment1"));
+    assertDoesNotThrow(() -> spyClient.getParsedJSONAssignment("subject1", "experiment1"));
+    assertDoesNotThrow(() -> spyClient.getJSONStringAssignment("subject1", "experiment1"));
     assertDoesNotThrow(() -> spyClient.getStringAssignment("subject1", "experiment1"));
+
+    assertEquals(Optional.empty(), spyClient.getBooleanAssignment("subject1", "experiment1"));
+    assertEquals(Optional.empty(), spyClient.getDoubleAssignment("subject1", "experiment1"));
+    assertEquals(Optional.empty(), spyClient.getParsedJSONAssignment("subject1", "experiment1"));
+    assertEquals(Optional.empty(), spyClient.getJSONStringAssignment("subject1", "experiment1"));
+    assertEquals(Optional.empty(), spyClient.getStringAssignment("subject1", "experiment1"));
   }
 
   @Test()
@@ -196,6 +207,14 @@ public class EppoClientTest {
     doThrow(new ExperimentConfigurationNotFound("Exception thrown by mock")).when(spyClient).getAssignmentValue(
         anyString(),
         anyString(), any(SubjectAttributes.class));
+
+    assertThrows(ExperimentConfigurationNotFound.class,
+        () -> spyClient.getBooleanAssignment("subject1", "experiment1"));
+    assertThrows(ExperimentConfigurationNotFound.class, () -> spyClient.getDoubleAssignment("subject1", "experiment1"));
+    assertThrows(ExperimentConfigurationNotFound.class,
+        () -> spyClient.getParsedJSONAssignment("subject1", "experiment1"));
+    assertThrows(ExperimentConfigurationNotFound.class,
+        () -> spyClient.getJSONStringAssignment("subject1", "experiment1"));
     assertThrows(ExperimentConfigurationNotFound.class, () -> spyClient.getStringAssignment("subject1", "experiment1"));
   }
 
