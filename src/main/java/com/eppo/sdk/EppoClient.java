@@ -57,7 +57,6 @@ public class EppoClient {
      * @param flagKey
      * @param subjectAttributes
      * @return
-     * @throws ConfigurationNotFoundException
      */
     protected Optional<EppoValue> getAssignmentValue(
             String subjectKey,
