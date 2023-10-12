@@ -1,14 +1,42 @@
 {
   "flags": {
     "test_bandit_1": {
-      "bandit": true,
+      "subjectShards": 10000,
+      "overrides": {},
+      "typedOverrides": {},
       "enabled": true,
-      "subjectShards": 10000
-    },
-    "test_bandit_2": {
-      "bandit": true,
-      "enabled": false,
-      "subjectShards": 10000
+      "rules": [
+        {
+          "allocationKey": "bandit",
+          "conditions": []
+        }
+      ],
+      "allocations": {
+        "bandit": {
+          "percentExposure": 0.4533,
+          "variations": [
+            {
+              "name": "control",
+              "value": "control",
+              "typedValue": "control",
+              "shardRange": {
+                "start": 0,
+                "end": 2000
+              }
+            },
+            {
+              "name": "bandit",
+              "value": "banner-bandit",
+              "typedValue": "banner-bandit",
+              "shardRange": {
+                "start": 2000,
+                "end": 10000
+              },
+              "algorithmType": "bandit"
+            }
+          ]
+        }
+      }
     }
   }
 }

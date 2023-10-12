@@ -15,4 +15,5 @@ public class EppoClientConfig {
     @Builder.Default
     private String baseURL = Constants.DEFAULT_BASE_URL;
     private IAssignmentLogger assignmentLogger;
+    private IBanditLogger banditLogger;
 }

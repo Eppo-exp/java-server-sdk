@@ -4,22 +4,19 @@ import com.eppo.sdk.dto.EppoAttributes;
 import com.eppo.sdk.dto.EppoValue;
 import com.eppo.sdk.dto.ShardRange;
 import com.eppo.sdk.dto.Variation;
+import com.eppo.sdk.helpers.Shard;
 
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.nio.ByteBuffer;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 public class BanditEvaluator {
 
-    public static List<Variation> evaluateBanditVariations(
-        String banditKey,
+    public static List<Variation> evaluateBanditActions(
+        String experimentKey,
         String modelName,
         Map<String, EppoAttributes> actions,
         String subjectKey,
@@ -28,45 +25,32 @@ public class BanditEvaluator {
     ) {
         BanditModel model = BanditModelFactory.build(modelName);
         Map<String, Float> actionWeights = model.weighActions(actions, subjectAttributes);
-        List<String> shuffledActions = shuffleVariations(actions.keySet(), banditKey, subjectKey);
+        List<String> shuffledActions = shuffleActions(actions.keySet(), experimentKey, subjectKey);
         return generateVariations(shuffledActions, actionWeights, subjectShards);
     }
 
-    private static List<String> shuffleVariations(Set<String> actionKeys, String banditKey, String subjectKey) {
+    private static List<String> shuffleActions(Set<String> actionKeys, String experimentKey, String subjectKey) {
         // Shuffle randomly (but deterministically) using a hash, tie-breaking with name
         return actionKeys
             .stream()
-            .sorted(Comparator.comparingInt((String actionKey) -> hashToPositiveInt(subjectKey, banditKey, actionKey)).thenComparing(actionKey -> actionKey))
+            .sorted(Comparator.comparingInt((String actionKey) -> hashToPositiveInt(experimentKey, subjectKey, actionKey)).thenComparing(actionKey -> actionKey))
             .collect(Collectors.toList());
     }
 
-    private static int hashToPositiveInt(String actionKey, String banditKey, String subjectKey) {
-        try {
-            // Create MD5 Hash
-            MessageDigest md = MessageDigest.getInstance("MD5");
-            md.update(actionKey.getBytes(StandardCharsets.UTF_8));
-            md.update(banditKey.getBytes(StandardCharsets.UTF_8));
-            md.update(subjectKey.getBytes(StandardCharsets.UTF_8));
-            byte[] digest = md.digest();
-
-            // Use the first 4 bytes to create an int
-            int digestInt = ByteBuffer.wrap(digest, 0, 4).getInt();
-            // Ensure its positive
-            return Math.abs(digestInt);
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("Could not generate MD5", e);
-        }
+    private static int hashToPositiveInt(String experimentKey, String subjectKey, String actionKey) {
+        int SHUFFLE_SHARDS = 10000;
+        return Shard.getShard(experimentKey+"-"+subjectKey+"-"+actionKey, SHUFFLE_SHARDS);
     }
 
     private static List<Variation> generateVariations(List<String> shuffledActions, Map<String, Float>  actionWeights, int subjectShards) {
 
-        final AtomicInteger lastShard = new AtomicInteger(-1);
+        final AtomicInteger lastShard = new AtomicInteger(0);
 
         List<Variation> variations = shuffledActions.stream().map(actionName -> {
             float weight = actionWeights.get(actionName);
             int numShards = Double.valueOf(Math.floor(weight * subjectShards)).intValue();
-            int shardStart = lastShard.get() + 1;
-            int shardEnd = shardStart + numShards - 1;
+            int shardStart = lastShard.get();
+            int shardEnd = shardStart + numShards;
             lastShard.set(shardEnd);
 
             ShardRange shardRange = new ShardRange();
@@ -82,7 +66,7 @@ public class BanditEvaluator {
 
         // Pad last shard if needed due to rounding of weights
         Variation lastVariation = variations.get(variations.size() - 1);
-        lastVariation.getShardRange().end = Math.max(lastVariation.getShardRange().end, subjectShards - 1);
+        lastVariation.getShardRange().end = Math.max(lastVariation.getShardRange().end, subjectShards);
 
         return variations;
     }

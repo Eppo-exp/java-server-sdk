@@ -12,7 +12,6 @@ import lombok.Data;
 @Data
 public class ExperimentConfiguration {
     private String name;
-    private boolean bandit;
     private boolean enabled;
     private int subjectShards;
     private Map<String, EppoValue> typedOverrides = new HashMap<>();
