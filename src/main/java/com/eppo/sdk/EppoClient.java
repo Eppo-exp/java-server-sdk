@@ -32,6 +32,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Timer;
 
+import static com.eppo.sdk.dto.AssignmentLogData.OVERRIDE_ALLOCATION_KEY;
+
 @Slf4j
 public class EppoClient {
     /**
@@ -51,14 +53,14 @@ public class EppoClient {
     }
 
     /**
-     * This function is used to get assignment Value
+     * This function is used to get assignment log data
      *
      * @param subjectKey
      * @param flagKey
      * @param subjectAttributes
      * @return
      */
-    protected Optional<EppoValue> getAssignmentValue(
+    public Optional<AssignmentLogData> getAssignmentWithDetails(
             String subjectKey,
             String flagKey,
             SubjectAttributes subjectAttributes) {
@@ -76,7 +78,8 @@ public class EppoClient {
         // Check if subject has override variations
         EppoValue subjectVariationOverride = this.getSubjectVariationOverride(subjectKey, configuration);
         if (!subjectVariationOverride.isNull()) {
-            return Optional.of(subjectVariationOverride);
+            AssignmentLogData data = getAssignmentLogData(subjectKey, flagKey, subjectAttributes, OVERRIDE_ALLOCATION_KEY, subjectVariationOverride);
+            return Optional.of(data);
         }
 
         // Check if disabled
@@ -104,26 +107,59 @@ public class EppoClient {
         // Get assigned variation
         Variation assignedVariation = this.getAssignedVariation(subjectKey, flagKey, configuration.getSubjectShards(),
                 allocation.getVariations());
+        return Optional.of(getAssignmentLogData(subjectKey, flagKey, subjectAttributes, allocationKey, assignedVariation.getTypedValue()));
+    }
+
+    /**
+     * This function is used to get assignment Value
+     *
+     * @param subjectKey
+     * @param flagKey
+     * @param subjectAttributes
+     * @return
+     */
+    protected Optional<EppoValue> getAssignmentValue(
+            String subjectKey,
+            String flagKey,
+            SubjectAttributes subjectAttributes) {
+        Optional<AssignmentLogData> data = getAssignmentWithDetails(subjectKey, flagKey, subjectAttributes);
+
+        if (data.isEmpty()) {
+            return Optional.empty();
+        }
+
+        AssignmentLogData assignmentLogData = data.get();
 
         try {
-            String experimentKey = ExperimentHelper.generateKey(flagKey, allocationKey);
-            this.eppoClientConfig.getAssignmentLogger()
-                    .logAssignment(new AssignmentLogData(
-                            experimentKey,
-                            flagKey,
-                            allocationKey,
-                            assignedVariation.getTypedValue().stringValue(),
-                            subjectKey,
-                            subjectAttributes));
+            if (!assignmentLogData.allocation.equals(OVERRIDE_ALLOCATION_KEY)) {
+                this.eppoClientConfig.getAssignmentLogger().logAssignment(assignmentLogData);
+            }
         } catch (Exception e) {
             // Ignore Exception
         }
-        return Optional.of(assignedVariation.getTypedValue());
+
+        return Optional.of(assignmentLogData.variationValue);
+    }
+
+    private AssignmentLogData getAssignmentLogData(
+            String subjectKey,
+            String flagKey,
+            SubjectAttributes subjectAttributes,
+            String allocationKey,
+            EppoValue assignmentValue) {
+        String experimentKey = ExperimentHelper.generateKey(flagKey, allocationKey);
+        return new AssignmentLogData(
+                experimentKey,
+                flagKey,
+                allocationKey,
+                assignmentValue,
+                subjectKey,
+                subjectAttributes);
     }
 
     /**
      * This function will return typed assignment value
-     * 
+     *
      * @param subjectKey
      * @param experimentKey
      * @param type
