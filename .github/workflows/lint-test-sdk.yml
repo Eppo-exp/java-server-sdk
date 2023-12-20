@@ -14,7 +14,5 @@ jobs:
         with:
           java-version: '11'
           distribution: 'adopt'
-      - name: 'Set up GCP SDK'
-        uses: 'google-github-actions/setup-gcloud@v0'
       - name: Run tests
         run: make test

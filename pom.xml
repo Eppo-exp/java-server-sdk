@@ -77,8 +77,9 @@
 
     <distributionManagement>
         <snapshotRepository>
-            <id>ossrh</id>
-            <url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
+            <id>github</id>
+            <name>GitHub Packages</name>
+            <url>https://maven.pkg.github.com/GlossGenius/eppo-java-server-sdk</url>
         </snapshotRepository>
     </distributionManagement>
 	<build>
