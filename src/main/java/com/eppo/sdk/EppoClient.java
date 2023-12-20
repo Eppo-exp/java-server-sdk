@@ -138,7 +138,7 @@ public class EppoClient {
             // Ignore Exception
         }
 
-        return Optional.of(assignmentLogData.variation);
+        return Optional.of(assignmentLogData.variationValue);
     }
 
     private AssignmentLogData getAssignmentLogData(
