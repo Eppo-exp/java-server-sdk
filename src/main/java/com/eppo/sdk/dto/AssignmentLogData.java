@@ -8,10 +8,13 @@ import java.util.Date;
 public class AssignmentLogData {
     public static final String OVERRIDE_ALLOCATION_KEY = "override";
 
+    public static final String OVERRIDE_ASSIGNMENT_NAME = "override_assignment";
+
     public String experiment;
     public String featureFlag;
     public String allocation;
     public String variation;
+    public String variationName;
     public EppoValue variationValue;
     public Date timestamp;
     public String subject;
@@ -21,6 +24,7 @@ public class AssignmentLogData {
             String experiment,
             String featureFlag,
             String allocation,
+            String variationName,
             EppoValue variationValue,
             String subject,
             SubjectAttributes subjectAttributes
@@ -28,6 +32,7 @@ public class AssignmentLogData {
         this.experiment = experiment;
         this.featureFlag = featureFlag;
         this.allocation = allocation;
+        this.variationName = variationName;
         this.variationValue = variationValue;
         this.variation = variationValue.stringValue();
         this.timestamp = new Date();

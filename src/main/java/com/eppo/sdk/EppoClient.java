@@ -33,6 +33,7 @@ import java.util.Optional;
 import java.util.Timer;
 
 import static com.eppo.sdk.dto.AssignmentLogData.OVERRIDE_ALLOCATION_KEY;
+import static com.eppo.sdk.dto.AssignmentLogData.OVERRIDE_ASSIGNMENT_NAME;
 
 @Slf4j
 public class EppoClient {
@@ -78,7 +79,14 @@ public class EppoClient {
         // Check if subject has override variations
         EppoValue subjectVariationOverride = this.getSubjectVariationOverride(subjectKey, configuration);
         if (!subjectVariationOverride.isNull()) {
-            AssignmentLogData data = getAssignmentLogData(subjectKey, flagKey, subjectAttributes, OVERRIDE_ALLOCATION_KEY, subjectVariationOverride);
+            AssignmentLogData data = getAssignmentLogData(
+                subjectKey,
+                flagKey,
+                subjectAttributes,
+                OVERRIDE_ALLOCATION_KEY,
+                OVERRIDE_ASSIGNMENT_NAME,
+                subjectVariationOverride
+            );
             return Optional.of(data);
         }
 
@@ -107,7 +115,16 @@ public class EppoClient {
         // Get assigned variation
         Variation assignedVariation = this.getAssignedVariation(subjectKey, flagKey, configuration.getSubjectShards(),
                 allocation.getVariations());
-        return Optional.of(getAssignmentLogData(subjectKey, flagKey, subjectAttributes, allocationKey, assignedVariation.getTypedValue()));
+        return Optional.of(
+            getAssignmentLogData(
+                subjectKey,
+                flagKey,
+                subjectAttributes,
+                allocationKey,
+                assignedVariation.getName(),
+                assignedVariation.getTypedValue()
+            )
+        );
     }
 
     /**
@@ -146,12 +163,15 @@ public class EppoClient {
             String flagKey,
             SubjectAttributes subjectAttributes,
             String allocationKey,
-            EppoValue assignmentValue) {
+            String assignmentName,
+            EppoValue assignmentValue
+    ) {
         String experimentKey = ExperimentHelper.generateKey(flagKey, allocationKey);
         return new AssignmentLogData(
                 experimentKey,
                 flagKey,
                 allocationKey,
+                assignmentName,
                 assignmentValue,
                 subjectKey,
                 subjectAttributes);
