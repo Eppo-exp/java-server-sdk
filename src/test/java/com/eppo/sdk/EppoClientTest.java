@@ -131,7 +131,15 @@ public class EppoClientTest {
     this.mockServer.start();
     String racResponseJson = getMockRandomizedAssignmentResponse(jsonToReturnFilePath);
     this.mockServer.stubFor(
-        WireMock.get(WireMock.urlMatching(".*randomized_assignment.*")).willReturn(WireMock.okJson(racResponseJson)));
+        WireMock.get(WireMock.urlMatching(".*randomized_assignment/v3/config\\?.*")).willReturn(WireMock.okJson(racResponseJson)));
+  }
+
+  private void addBanditRacToMockServer(WireMockServer server, String banditJsonFilePath) {
+    String racResponseJson = getMockRandomizedAssignmentResponse(banditJsonFilePath);
+    server.stubFor(
+      WireMock.get(WireMock.urlMatching(".*randomized_assignment/v3/bandits\\?.*"))
+        .willReturn(WireMock.okJson(racResponseJson))
+    );
   }
 
   @AfterEach
@@ -261,8 +269,9 @@ public class EppoClientTest {
     // For now, use our special bandits RAC until we fold it into the shared test case suite
     String racResponseJson = getMockRandomizedAssignmentResponse("src/test/resources/bandits/rac-experiments-bandits-beta.json");
     this.mockServer.stubFor(
-      WireMock.get(WireMock.urlMatching(".*randomized_assignment.*")).willReturn(WireMock.okJson(racResponseJson))
+      WireMock.get(WireMock.urlMatching(".*randomized_assignment/v3/config\\?.*")).willReturn(WireMock.okJson(racResponseJson))
     );
+    this.addBanditRacToMockServer(this.mockServer, "src/test/resources/bandits/bandits-parameters-1.json");
 
     // Re-initialize client with our bandit RAC and a mock logger we can spy on
     IAssignmentLogger mockAssignmentLogger = mock();
@@ -319,8 +328,9 @@ public class EppoClientTest {
     // For now, use our special bandits RAC until we fold it into the shared test case suite
     String racResponseJson = getMockRandomizedAssignmentResponse("src/test/resources/bandits/rac-experiments-bandits-beta.json");
     this.mockServer.stubFor(
-            WireMock.get(WireMock.urlMatching(".*randomized_assignment.*")).willReturn(WireMock.okJson(racResponseJson))
+            WireMock.get(WireMock.urlMatching(".*randomized_assignment/v3/config\\?.*")).willReturn(WireMock.okJson(racResponseJson))
     );
+    this.addBanditRacToMockServer(this.mockServer, "src/test/resources/bandits/bandits-parameters-1.json");
 
     // Re-initialize client with our bandit RAC and a mock logger we can spy on
     IAssignmentLogger mockAssignmentLogger = mock();
@@ -386,8 +396,9 @@ public class EppoClientTest {
     // For now, use our special bandits RAC until we fold it into the shared test case suite
     String racResponseJson = getMockRandomizedAssignmentResponse("src/test/resources/bandits/rac-experiments-bandits-beta.json");
     this.mockServer.stubFor(
-            WireMock.get(WireMock.urlMatching(".*randomized_assignment.*")).willReturn(WireMock.okJson(racResponseJson))
+            WireMock.get(WireMock.urlMatching(".*randomized_assignment/v3/config\\?.*")).willReturn(WireMock.okJson(racResponseJson))
     );
+    this.addBanditRacToMockServer(this.mockServer, "src/test/resources/bandits/bandits-parameters-1.json");
 
     // Re-initialize client with our bandit RAC and a mock logger we can spy on
     EppoClientConfig config = EppoClientConfig.builder()

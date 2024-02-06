@@ -1,10 +1,10 @@
 package com.eppo.sdk.helpers;
 
-import com.eppo.sdk.dto.ExperimentConfiguration;
-import com.eppo.sdk.dto.ExperimentConfigurationResponse;
+import com.eppo.sdk.dto.*;
 import com.eppo.sdk.exception.ExperimentConfigurationNotFound;
 import com.eppo.sdk.exception.NetworkException;
 import com.eppo.sdk.exception.NetworkRequestNotAllowed;
+import lombok.extern.slf4j.Slf4j;
 import org.ehcache.Cache;
 
 import java.util.Map;
@@ -13,34 +13,38 @@ import java.util.Optional;
 /**
  * Configuration Store Class
  */
+@Slf4j
 public class ConfigurationStore {
     Cache<String, ExperimentConfiguration> experimentConfigurationCache;
-    ExperimentConfigurationRequestor experimentConfigurationRequestor;
+    Cache<String, BanditParameters> banditParametersCache;
+    ConfigurationRequestor<ExperimentConfigurationResponse> experimentConfigurationRequestor;
+    ConfigurationRequestor<BanditParametersResponse> banditParametersRequestor;
     static ConfigurationStore instance = null;
 
     public ConfigurationStore(
             Cache<String, ExperimentConfiguration> experimentConfigurationCache,
-            ExperimentConfigurationRequestor experimentConfigurationRequestor
+            ConfigurationRequestor<ExperimentConfigurationResponse> experimentConfigurationRequestor,
+            Cache<String, BanditParameters> banditParametersCache,
+            ConfigurationRequestor<BanditParametersResponse> banditParametersRequestor
     ) {
         this.experimentConfigurationRequestor = experimentConfigurationRequestor;
         this.experimentConfigurationCache = experimentConfigurationCache;
+        this.banditParametersCache = banditParametersCache;
+        this.banditParametersRequestor = banditParametersRequestor;
     }
 
-    /**
-     * This function is used to initialize configuration store
-     *
-     * @param experimentConfigurationCache
-     * @param experimentConfigurationRequestor
-     * @return
-     */
     public final static ConfigurationStore init(
             Cache<String, ExperimentConfiguration> experimentConfigurationCache,
-            ExperimentConfigurationRequestor experimentConfigurationRequestor
+            ConfigurationRequestor<ExperimentConfigurationResponse> experimentConfigurationRequestor,
+            Cache<String, BanditParameters> banditParametersCache,
+            ConfigurationRequestor<BanditParametersResponse> banditParametersRequestor
     ) {
         if (ConfigurationStore.instance == null) {
             ConfigurationStore.instance = new ConfigurationStore(
                     experimentConfigurationCache,
-                    experimentConfigurationRequestor
+                    experimentConfigurationRequestor,
+                    banditParametersCache,
+                    banditParametersRequestor
             );
         }
         instance.experimentConfigurationCache.clear();
@@ -62,7 +66,7 @@ public class ConfigurationStore {
      * @param key
      * @param experimentConfiguration
      */
-    public void setExperimentConfiguration(String key, ExperimentConfiguration experimentConfiguration) {
+    protected void setExperimentConfiguration(String key, ExperimentConfiguration experimentConfiguration) {
         this.experimentConfigurationCache.put(key, experimentConfiguration);
     }
 
@@ -93,11 +97,35 @@ public class ConfigurationStore {
      */
     public void fetchAndSetExperimentConfiguration() throws NetworkException, NetworkRequestNotAllowed {
         Optional<ExperimentConfigurationResponse> response = this.experimentConfigurationRequestor
-                .fetchExperimentConfiguration();
+                .fetchConfiguration();
 
-        if (!response.isEmpty()) {
+        boolean loadBandits = false;
+        if (response.isPresent()) {
             for (Map.Entry<String, ExperimentConfiguration> entry : response.get().getFlags().entrySet()) {
-                this.setExperimentConfiguration(entry.getKey(), entry.getValue());
+                ExperimentConfiguration configuration = entry.getValue();
+                this.setExperimentConfiguration(entry.getKey(), configuration);
+                boolean hasBanditVariation =
+                  configuration
+                    .getAllocations()
+                    .values()
+                    .stream().anyMatch(
+                      a -> a.getVariations().stream().anyMatch(v -> v.getAlgorithmType() == AlgorithmType.BANDIT)
+                    );
+
+                if (configuration.isEnabled() && hasBanditVariation) {
+                    loadBandits = true;
+                }
+            }
+        }
+
+        if (loadBandits) {
+            Optional<BanditParametersResponse> banditResponse = this.banditParametersRequestor.fetchConfiguration();
+            if (banditResponse.isEmpty() || banditResponse.get().getBandits() == null) {
+                log.warn("Unexpected empty bandit parameter response");
+                return;
+            }
+            for (Map.Entry<String, BanditParameters> entry : banditResponse.get().getBandits().entrySet()) {
+                this.banditParametersCache.put(entry.getKey(), entry.getValue());
             }
         }
     }

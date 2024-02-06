@@ -5,39 +5,31 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.extern.slf4j.Slf4j;
 
-import com.eppo.sdk.constants.Constants;
-import com.eppo.sdk.dto.ExperimentConfigurationResponse;
 import com.eppo.sdk.exception.InvalidApiKeyException;
-import com.eppo.sdk.exception.NetworkException;
 
 import java.net.http.HttpResponse;
-import java.net.http.HttpTimeoutException;
 import java.util.Optional;
 
-/**
- * Experiment Configuration Requestor Class
- */
 @Slf4j
-public class ExperimentConfigurationRequestor {
+public class ConfigurationRequestor<T> {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-    private EppoHttpClient eppoHttpClient;
+    private final Class<T> responseClass;
+    private final EppoHttpClient eppoHttpClient;
+    private final String endpoint;
 
-    public ExperimentConfigurationRequestor(EppoHttpClient eppoHttpClient) {
+    public ConfigurationRequestor(Class<T> responseClass, EppoHttpClient eppoHttpClient, String endpoint) {
+        this.responseClass = responseClass;
         this.eppoHttpClient = eppoHttpClient;
+        this.endpoint = endpoint;
     }
 
-    /**
-     * This function is used to fetch Experiment Configuration
-     *
-     * @return
-     */
-    public Optional<ExperimentConfigurationResponse> fetchExperimentConfiguration() {
-        ExperimentConfigurationResponse config = null;
+    public Optional<T> fetchConfiguration() {
+        T config = null;
         try {
-            HttpResponse<String> response = this.eppoHttpClient.get(Constants.RAC_ENDPOINT);
+            HttpResponse<String> response = this.eppoHttpClient.get(this.endpoint);
             int statusCode = response.statusCode();
             if (statusCode == 200) {
-                config = OBJECT_MAPPER.readValue(response.body(), ExperimentConfigurationResponse.class);
+                config = OBJECT_MAPPER.readValue(response.body(), this.responseClass);
             }
             if (statusCode == 401) { // unauthorized - invalid API key
                 throw new InvalidApiKeyException("Unauthorized: invalid Eppo API key.");
