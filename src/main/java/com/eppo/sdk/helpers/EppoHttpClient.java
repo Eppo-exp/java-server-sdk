@@ -81,21 +81,11 @@ public class EppoHttpClient {
         final String newUrl = this.urlBuilder(this.baseURl + url, allParams);
         HttpGet getRequest = new HttpGet(newUrl);
 
-
-//                .GET()
-//                .timeout(Duration.ofMillis(requestTimeOutMillis))
-//                .uri(new URI(newUrl));
-
-        // Set Header
-
         for (Map.Entry<String, String> entry : headers.entrySet()) {
             getRequest.setHeader(entry.getKey(), entry.getValue());
         }
 
-        HttpResponse response = httpClient.execute(getRequest);
-
-        // Make a Request
-        return response;
+        return httpClient.execute(getRequest);
     }
 
     /**
