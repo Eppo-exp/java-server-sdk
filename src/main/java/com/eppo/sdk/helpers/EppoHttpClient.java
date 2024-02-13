@@ -4,7 +4,9 @@ import org.apache.http.Header;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 
 import java.net.URI;
@@ -18,11 +20,18 @@ import java.util.stream.Stream;
  * Eppo Http Client Class
  */
 public class EppoHttpClient {
-    private HttpClient httpClient = HttpClients.createDefault();
+
     private Map<String, String> defaultParams = new HashMap<>();
     private String baseURl;
 
     private int requestTimeOutMillis = 3000; // 3 secs
+
+    private RequestConfig config = RequestConfig.custom()
+            .setConnectTimeout(requestTimeOutMillis)
+            .setConnectionRequestTimeout(requestTimeOutMillis)
+            .setSocketTimeout(requestTimeOutMillis).build();
+
+    private HttpClient httpClient = HttpClientBuilder.create().setDefaultRequestConfig(config).build();
 
     public EppoHttpClient(String apikey, String sdkName, String sdkVersion, String baseURl) {
         this.defaultParams.put("apiKey", apikey);
@@ -80,6 +89,7 @@ public class EppoHttpClient {
         // Build URL
         final String newUrl = this.urlBuilder(this.baseURl + url, allParams);
         HttpGet getRequest = new HttpGet(newUrl);
+
 
         for (Map.Entry<String, String> entry : headers.entrySet()) {
             getRequest.setHeader(entry.getKey(), entry.getValue());
