@@ -90,7 +90,7 @@ public class ConfigurationStore {
         Optional<ExperimentConfigurationResponse> response = this.experimentConfigurationRequestor
                 .fetchExperimentConfiguration();
 
-        if (!response.isEmpty()) {
+        if (response.isPresent()) {
             for (Map.Entry<String, ExperimentConfiguration> entry : response.get().getFlags().entrySet()) {
                 this.setExperimentConfiguration(entry.getKey(), entry.getValue());
             }
