@@ -21,13 +21,15 @@ class BanditsDeserializerTest {
         BanditParametersResponse responseObject = this.mapper.readValue(jsonString, BanditParametersResponse.class);
 
         assertEquals(1, responseObject.getBandits().size());
-        BanditParameters parameters = responseObject.getBandits().get("banner");
-        assertEquals("banner", parameters.getBanditKey());
-        assertEquals("falcon", parameters.getModel());
+        BanditParameters parameters = responseObject.getBandits().get("banner-bandit");
+        assertEquals("banner-bandit", parameters.getBanditKey());
+        assertEquals("falcon", parameters.getModelName());
         assertEquals("v123", parameters.getModelVersion());
 
         BanditModelData modelData = parameters.getModelData();
         assertEquals(1.0, modelData.getGamma());
+        assertEquals(0.0, modelData.getDefaultActionScore());
+        assertEquals(0.0, modelData.getActionProbabilityFloor());
 
         Map<String, BanditCoefficients> coefficients = modelData.getCoefficients();
         assertEquals(2, coefficients.size());

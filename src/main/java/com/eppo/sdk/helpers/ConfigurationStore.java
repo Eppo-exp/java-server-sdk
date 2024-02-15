@@ -89,6 +89,10 @@ public class ConfigurationStore {
 
     }
 
+    public BanditParameters getBanditParameters(String banditKey) {
+        return this.banditParametersCache.get(banditKey);
+    }
+
     /**
      * This function is used to set experiment configuration int the cache
      *

@@ -1,6 +1,6 @@
 {
   "flags": {
-    "test_bandit_1": {
+    "cold-start-bandit-experiment": {
       "subjectShards": 10000,
       "overrides": {},
       "typedOverrides": {},
@@ -14,6 +14,44 @@
       "allocations": {
         "bandit": {
           "percentExposure": 0.4533,
+          "variations": [
+            {
+              "name": "control",
+              "value": "control",
+              "typedValue": "control",
+              "shardRange": {
+                "start": 0,
+                "end": 2000
+              }
+            },
+            {
+              "name": "bandit",
+              "value": "cold-start-bandit",
+              "typedValue": "cold-start-bandit",
+              "shardRange": {
+                "start": 2000,
+                "end": 10000
+              },
+              "algorithmType": "bandit"
+            }
+          ]
+        }
+      }
+    },
+    "banner-bandit-experiment": {
+      "subjectShards": 10000,
+      "overrides": {},
+      "typedOverrides": {},
+      "enabled": true,
+      "rules": [
+        {
+          "allocationKey": "bandit",
+          "conditions": []
+        }
+      ],
+      "allocations": {
+        "bandit": {
+          "percentExposure": 1.0,
           "variations": [
             {
               "name": "control",

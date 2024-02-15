@@ -154,15 +154,12 @@ public class EppoClient {
     private Optional<EppoValue> determineAndLogBanditAction(VariationAssignmentResult assignmentResult, Map<String, EppoAttributes> assignmentOptions) {
         String banditName = assignmentResult.getVariation().getTypedValue().stringValue();
 
-        // Properties of the bandit model are hardcoded for now
-        // These would be pulled from the RAC
-        String modelName = "random";
-        String modelVersion = "0.1";
-        String modelVersionToLog = modelName + " " + modelVersion;
+        String banditKey = assignmentResult.getVariation().getTypedValue().stringValue();
+        BanditParameters banditParameters = this.configurationStore.getBanditParameters(banditKey);
 
         List<Variation> actionVariations = BanditEvaluator.evaluateBanditActions(
           assignmentResult.getExperimentKey(),
-          modelName,
+          banditParameters,
           assignmentOptions,
           assignmentResult.getSubjectKey(),
           assignmentResult.getSubjectAttributes(),
@@ -179,12 +176,18 @@ public class EppoClient {
         if (this.eppoClientConfig.getBanditLogger() != null) {
             // Do bandit-specific logging
 
+            String modelVersionToLog = "uninitialized"; // Default model "version" if we have not seen this bandit before or don't have model parameters for it
+            if (banditParameters != null) {
+                modelVersionToLog = banditParameters.getModelName() + " " + banditParameters.getModelVersion();
+            }
+
             // Get the action-related attributes
             EppoAttributes actionAttributes = new EppoAttributes();
             if (assignmentOptions != null && !assignmentOptions.isEmpty()) {
                 actionAttributes = assignmentOptions.get(actionString);
             }
 
+            // TODO FF-1546: break out logging the attributes by numeric and categorical
             this.eppoClientConfig.getBanditLogger().logBanditAction(new BanditLogData(
               assignmentResult.getExperimentKey(),
               banditName,

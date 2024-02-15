@@ -7,7 +7,7 @@ import lombok.Data;
 public class BanditParameters {
   private String banditKey;
   private Date updatedAt;
-  private String model;
+  private String modelName;
   private String modelVersion;
   private BanditModelData modelData;
 }

@@ -1,9 +1,6 @@
 package com.eppo.sdk.helpers.bandit;
 
-import com.eppo.sdk.dto.EppoAttributes;
-import com.eppo.sdk.dto.EppoValue;
-import com.eppo.sdk.dto.ShardRange;
-import com.eppo.sdk.dto.Variation;
+import com.eppo.sdk.dto.*;
 import com.eppo.sdk.helpers.Shard;
 
 import java.util.Comparator;
@@ -17,14 +14,18 @@ public class BanditEvaluator {
 
     public static List<Variation> evaluateBanditActions(
         String experimentKey,
-        String modelName,
+        BanditParameters modelParameters,
         Map<String, EppoAttributes> actions,
         String subjectKey,
         EppoAttributes subjectAttributes,
         int subjectShards
     ) {
+        String modelName = modelParameters != null
+          ? modelParameters.getModelName()
+          : RandomBanditModel.MODEL_IDENTIFIER; // Default to random model for unknown bandits
+
         BanditModel model = BanditModelFactory.build(modelName);
-        Map<String, Float> actionWeights = model.weighActions(actions, subjectAttributes);
+        Map<String, Double> actionWeights = model.weighActions(modelParameters, actions, subjectAttributes);
         List<String> shuffledActions = shuffleActions(actions.keySet(), experimentKey, subjectKey);
         return generateVariations(shuffledActions, actionWeights, subjectShards);
     }
@@ -42,12 +43,12 @@ public class BanditEvaluator {
         return Shard.getShard(experimentKey+"-"+subjectKey+"-"+actionKey, SHUFFLE_SHARDS);
     }
 
-    private static List<Variation> generateVariations(List<String> shuffledActions, Map<String, Float>  actionWeights, int subjectShards) {
+    private static List<Variation> generateVariations(List<String> shuffledActions, Map<String, Double>  actionWeights, int subjectShards) {
 
         final AtomicInteger lastShard = new AtomicInteger(0);
 
         List<Variation> variations = shuffledActions.stream().map(actionName -> {
-            float weight = actionWeights.get(actionName);
+            double weight = actionWeights.get(actionName);
             int numShards = Double.valueOf(Math.floor(weight * subjectShards)).intValue();
             int shardStart = lastShard.get();
             int shardEnd = shardStart + numShards;

@@ -33,19 +33,23 @@ public class BanditsDeserializer extends StdDeserializer<Map<String, BanditParam
             String updatedAtStr = banditNode.get("updatedAt").asText();
             Instant instant = Instant.parse(updatedAtStr);
             Date updatedAt = Date.from(instant);
-            String model = banditNode.get("model").asText();
+            String modelName = banditNode.get("modelName").asText();
             String modelVersion = banditNode.get("modelVersion").asText();
 
             BanditParameters parameters = new BanditParameters();
             parameters.setBanditKey(banditKey);
             parameters.setUpdatedAt(updatedAt);
-            parameters.setModel(model);
+            parameters.setModelName(modelName);
             parameters.setModelVersion(modelVersion);
 
             BanditModelData modelData = new BanditModelData();
             JsonNode modelDataNode = banditNode.get("modelData");
             double gamma = modelDataNode.get("gamma").asDouble();
             modelData.setGamma(gamma);
+            double defaultActionScore = modelDataNode.get("defaultActionScore").asDouble();
+            modelData.setDefaultActionScore(defaultActionScore);
+            double actionProbabilityFloor = modelDataNode.get("actionProbabilityFloor").asDouble();
+            modelData.setActionProbabilityFloor(actionProbabilityFloor);
             JsonNode coefficientsNode = modelDataNode.get("coefficients");
 
             Map<String, BanditCoefficients> coefficients = new HashMap<>();

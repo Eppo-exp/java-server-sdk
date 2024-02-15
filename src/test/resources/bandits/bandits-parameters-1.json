@@ -2,12 +2,14 @@
   "updatedAt": "2023-09-13T04:52:06.462Z",
   "bandits": [
     {
-      "banditKey": "banner",
-      "model": "falcon",
+      "banditKey": "banner-bandit",
+      "modelName": "falcon",
       "updatedAt": "2023-09-13T04:52:06.462Z",
       "modelVersion": "v123",
       "modelData": {
         "gamma": 1.0,
+        "defaultActionScore": 0.0,
+        "actionProbabilityFloor": 0.0,
         "coefficients": [
           {
             "actionKey": "nike",
