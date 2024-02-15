@@ -1,9 +1,15 @@
 package com.eppo.sdk.helpers;
 
+import org.apache.http.Header;
+import org.apache.http.HttpRequest;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.HttpClients;
+
 import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
@@ -14,11 +20,18 @@ import java.util.stream.Stream;
  * Eppo Http Client Class
  */
 public class EppoHttpClient {
-    private HttpClient httpClient = HttpClient.newHttpClient();
+
     private Map<String, String> defaultParams = new HashMap<>();
     private String baseURl;
 
     private int requestTimeOutMillis = 3000; // 3 secs
+
+    private RequestConfig config = RequestConfig.custom()
+            .setConnectTimeout(requestTimeOutMillis)
+            .setConnectionRequestTimeout(requestTimeOutMillis)
+            .setSocketTimeout(requestTimeOutMillis).build();
+
+    private HttpClient httpClient = HttpClientBuilder.create().setDefaultRequestConfig(config).build();
 
     public EppoHttpClient(String apikey, String sdkName, String sdkVersion, String baseURl) {
         this.defaultParams.put("apiKey", apikey);
@@ -61,7 +74,7 @@ public class EppoHttpClient {
      * @return
      * @throws Exception
      */
-    public HttpResponse<String> get(
+    public HttpResponse get(
             String url,
             Map<String, String> params,
             Map<String, String> headers
@@ -75,20 +88,14 @@ public class EppoHttpClient {
 
         // Build URL
         final String newUrl = this.urlBuilder(this.baseURl + url, allParams);
-        HttpRequest.Builder builder = HttpRequest.newBuilder()
-                .GET()
-                .timeout(Duration.ofMillis(requestTimeOutMillis))
-                .uri(new URI(newUrl));
+        HttpGet getRequest = new HttpGet(newUrl);
 
-        // Set Header
+
         for (Map.Entry<String, String> entry : headers.entrySet()) {
-            builder = builder.setHeader(entry.getKey(), entry.getValue());
+            getRequest.setHeader(entry.getKey(), entry.getValue());
         }
 
-        HttpRequest request = builder.build();
-
-        // Make a Request
-        return this.httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        return httpClient.execute(getRequest);
     }
 
     /**
@@ -99,7 +106,7 @@ public class EppoHttpClient {
      * @return
      * @throws Exception
      */
-    public HttpResponse<String> get(String url, Map<String, String> params) throws Exception {
+    public HttpResponse get(String url, Map<String, String> params) throws Exception {
         return this.get(url, params, new HashMap<>());
     }
 
@@ -110,7 +117,7 @@ public class EppoHttpClient {
      * @return
      * @throws Exception
      */
-    public HttpResponse<String> get(String url) throws Exception {
+    public HttpResponse get(String url) throws Exception {
         return this.get(url, new HashMap<>(), new HashMap<>());
     }
 
