@@ -4,6 +4,7 @@ import com.eppo.sdk.deserializer.EppoValueDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -107,7 +108,8 @@ public class EppoValue {
     @Override
     public String toString() {
         if (this.isArray()) {
-            return List.of(this.array).toString();
+            // Assuming this.array is an array, use Arrays.asList() for compatibility with Java 8
+            return Arrays.asList(this.array).toString();
         } else if (this.type == EppoValueType.JSON_NODE) {
             return this.node.toString();
         }
