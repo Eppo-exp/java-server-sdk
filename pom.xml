@@ -105,10 +105,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>2.22.0</version>
                 <configuration>
-                    <argLine>
-                        --add-opens java.base/java.lang=ALL-UNNAMED
-                        --add-opens java.base/java.util=ALL-UNNAMED
-                    </argLine>
+                     <!-- No argLine needed for Java 8 -->
                 </configuration>
             </plugin>
             <plugin>
