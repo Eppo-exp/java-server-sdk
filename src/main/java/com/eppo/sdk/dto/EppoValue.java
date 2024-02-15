@@ -113,6 +113,6 @@ public class EppoValue {
         } else if (this.type == EppoValueType.JSON_NODE) {
             return this.node.toString();
         }
-            return this.value;
-        }
+        return this.value;
     }
+}
