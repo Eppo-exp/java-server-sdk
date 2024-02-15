@@ -28,6 +28,9 @@ help: Makefile
 build: test-data
 	mvn --batch-mode --update-snapshots package
 
+docker-compile-java:
+	@docker run --rm -v "$$(pwd)":/usr/src/myapp -w /usr/src/myapp amd64/maven:3.8.2-ibmjava-8-alpine mvn clean compile
+	
 ## test-data
 testDataDir := src/test/resources/
 tempDir := ${testDataDir}temp/

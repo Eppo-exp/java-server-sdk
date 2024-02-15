@@ -95,7 +95,7 @@ class RuleValidatorTest {
         SubjectAttributes subjectAttributes = new SubjectAttributes();
         addNameToSubjectAttribute(subjectAttributes);
 
-        Assertions.assertTrue(RuleValidator.findMatchingRule(subjectAttributes, rules).isEmpty());
+        Assertions.assertFalse(RuleValidator.findMatchingRule(subjectAttributes, rules).isPresent());
     }
 
     @DisplayName("findMatchingRule() when no rule matches")
@@ -109,7 +109,7 @@ class RuleValidatorTest {
         SubjectAttributes subjectAttributes = new SubjectAttributes();
         addPriceToSubjectAttribute(subjectAttributes);
 
-        Assertions.assertTrue(RuleValidator.findMatchingRule(subjectAttributes, rules).isEmpty());
+        Assertions.assertFalse(RuleValidator.findMatchingRule(subjectAttributes, rules).isPresent());
     }
 
     @DisplayName("findMatchingRule() when rule matches")
@@ -138,7 +138,7 @@ class RuleValidatorTest {
         subjectAttributes.put("price", EppoValue.valueOf("abcd"));
 
 
-        Assertions.assertTrue(RuleValidator.findMatchingRule(subjectAttributes, rules).isEmpty());
+        Assertions.assertFalse(RuleValidator.findMatchingRule(subjectAttributes, rules).isPresent());
     }
 
     @DisplayName("findMatchingRule() with regex condition")
@@ -166,7 +166,7 @@ class RuleValidatorTest {
         SubjectAttributes subjectAttributes = new SubjectAttributes();
         subjectAttributes.put("match", EppoValue.valueOf("123"));
 
-        Assertions.assertTrue(RuleValidator.findMatchingRule(subjectAttributes, rules).isEmpty());
+        Assertions.assertFalse(RuleValidator.findMatchingRule(subjectAttributes, rules).isPresent());
     }
 
     @DisplayName("findMatchingRule() with not oneOf rule")
@@ -194,7 +194,7 @@ class RuleValidatorTest {
         SubjectAttributes subjectAttributes = new SubjectAttributes();
         subjectAttributes.put("oneOf", EppoValue.valueOf("value1"));
 
-        Assertions.assertTrue(RuleValidator.findMatchingRule(subjectAttributes, rules).isEmpty());
+        Assertions.assertFalse(RuleValidator.findMatchingRule(subjectAttributes, rules).isPresent());
     }
 
 }

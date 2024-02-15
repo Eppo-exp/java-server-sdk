@@ -87,7 +87,7 @@ public class EppoClient {
 
         // Find matched rule
         Optional<Rule> rule = RuleValidator.findMatchingRule(subjectAttributes, configuration.getRules());
-        if (rule.isEmpty()) {
+        if (!rule.isPresent()) {
             log.info("[Eppo SDK] No assigned variation. The subject attributes did not match any targeting rules");
             return Optional.empty();
         }
@@ -134,7 +134,7 @@ public class EppoClient {
             SubjectAttributes subjectAttributes) {
         try {
             Optional<EppoValue> value = this.getAssignmentValue(subjectKey, experimentKey, subjectAttributes);
-            if (value.isEmpty()) {
+            if (!value.isPresent()) {
                 return Optional.empty();
             }
 
