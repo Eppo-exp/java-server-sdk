@@ -315,23 +315,37 @@ public class EppoClientTest {
     assertEquals("cold-start-bandit-experiment-bandit", capturedBanditLog.experiment);
     assertEquals("cold-start-bandit", capturedBanditLog.variation);
     assertEquals("subject2", capturedBanditLog.subject);
-    assertEquals(Map.of(), capturedBanditLog.subjectAttributes);
+    assertEquals(Map.of(), capturedBanditLog.subjectNumericAttributes);
+    assertEquals(Map.of(), capturedBanditLog.subjectCategoricalAttributes);
     assertEquals("option3", capturedBanditLog.action);
-    assertEquals(Map.of(), capturedBanditLog.actionAttributes);
+    assertEquals(Map.of(), capturedBanditLog.actionNumericAttributes);
+    assertEquals(Map.of(), capturedBanditLog.actionCategoricalAttributes);
     assertEquals(0.3333, capturedBanditLog.actionProbability, 0.0002);
     assertEquals("uninitialized", capturedBanditLog.modelVersion);
   }
 
   @Test
   public void testBanditModelActionLogging() {
+    // Note: some of the passed in attributes are not used for scoring, but we do still want to make sure they are logged
+
     EppoAttributes subjectAttributes = new EppoAttributes(Map.of(
-      "gender_identity", EppoValue.valueOf("female"),
-      "days_since_signup", EppoValue.valueOf(130) // note: unused for scoring (which looks for account_age)
+    "gender_identity", EppoValue.valueOf("female"),
+    "days_since_signup", EppoValue.valueOf(130), // unused for scoring (which looks for account_age)
+    "is_premium", EppoValue.valueOf(false), // unused for scoring
+    "numeric_string", EppoValue.valueOf("123"), // unused for scoring
+    "unpopulated", EppoValue.nullValue() // unused for scoring
     ));
 
-    Map<String, EppoAttributes> actionAttributes = Map.of(
-      "nike", new EppoAttributes(Map.of("brand_affinity", EppoValue.valueOf(0.25))),
-      "adidas", new EppoAttributes(Map.of("brand_affinity", EppoValue.valueOf(0.1))),
+    Map<String, EppoAttributes> actionsWithAttributes = Map.of(
+      "nike", new EppoAttributes(Map.of(
+        "brand_affinity", EppoValue.valueOf(0.25)
+      )),
+      "adidas", new EppoAttributes(Map.of(
+        "brand_affinity", EppoValue.valueOf(0.1),
+        "num_brand_purchases", EppoValue.valueOf(5), // unused for scoring
+        "in_email_campaign", EppoValue.valueOf(true), // unused for scoring
+        "also_unpopulated", EppoValue.nullValue() // unused for scoring
+      )),
       "puma", new EppoAttributes(Map.of())
     );
 
@@ -340,7 +354,7 @@ public class EppoClientTest {
       "subject2",
       "banner-bandit-experiment",
       subjectAttributes,
-      actionAttributes
+      actionsWithAttributes
     );
 
     // Verify assignment
@@ -365,11 +379,20 @@ public class EppoClientTest {
     assertEquals("banner-bandit-experiment-bandit", capturedBanditLog.experiment);
     assertEquals("banner-bandit", capturedBanditLog.variation);
     assertEquals("subject2", capturedBanditLog.subject);
-    assertEquals(subjectAttributes, capturedBanditLog.subjectAttributes);
     assertEquals("adidas", capturedBanditLog.action);
-    assertEquals(actionAttributes.get("adidas"), capturedBanditLog.actionAttributes);
     assertEquals(0.2899, capturedBanditLog.actionProbability, 0.0002);
     assertEquals("falcon v123", capturedBanditLog.modelVersion);
+    assertEquals(Map.of("days_since_signup", 130.0), capturedBanditLog.subjectNumericAttributes);
+    assertEquals(Map.of(
+      "gender_identity", "female",
+      "is_premium", "false",
+      "numeric_string", "123"
+    ), capturedBanditLog.subjectCategoricalAttributes);
+    assertEquals(Map.of(
+      "brand_affinity", 0.1,
+      "num_brand_purchases", 5.0
+    ), capturedBanditLog.actionNumericAttributes);
+    assertEquals(Map.of("in_email_campaign", "true"), capturedBanditLog.actionCategoricalAttributes);
   }
 
   @Test
@@ -441,11 +464,17 @@ public class EppoClientTest {
 
     Set<String> banditActions = Set.of("option1", "option2", "option3");
 
+    EppoAttributes subjectAttributes = new EppoAttributes(Map.of(
+      "account_age", EppoValue.valueOf(90),
+      "loyalty_tier", EppoValue.valueOf("gold"),
+      "is_account_admin", EppoValue.valueOf(false)
+    ));
+
     // Attempt to get a bandit assignment
     Optional<String> stringAssignment = EppoClient.getInstance().getStringAssignment(
             "subject10",
             "cold-start-bandit-experiment",
-            new EppoAttributes(),
+            subjectAttributes,
             banditActions
     );
 
@@ -454,12 +483,19 @@ public class EppoClientTest {
     assertEquals("control", stringAssignment.get());
 
     // Manually log an action
+
+    EppoAttributes controlActionAttributes = new EppoAttributes(Map.of(
+      "brand", EppoValue.valueOf("skechers"),
+      "num_past_purchases", EppoValue.valueOf(0),
+      "has_promo_code", EppoValue.valueOf(true)
+    ));
+
     Exception banditLoggingException = EppoClient.getInstance().logNonBanditAction(
       "subject10",
       "cold-start-bandit-experiment",
-      new EppoAttributes(),
+      subjectAttributes,
       "option0",
-      new EppoAttributes()
+      controlActionAttributes
     );
     assertNull(banditLoggingException);
 
@@ -472,7 +508,7 @@ public class EppoClientTest {
     assertEquals("bandit", capturedAssignmentLog.allocation);
     assertEquals("control", capturedAssignmentLog.variation);
     assertEquals("subject10", capturedAssignmentLog.subject);
-    assertEquals(Map.of(), capturedAssignmentLog.subjectAttributes);
+    assertEquals(subjectAttributes, capturedAssignmentLog.subjectAttributes);
 
     // Verify bandit log
     ArgumentCaptor<BanditLogData> banditLogCaptor = ArgumentCaptor.forClass(BanditLogData.class);
@@ -481,11 +517,13 @@ public class EppoClientTest {
     assertEquals("cold-start-bandit-experiment-bandit", capturedBanditLog.experiment);
     assertEquals("control", capturedBanditLog.variation);
     assertEquals("subject10", capturedBanditLog.subject);
-    assertEquals(Map.of(), capturedBanditLog.subjectAttributes);
     assertEquals("option0", capturedBanditLog.action);
-    assertEquals(Map.of(), capturedBanditLog.actionAttributes);
     assertNull(capturedBanditLog.actionProbability);
     assertNull(capturedBanditLog.modelVersion);
+    assertEquals(Map.of("account_age", 90.0), capturedBanditLog.subjectNumericAttributes);
+    assertEquals(Map.of("loyalty_tier", "gold", "is_account_admin", "false"), capturedBanditLog.subjectCategoricalAttributes);
+    assertEquals(Map.of("num_past_purchases", 0.0), capturedBanditLog.actionNumericAttributes);
+    assertEquals(Map.of("brand", "skechers", "has_promo_code", "true"), capturedBanditLog.actionCategoricalAttributes);
   }
 
   @Test

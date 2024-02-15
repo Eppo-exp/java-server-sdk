@@ -45,7 +45,7 @@ public class EppoClient {
             String subjectKey,
             String flagKey,
             EppoAttributes subjectAttributes,
-            Map<String, EppoAttributes> assignmentOptions
+            Map<String, EppoAttributes> actionsWithAttributes
     ) {
         // Validate Input Values
         InputValidator.validateNotBlank(subjectKey, "Invalid argument: subjectKey cannot be blank");
@@ -70,7 +70,7 @@ public class EppoClient {
             return assignmentValue;
         } else if (assignedVariation.getAlgorithmType() == AlgorithmType.BANDIT) {
             // Assigned variation is a bandit; need to use the bandit to determine its value
-            assignmentValue = this.determineAndLogBanditAction(assignmentResult, assignmentOptions);
+            assignmentValue = this.determineAndLogBanditAction(assignmentResult, actionsWithAttributes);
         }
 
         // Log the assignment
@@ -171,7 +171,7 @@ public class EppoClient {
 
         EppoValue actionValue = selectedAction.getTypedValue();
         String actionString = actionValue.stringValue();
-        float actionProbability = VariationHelper.variationProbability(selectedAction, assignmentResult.getSubjectShards());
+        double actionProbability = VariationHelper.variationProbability(selectedAction, assignmentResult.getSubjectShards());
 
         if (this.eppoClientConfig.getBanditLogger() != null) {
             // Do bandit-specific logging
@@ -187,16 +187,22 @@ public class EppoClient {
                 actionAttributes = assignmentOptions.get(actionString);
             }
 
-            // TODO FF-1546: break out logging the attributes by numeric and categorical
+            Map<String, Double> subjectNumericAttributes = numericAttributes(assignmentResult.getSubjectAttributes());
+            Map<String, String> subjectCategoricalAttributes = categoricalAttributes(assignmentResult.getSubjectAttributes());
+            Map<String, Double> actionNumericAttributes = numericAttributes(actionAttributes);
+            Map<String, String> actionCategoricalAttributes = categoricalAttributes(actionAttributes);
+
             this.eppoClientConfig.getBanditLogger().logBanditAction(new BanditLogData(
               assignmentResult.getExperimentKey(),
               banditName,
               assignmentResult.getSubjectKey(),
-              assignmentResult.getSubjectAttributes(),
               actionString,
-              actionAttributes,
               actionProbability,
-              modelVersionToLog
+              modelVersionToLog,
+              subjectNumericAttributes,
+              subjectCategoricalAttributes,
+              actionNumericAttributes,
+              actionCategoricalAttributes
             ));
         }
 
@@ -217,22 +223,26 @@ public class EppoClient {
             String subjectKey,
             String experimentKey,
             EppoAttributes subjectAttributes,
-            Map<String, EppoAttributes> assignmentOptions
+            Map<String, EppoAttributes> actionsWithAttributes
     ) {
-        Optional<EppoValue> value = this.getAssignmentValue(subjectKey, experimentKey, subjectAttributes, assignmentOptions);
+        Optional<EppoValue> value = this.getAssignmentValue(subjectKey, experimentKey, subjectAttributes, actionsWithAttributes);
         if (value.isEmpty()) {
             return Optional.empty();
         }
 
+        EppoValue eppoValue = value.get();
+
         switch (type) {
-            case BOOLEAN:
-                return Optional.of(value.get().boolValue());
             case NUMBER:
-                return Optional.of(value.get().doubleValue());
+                return Optional.of(eppoValue.doubleValue());
+            case BOOLEAN:
+                return Optional.of(eppoValue.boolValue());
+            case ARRAY_OF_STRING:
+                return Optional.of(eppoValue.arrayValue());
             case JSON_NODE:
-                return Optional.of(value.get().jsonNodeValue());
-            default:
-                return Optional.of(value.get().stringValue());
+                return Optional.of(eppoValue.jsonNodeValue());
+            default: // strings and null
+                return Optional.of(eppoValue.stringValue());
         }
     }
 
@@ -295,22 +305,21 @@ public class EppoClient {
      * @param subjectAttributes optional attributes associated with the subject, for example name, email,
      *                          account age, etc. The subject attributes are used for evaluating any targeting
      *                          rules as well as weighting assignment choices for bandits.
-     * @param assignmentOptions used by bandits to know the assignment options (i.e., actions) available. Options are
-     *                          given without attributes, as a set of option names.
+     * @param actions used by bandits to know the actions (potential assignments) available.
      * @return the variation string assigned to the subject, or null if an unrecoverable error was encountered.
      */
     public Optional<String> getStringAssignment(
             String subjectKey,
             String flagKey,
             EppoAttributes subjectAttributes,
-            Set<String> assignmentOptions
+            Set<String> actions
     ) {
-        Map<String, EppoAttributes> assignmentOptionsWithAttributes = assignmentOptions.stream()
+        Map<String, EppoAttributes> actionsWithEmptyAttributes = actions.stream()
                 .collect(Collectors.toMap(
                         key -> key,
                         value -> new EppoAttributes()
                 ));
-        return this.getStringAssignment(subjectKey, flagKey, subjectAttributes, assignmentOptionsWithAttributes);
+        return this.getStringAssignment(subjectKey, flagKey, subjectAttributes, actionsWithEmptyAttributes);
     }
 
     /**
@@ -321,18 +330,18 @@ public class EppoClient {
      * @param subjectAttributes optional attributes associated with the subject, for example name, email,
      *                          account age, etc. The subject attributes are used for evaluating any targeting
      *                          rules as well as weighting assignment choices for bandits.
-     * @param assignmentOptions used by bandits to know the assignment options (i.e., actions) available. Options are
-     *                          given as a mapping of the option name to the attributes associated with that option.
+     * @param actionsWithAttributes used by bandits to know the actions (assignment options) available and any
+     *                              attributes associated with that option.
      * @return the variation string assigned to the subject, or null if an unrecoverable error was encountered.
      */
     public Optional<String> getStringAssignment(
             String subjectKey,
             String flagKey,
             EppoAttributes subjectAttributes,
-            Map<String, EppoAttributes> assignmentOptions
+            Map<String, EppoAttributes> actionsWithAttributes
     ) {
         @SuppressWarnings("unchecked")
-        Optional<String> typedAssignment = (Optional<String>) this.getTypedAssignment(EppoValueType.STRING, subjectKey, flagKey, subjectAttributes, assignmentOptions);
+        Optional<String> typedAssignment = (Optional<String>) this.getTypedAssignment(EppoValueType.STRING, subjectKey, flagKey, subjectAttributes, actionsWithAttributes);
         return typedAssignment;
     }
 
@@ -450,7 +459,7 @@ public class EppoClient {
             String subjectKey,
             String experimentKey,
             int subjectShards,
-            float percentageExposure) {
+            double percentageExposure) {
         int shard = Shard.getShard("exposure-" + subjectKey + "-" + experimentKey, subjectShards);
         return shard <= percentageExposure * subjectShards;
     }
@@ -466,7 +475,7 @@ public class EppoClient {
             String subjectKey,
             ExperimentConfiguration experimentConfiguration) {
         String hexedSubjectKey = Shard.getHex(subjectKey);
-        return experimentConfiguration.getTypedOverrides().getOrDefault(hexedSubjectKey, new EppoValue());
+        return experimentConfiguration.getTypedOverrides().getOrDefault(hexedSubjectKey, EppoValue.nullValue());
     }
 
     /***
@@ -497,21 +506,51 @@ public class EppoClient {
 
             String variationValue = assignmentResult.getVariation().getTypedValue().toString();
 
+            Map<String, Double> subjectNumericAttributes = numericAttributes(subjectAttributes);
+            Map<String, String> subjectCategoricalAttributes = categoricalAttributes(subjectAttributes);
+            Map<String, Double> actionNumericAttributes = numericAttributes(actionAttributes);
+            Map<String, String> actionCategoricalAttributes = categoricalAttributes(actionAttributes);
+
             this.eppoClientConfig.getBanditLogger().logBanditAction(new BanditLogData(
               assignmentResult.getExperimentKey(),
               variationValue,
               subjectKey,
-              subjectAttributes,
               actionString,
-              actionAttributes,
               null,
-              null
+              null,
+              subjectNumericAttributes,
+              subjectCategoricalAttributes,
+              actionNumericAttributes,
+              actionCategoricalAttributes
             ));
         } catch (Exception ex) {
             loggingException = ex;
         }
         return loggingException;
     }
+
+    private Map<String, Double> numericAttributes(EppoAttributes eppoAttributes) {
+        if (eppoAttributes == null) {
+            return Map.of();
+        }
+        return eppoAttributes.entrySet().stream().filter(e -> e.getValue().isNumeric()
+        ).collect(Collectors.toMap(
+          Map.Entry::getKey,
+          e -> e.getValue().doubleValue())
+        );
+    }
+
+    private Map<String, String> categoricalAttributes(EppoAttributes eppoAttributes) {
+        if (eppoAttributes == null) {
+            return Map.of();
+        }
+        return eppoAttributes.entrySet().stream().filter(e -> !e.getValue().isNumeric() && !e.getValue().isNull()
+        ).collect(Collectors.toMap(
+          Map.Entry::getKey,
+          e -> e.getValue().toString())
+        );
+    }
+
 
     /***
      * This function is used to initialize the Eppo Client

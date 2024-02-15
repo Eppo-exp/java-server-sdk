@@ -22,7 +22,7 @@ public class VariationHelper {
         return variation.get();
     }
 
-    static public float variationProbability(Variation variation, int subjectShards) {
-        return (float)(variation.getShardRange().end - variation.getShardRange().start + 1) / subjectShards;
+    static public double variationProbability(Variation variation, int subjectShards) {
+        return (double)(variation.getShardRange().end - variation.getShardRange().start + 1) / subjectShards;
     }
 }
