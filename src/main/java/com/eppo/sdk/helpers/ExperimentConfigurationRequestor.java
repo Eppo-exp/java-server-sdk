@@ -8,8 +8,9 @@ import lombok.extern.slf4j.Slf4j;
 import com.eppo.sdk.constants.Constants;
 import com.eppo.sdk.dto.ExperimentConfigurationResponse;
 import com.eppo.sdk.exception.InvalidApiKeyException;
+import org.apache.http.HttpResponse;
+import org.apache.http.util.EntityUtils;
 
-import java.net.http.HttpResponse;
 import java.util.Optional;
 
 /**
@@ -33,10 +34,10 @@ public class ExperimentConfigurationRequestor {
     public Optional<ExperimentConfigurationResponse> fetchExperimentConfiguration() {
         ExperimentConfigurationResponse config = null;
         try {
-            HttpResponse<String> response = this.eppoHttpClient.get(Constants.RAC_ENDPOINT);
-            int statusCode = response.statusCode();
+            HttpResponse response = this.eppoHttpClient.get(Constants.RAC_ENDPOINT);
+            int statusCode = response.getStatusLine().getStatusCode();
             if (statusCode == 200) {
-                config = OBJECT_MAPPER.readValue(response.body(), ExperimentConfigurationResponse.class);
+                config = OBJECT_MAPPER.readValue(EntityUtils.toString(response.getEntity()), ExperimentConfigurationResponse.class);
             }
             if (statusCode == 401) { // unauthorized - invalid API key
                 throw new InvalidApiKeyException("Unauthorized: invalid Eppo API key.");
