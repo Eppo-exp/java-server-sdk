@@ -35,6 +35,21 @@ class RuleValidatorTest {
         addConditionToRule(rule, condition2);
     }
 
+    public void addSemVerConditionToRule(Rule rule) {
+        Condition condition1 = new Condition();
+        condition1.value = EppoValue.valueOf("1.5.0");
+        condition1.attribute = "version";
+        condition1.operator = OperatorType.GTE;
+
+        Condition condition2 = new Condition();
+        condition2.value = EppoValue.valueOf("2.2.0");
+        condition2.attribute = "version";
+        condition2.operator = OperatorType.LT;
+
+        addConditionToRule(rule, condition1);
+        addConditionToRule(rule, condition2);
+    }
+
     public void addRegexConditionToRule(Rule rule) {
         Condition condition = new Condition();
         condition.value = EppoValue.valueOf("[a-z]+");
@@ -85,7 +100,8 @@ class RuleValidatorTest {
         SubjectAttributes subjectAttributes = new SubjectAttributes();
         addNameToSubjectAttribute(subjectAttributes);
 
-        Assertions.assertEquals(ruleWithEmptyConditions, RuleValidator.findMatchingRule(subjectAttributes, rules).get());
+        Assertions.assertEquals(ruleWithEmptyConditions,
+                RuleValidator.findMatchingRule(subjectAttributes, rules).get());
     }
 
     @DisplayName("findMatchingRule() with empty rules")
@@ -126,6 +142,20 @@ class RuleValidatorTest {
         Assertions.assertEquals(rule, RuleValidator.findMatchingRule(subjectAttributes, rules).get());
     }
 
+    @DisplayName("findMatchingRule() when rule matches with semver")
+    @Test
+    void testMatchesAnyRuleWhenRuleMatchesWithSemVer() {
+        List<Rule> rules = new ArrayList<>();
+        Rule rule = createRule(new ArrayList<>());
+        addSemVerConditionToRule(rule);
+        rules.add(rule);
+
+        SubjectAttributes subjectAttributes = new SubjectAttributes();
+        subjectAttributes.put("version", EppoValue.valueOf("1.15.5"));
+
+        Assertions.assertEquals(rule, RuleValidator.findMatchingRule(subjectAttributes, rules).get());
+    }
+
     @DisplayName("findMatchingRule() throw InvalidSubjectAttribute")
     @Test
     void testMatchesAnyRuleWhenThrowInvalidSubjectAttribute() {
@@ -136,7 +166,6 @@ class RuleValidatorTest {
 
         SubjectAttributes subjectAttributes = new SubjectAttributes();
         subjectAttributes.put("price", EppoValue.valueOf("abcd"));
-
 
         Assertions.assertFalse(RuleValidator.findMatchingRule(subjectAttributes, rules).isPresent());
     }
