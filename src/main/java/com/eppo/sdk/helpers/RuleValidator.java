@@ -26,18 +26,6 @@ interface IConditionFunc<T> {
  */
 class Compare {
     /**
-     * This function is used to compare number
-     *
-     * @param a
-     * @param b
-     * @param conditionFunc
-     * @return
-     */
-    public static boolean compareNumber(double a, double b, IConditionFunc<Double> conditionFunc) {
-        return conditionFunc.check(a, b);
-    }
-
-    /**
      * This function is used to compare Regex
      *
      * @param a
@@ -120,33 +108,45 @@ public class RuleValidator {
             try {
                 switch (condition.operator) {
                     case GTE:
+                        if (value.isNumeric() && condition.value.isNumeric()) {
+                            return value.doubleValue() >= condition.value.doubleValue();
+                        }
+
                         if (valueSemVer.isPresent() && conditionSemVer.isPresent()) {
                             return valueSemVer.get().isHigherThanOrEquivalentTo(conditionSemVer.get());
                         }
 
-                        return Compare.compareNumber(value.doubleValue(), condition.value.doubleValue(),
-                                (a, b) -> a >= b);
+                        return false;
                     case GT:
+                        if (value.isNumeric() && condition.value.isNumeric()) {
+                            return value.doubleValue() > condition.value.doubleValue();
+                        }
+
                         if (valueSemVer.isPresent() && conditionSemVer.isPresent()) {
                             return valueSemVer.get().isHigherThan(conditionSemVer.get());
                         }
 
-                        return Compare.compareNumber(value.doubleValue(), condition.value.doubleValue(),
-                                (a, b) -> a > b);
+                        return false;
                     case LTE:
+                        if (value.isNumeric() && condition.value.isNumeric()) {
+                            return value.doubleValue() <= condition.value.doubleValue();
+                        }
+
                         if (valueSemVer.isPresent() && conditionSemVer.isPresent()) {
                             return valueSemVer.get().isLowerThanOrEquivalentTo(conditionSemVer.get());
                         }
 
-                        return Compare.compareNumber(value.doubleValue(), condition.value.doubleValue(),
-                                (a, b) -> a <= b);
+                        return false;
                     case LT:
+                        if (value.isNumeric() && condition.value.isNumeric()) {
+                            return value.doubleValue() < condition.value.doubleValue();
+                        }
+
                         if (valueSemVer.isPresent() && conditionSemVer.isPresent()) {
                             return valueSemVer.get().isLowerThan(conditionSemVer.get());
                         }
 
-                        return Compare.compareNumber(value.doubleValue(), condition.value.doubleValue(),
-                                (a, b) -> a < b);
+                        return false;
                     case MATCHES:
                         return Compare.compareRegex(value.stringValue(),
                                 Pattern.compile(condition.value.stringValue()));
