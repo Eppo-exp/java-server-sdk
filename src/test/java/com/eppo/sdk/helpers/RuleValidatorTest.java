@@ -37,7 +37,7 @@ class RuleValidatorTest {
 
     public void addSemVerConditionToRule(Rule rule) {
         Condition condition1 = new Condition();
-        condition1.value = EppoValue.valueOf("1.0.0");
+        condition1.value = EppoValue.valueOf("1.5.0");
         condition1.attribute = "version";
         condition1.operator = OperatorType.GTE;
 
@@ -151,7 +151,7 @@ class RuleValidatorTest {
         rules.add(rule);
 
         SubjectAttributes subjectAttributes = new SubjectAttributes();
-        subjectAttributes.put("version", EppoValue.valueOf("2.0.5"));
+        subjectAttributes.put("version", EppoValue.valueOf("1.15.5"));
 
         Assertions.assertEquals(rule, RuleValidator.findMatchingRule(subjectAttributes, rules).get());
     }
