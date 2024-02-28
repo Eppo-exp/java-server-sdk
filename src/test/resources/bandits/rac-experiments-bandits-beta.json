@@ -32,7 +32,7 @@
                 "start": 2000,
                 "end": 10000
               },
-              "algorithmType": "bandit"
+              "algorithmType": "CONTEXTUAL_BANDIT"
             }
           ]
         }
@@ -70,7 +70,7 @@
                 "start": 2000,
                 "end": 10000
               },
-              "algorithmType": "bandit"
+              "algorithmType": "CONTEXTUAL_BANDIT"
             }
           ]
         }

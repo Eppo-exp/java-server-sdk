@@ -113,7 +113,7 @@ public class ConfigurationStore {
                     .getAllocations()
                     .values()
                     .stream().anyMatch(
-                      a -> a.getVariations().stream().anyMatch(v -> v.getAlgorithmType() == AlgorithmType.BANDIT)
+                      a -> a.getVariations().stream().anyMatch(v -> v.getAlgorithmType() == AlgorithmType.CONTEXTUAL_BANDIT)
                     );
 
                 if (configuration.isEnabled() && hasBanditVariation) {

@@ -64,11 +64,12 @@ public class EppoClient {
         String experimentKey = assignmentResult.getExperimentKey();
         String allocationKey = assignmentResult.getAllocationKey();
         String assignedVariationString = assignedVariation.getTypedValue().stringValue();
+        AlgorithmType algorithmType = assignedVariation.getAlgorithmType();
 
-        if (assignedVariation.getAlgorithmType() == AlgorithmType.OVERRIDE) {
+        if (algorithmType == AlgorithmType.OVERRIDE) {
             // Assigned variation was from an override; return its value without logging
             return assignmentValue;
-        } else if (assignedVariation.getAlgorithmType() == AlgorithmType.BANDIT) {
+        } else if (algorithmType == AlgorithmType.CONTEXTUAL_BANDIT) {
             // Assigned variation is a bandit; need to use the bandit to determine its value
             assignmentValue = this.determineAndLogBanditAction(assignmentResult, actionsWithAttributes);
         }
