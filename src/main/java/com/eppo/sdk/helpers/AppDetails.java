@@ -24,7 +24,7 @@ public class AppDetails {
         Properties prop = new Properties();
         try {
             prop = readPropertiesFile("app.properties");
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             log.warn("Unable to read properties file", ex);
         }
         this.version = prop.getProperty("app.version", "1.0.0");
@@ -42,9 +42,8 @@ public class AppDetails {
     public static Properties readPropertiesFile(String fileName) throws IOException {
         ClassLoader loader = Thread.currentThread().getContextClassLoader();
         Properties props = new Properties();
-        try(InputStream resourceStream = loader.getResourceAsStream(fileName)) {
-            props.load(resourceStream);
-        }
+        InputStream resourceStream = loader.getResourceAsStream(fileName);
+        props.load(resourceStream);
         return props;
     }
 
