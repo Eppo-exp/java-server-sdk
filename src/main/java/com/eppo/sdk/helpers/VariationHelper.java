@@ -23,6 +23,6 @@ public class VariationHelper {
     }
 
     static public double variationProbability(Variation variation, int subjectShards) {
-        return (double)(variation.getShardRange().end - variation.getShardRange().start + 1) / subjectShards;
+        return (double)(variation.getShardRange().end - variation.getShardRange().start) / subjectShards;
     }
 }
