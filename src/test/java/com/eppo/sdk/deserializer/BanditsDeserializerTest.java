@@ -20,7 +20,7 @@ class BanditsDeserializerTest {
         String jsonString = FileUtils.readFileToString(new File("src/test/resources/bandits/bandits-parameters-1.json"), "UTF8");
         BanditParametersResponse responseObject = this.mapper.readValue(jsonString, BanditParametersResponse.class);
 
-        assertEquals(1, responseObject.getBandits().size());
+        assertEquals(2, responseObject.getBandits().size());
         BanditParameters parameters = responseObject.getBandits().get("banner-bandit");
         assertEquals("banner-bandit", parameters.getBanditKey());
         assertEquals("falcon", parameters.getModelName());

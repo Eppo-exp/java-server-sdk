@@ -13,7 +13,7 @@
       ],
       "allocations": {
         "bandit": {
-          "percentExposure": 0.4533,
+          "percentExposure": 1.0,
           "variations": [
             {
               "name": "control",
@@ -28,6 +28,44 @@
               "name": "bandit",
               "value": "cold-start-bandit",
               "typedValue": "cold-start-bandit",
+              "shardRange": {
+                "start": 2000,
+                "end": 10000
+              },
+              "algorithmType": "CONTEXTUAL_BANDIT"
+            }
+          ]
+        }
+      }
+    },
+    "uninitialized-bandit-experiment": {
+      "subjectShards": 10000,
+      "overrides": {},
+      "typedOverrides": {},
+      "enabled": true,
+      "rules": [
+        {
+          "allocationKey": "bandit",
+          "conditions": []
+        }
+      ],
+      "allocations": {
+        "bandit": {
+          "percentExposure": 0.4533,
+          "variations": [
+            {
+              "name": "control",
+              "value": "control",
+              "typedValue": "control",
+              "shardRange": {
+                "start": 0,
+                "end": 2000
+              }
+            },
+            {
+              "name": "bandit",
+              "value": "this-bandit-does-not-exist",
+              "typedValue": "this-bandit-does-not-exist",
               "shardRange": {
                 "start": 2000,
                 "end": 10000
