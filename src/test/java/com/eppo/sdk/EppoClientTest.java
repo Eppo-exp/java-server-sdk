@@ -50,13 +50,13 @@ public class EppoClientTest {
   }
 
   @Data
-  static class SubjectWithAttributes {
+  protected static class SubjectWithAttributes {
     String subjectKey;
     EppoAttributes subjectAttributes;
   }
 
   @Data
-  static class AssignmentTestCase {
+  protected static class AssignmentTestCase {
     String experiment;
     @JsonDeserialize(using = AssignmentValueTypeDeserializer.class)
     AssignmentValueType valueType = AssignmentValueType.STRING;
@@ -125,7 +125,7 @@ public class EppoClientTest {
   private IBanditLogger mockBanditLogger;
 
   @BeforeEach
-  void init() {
+  public void init() {
     System.out.println(">>>> BEFORE EACH START");
     mockAssignmentLogger = mock(IAssignmentLogger.class);
     mockBanditLogger = mock(IBanditLogger.class);
@@ -156,12 +156,12 @@ public class EppoClientTest {
   }
 
   @AfterEach
-  void teardown() {
+  public void teardown() {
     this.mockServer.stop();
   }
 
   @Test()
-  void testGracefulModeOn() {
+  public void testGracefulModeOn() {
     EppoClientConfig config = EppoClientConfig.builder()
         .apiKey("mock-api-key")
         .baseURL("http://localhost:4001")
@@ -201,7 +201,7 @@ public class EppoClientTest {
   }
 
   @Test()
-  void testGracefulModeOff() {
+  public void testGracefulModeOff() {
     EppoClientConfig config = EppoClientConfig.builder()
         .apiKey("mock-api-key")
         .baseURL("http://localhost:4001")
@@ -238,7 +238,7 @@ public class EppoClientTest {
 
   @ParameterizedTest
   @MethodSource("getAssignmentTestData")
-  void testAssignments(AssignmentTestCase testCase) {
+  public void testAssignments(AssignmentTestCase testCase) {
 
     // These test cases rely on the currently shared non-bandit RAC, so we need to re-initialize our client to use that
     String racResponseJson = getMockRandomizedAssignmentResponse("src/test/resources/rac-experiments-v3.json");
