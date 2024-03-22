@@ -6,8 +6,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 
 import com.eppo.sdk.exception.InvalidApiKeyException;
+import org.apache.http.HttpResponse;
+import org.apache.http.util.EntityUtils;
 
-import java.net.http.HttpResponse;
 import java.util.Optional;
 
 @Slf4j
@@ -26,10 +27,10 @@ public class ConfigurationRequestor<T> {
     public Optional<T> fetchConfiguration() {
         T config = null;
         try {
-            HttpResponse<String> response = this.eppoHttpClient.get(this.endpoint);
-            int statusCode = response.statusCode();
+            HttpResponse response = this.eppoHttpClient.get(this.endpoint);
+            int statusCode = response.getStatusLine().getStatusCode();
             if (statusCode == 200) {
-                config = OBJECT_MAPPER.readValue(response.body(), this.responseClass);
+              config = OBJECT_MAPPER.readValue(EntityUtils.toString(response.getEntity()), this.responseClass);
             }
             if (statusCode == 401) { // unauthorized - invalid API key
                 throw new InvalidApiKeyException("Unauthorized: invalid Eppo API key.");

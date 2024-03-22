@@ -1,5 +1,13 @@
 package com.eppo.sdk;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
@@ -7,6 +15,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.eppo.sdk.dto.*;
+import com.eppo.sdk.exception.ExperimentConfigurationNotFound;
 import com.eppo.sdk.helpers.Converter;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.*;
@@ -21,7 +30,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
@@ -115,13 +123,13 @@ public class EppoClientTest {
     }
   }
 
-  private IAssignmentLogger mockAssignmentLogger = mock();
-  private IBanditLogger mockBanditLogger = mock();
+  private IAssignmentLogger mockAssignmentLogger;
+  private IBanditLogger mockBanditLogger;
 
   @BeforeEach
   void init() {
-    mockAssignmentLogger = mock();
-    mockBanditLogger = mock();
+    mockAssignmentLogger = mock(IAssignmentLogger.class);
+    mockBanditLogger = mock(IBanditLogger.class);
 
     // For now, use our special bandits RAC until we fold it into the shared test case suite
     this.mockServer = new WireMockServer(TEST_PORT);
@@ -149,6 +157,82 @@ public class EppoClientTest {
   @AfterEach
   void teardown() {
     this.mockServer.stop();
+  }
+
+  @Test()
+  void testGracefulModeOn() {
+    EppoClientConfig config = EppoClientConfig.builder()
+        .apiKey("mock-api-key")
+        .baseURL("http://localhost:4001")
+        .isGracefulMode(true)
+        .assignmentLogger(new IAssignmentLogger() {
+          @Override
+          public void logAssignment(AssignmentLogData logData) {
+            // Auto-generated method stub
+          }
+        })
+        .build();
+    EppoClient.init(config);
+    EppoClient realClient = EppoClient.getInstance();
+
+    EppoClient spyClient = spy(realClient);
+
+    doThrow(new ExperimentConfigurationNotFound("Exception thrown by mock"))
+        .when(spyClient)
+        .getAssignmentValue(
+            anyString(),
+            anyString(),
+            any(EppoAttributes.class),
+            anyMapOf(String.class, EppoAttributes.class)
+        );
+
+    assertDoesNotThrow(() -> spyClient.getBooleanAssignment("subject1", "experiment1"));
+    assertDoesNotThrow(() -> spyClient.getDoubleAssignment("subject1", "experiment1"));
+    assertDoesNotThrow(() -> spyClient.getParsedJSONAssignment("subject1", "experiment1"));
+    assertDoesNotThrow(() -> spyClient.getJSONStringAssignment("subject1", "experiment1"));
+    assertDoesNotThrow(() -> spyClient.getStringAssignment("subject1", "experiment1"));
+
+    assertEquals(Optional.empty(), spyClient.getBooleanAssignment("subject1", "experiment1"));
+    assertEquals(Optional.empty(), spyClient.getDoubleAssignment("subject1", "experiment1"));
+    assertEquals(Optional.empty(), spyClient.getParsedJSONAssignment("subject1", "experiment1"));
+    assertEquals(Optional.empty(), spyClient.getJSONStringAssignment("subject1", "experiment1"));
+    assertEquals(Optional.empty(), spyClient.getStringAssignment("subject1", "experiment1"));
+  }
+
+  @Test()
+  void testGracefulModeOff() {
+    EppoClientConfig config = EppoClientConfig.builder()
+        .apiKey("mock-api-key")
+        .baseURL("http://localhost:4001")
+        .isGracefulMode(false)
+        .assignmentLogger(new IAssignmentLogger() {
+          @Override
+          public void logAssignment(AssignmentLogData logData) {
+            // Auto-generated method stub
+          }
+        })
+        .build();
+    EppoClient.init(config);
+    EppoClient realClient = EppoClient.getInstance();
+
+    EppoClient spyClient = spy(realClient);
+
+    doThrow(new ExperimentConfigurationNotFound("Exception thrown by mock"))
+        .when(spyClient).getAssignmentValue(
+            anyString(),
+            anyString(),
+            any(EppoAttributes.class),
+            anyMapOf(String.class, EppoAttributes.class)
+        );
+
+    assertThrows(ExperimentConfigurationNotFound.class,
+        () -> spyClient.getBooleanAssignment("subject1", "experiment1"));
+    assertThrows(ExperimentConfigurationNotFound.class, () -> spyClient.getDoubleAssignment("subject1", "experiment1"));
+    assertThrows(ExperimentConfigurationNotFound.class,
+        () -> spyClient.getParsedJSONAssignment("subject1", "experiment1"));
+    assertThrows(ExperimentConfigurationNotFound.class,
+        () -> spyClient.getJSONStringAssignment("subject1", "experiment1"));
+    assertThrows(ExperimentConfigurationNotFound.class, () -> spyClient.getStringAssignment("subject1", "experiment1"));
   }
 
   @ParameterizedTest
@@ -283,7 +367,7 @@ public class EppoClientTest {
 
   @Test
   public void testBanditColdStartAction() {
-    Set<String> banditActions = Set.of("option1", "option2", "option3");
+    Set<String> banditActions = Stream.of("option1", "option2", "option3").collect(Collectors.toSet());
 
     // Attempt to get a bandit assignment
     Optional<String> stringAssignment = EppoClient.getInstance().getStringAssignment(
@@ -294,7 +378,7 @@ public class EppoClientTest {
     );
 
     // Verify assignment
-    assertFalse(stringAssignment.isEmpty());
+    assertTrue(stringAssignment.isPresent());
     assertTrue(banditActions.contains(stringAssignment.get()));
 
     // Verify experiment assignment log
@@ -306,7 +390,7 @@ public class EppoClientTest {
     assertEquals("bandit", capturedAssignmentLog.allocation);
     assertEquals("cold-start-bandit", capturedAssignmentLog.variation);
     assertEquals("subject1", capturedAssignmentLog.subject);
-    assertEquals(Map.of(), capturedAssignmentLog.subjectAttributes);
+    assertEquals(new EppoAttributes(), capturedAssignmentLog.subjectAttributes);
 
     // Verify bandit log
     ArgumentCaptor<BanditLogData> banditLogCaptor = ArgumentCaptor.forClass(BanditLogData.class);
@@ -315,18 +399,18 @@ public class EppoClientTest {
     assertEquals("cold-start-bandit-experiment-bandit", capturedBanditLog.experiment);
     assertEquals("cold-start-bandit", capturedBanditLog.banditKey);
     assertEquals("subject1", capturedBanditLog.subject);
-    assertEquals(Map.of(), capturedBanditLog.subjectNumericAttributes);
-    assertEquals(Map.of(), capturedBanditLog.subjectCategoricalAttributes);
+    assertEquals(new HashMap<>(), capturedBanditLog.subjectNumericAttributes);
+    assertEquals(new HashMap<>(), capturedBanditLog.subjectCategoricalAttributes);
     assertEquals("option1", capturedBanditLog.action);
-    assertEquals(Map.of(), capturedBanditLog.actionNumericAttributes);
-    assertEquals(Map.of(), capturedBanditLog.actionCategoricalAttributes);
+    assertEquals(new HashMap<>(), capturedBanditLog.actionNumericAttributes);
+    assertEquals(new HashMap<>(), capturedBanditLog.actionCategoricalAttributes);
     assertEquals(0.3333, capturedBanditLog.actionProbability, 0.0002);
     assertEquals("falcon cold start", capturedBanditLog.modelVersion);
   }
 
   @Test
   public void testBanditUninitializedAction() {
-    Set<String> banditActions = Set.of("option1", "option2", "option3");
+    Set<String> banditActions = Stream.of("option1", "option2", "option3").collect(Collectors.toSet());
 
     // Attempt to get a bandit assignment
     Optional<String> stringAssignment = EppoClient.getInstance().getStringAssignment(
@@ -337,7 +421,7 @@ public class EppoClientTest {
     );
 
     // Verify assignment
-    assertFalse(stringAssignment.isEmpty());
+    assertTrue(stringAssignment.isPresent());
     assertTrue(banditActions.contains(stringAssignment.get()));
 
     // Verify experiment assignment log
@@ -349,7 +433,7 @@ public class EppoClientTest {
     assertEquals("bandit", capturedAssignmentLog.allocation);
     assertEquals("this-bandit-does-not-exist", capturedAssignmentLog.variation);
     assertEquals("subject8", capturedAssignmentLog.subject);
-    assertEquals(Map.of(), capturedAssignmentLog.subjectAttributes);
+    assertEquals(new EppoAttributes(), capturedAssignmentLog.subjectAttributes);
 
     // Verify bandit log
     ArgumentCaptor<BanditLogData> banditLogCaptor = ArgumentCaptor.forClass(BanditLogData.class);
@@ -358,11 +442,11 @@ public class EppoClientTest {
     assertEquals("uninitialized-bandit-experiment-bandit", capturedBanditLog.experiment);
     assertEquals("this-bandit-does-not-exist", capturedBanditLog.banditKey);
     assertEquals("subject8", capturedBanditLog.subject);
-    assertEquals(Map.of(), capturedBanditLog.subjectNumericAttributes);
-    assertEquals(Map.of(), capturedBanditLog.subjectCategoricalAttributes);
+    assertEquals(new HashMap<>(), capturedBanditLog.subjectNumericAttributes);
+    assertEquals(new HashMap<>(), capturedBanditLog.subjectCategoricalAttributes);
     assertEquals("option1", capturedBanditLog.action);
-    assertEquals(Map.of(), capturedBanditLog.actionNumericAttributes);
-    assertEquals(Map.of(), capturedBanditLog.actionCategoricalAttributes);
+    assertEquals(new HashMap<>(), capturedBanditLog.actionNumericAttributes);
+    assertEquals(new HashMap<>(), capturedBanditLog.actionCategoricalAttributes);
     assertEquals(0.3333, capturedBanditLog.actionProbability, 0.0002);
     assertEquals("uninitialized", capturedBanditLog.modelVersion);
   }
@@ -371,26 +455,27 @@ public class EppoClientTest {
   public void testBanditModelActionLogging() {
     // Note: some of the passed in attributes are not used for scoring, but we do still want to make sure they are logged
 
-    EppoAttributes subjectAttributes = new EppoAttributes(Map.of(
-    "gender_identity", EppoValue.valueOf("female"),
-    "days_since_signup", EppoValue.valueOf(130), // unused for scoring (which looks for account_age)
-    "is_premium", EppoValue.valueOf(false), // unused for scoring
-    "numeric_string", EppoValue.valueOf("123"), // unused for scoring
-    "unpopulated", EppoValue.nullValue() // unused for scoring
-    ));
+    EppoAttributes subjectAttributes = new EppoAttributes();
+    subjectAttributes.put("gender_identity", EppoValue.valueOf("female"));
+    subjectAttributes.put("days_since_signup", EppoValue.valueOf(130)); // unused for scoring (which looks for account_age)
+    subjectAttributes.put("is_premium", EppoValue.valueOf(false)); // unused for scoring
+    subjectAttributes.put("numeric_string", EppoValue.valueOf("123")); // unused for scoring
+    subjectAttributes.put("unpopulated", EppoValue.nullValue()); // unused for scoring
 
-    Map<String, EppoAttributes> actionsWithAttributes = Map.of(
-      "nike", new EppoAttributes(Map.of(
-        "brand_affinity", EppoValue.valueOf(0.25)
-      )),
-      "adidas", new EppoAttributes(Map.of(
-        "brand_affinity", EppoValue.valueOf(0.1),
-        "num_brand_purchases", EppoValue.valueOf(5), // unused for scoring
-        "in_email_campaign", EppoValue.valueOf(true), // unused for scoring
-        "also_unpopulated", EppoValue.nullValue() // unused for scoring
-      )),
-      "puma", new EppoAttributes(Map.of())
-    );
+    Map<String, EppoAttributes> actionsWithAttributes = new HashMap<>();
+
+    EppoAttributes nikeAttributes = new EppoAttributes();
+    nikeAttributes.put("brand_affinity", EppoValue.valueOf(0.25));
+    actionsWithAttributes.put("nike", nikeAttributes);
+
+    EppoAttributes adidasAttributes = new EppoAttributes();
+    adidasAttributes.put("brand_affinity", EppoValue.valueOf(0.1));
+    adidasAttributes.put("num_brand_purchases", EppoValue.valueOf(5)); // unused for scoring
+    adidasAttributes.put("in_email_campaign", EppoValue.valueOf(true)); // unused for scoring
+    adidasAttributes.put("also_unpopulated", EppoValue.nullValue()); // unused for scoring
+    actionsWithAttributes.put("adidas", adidasAttributes);
+
+    actionsWithAttributes.put("puma", new EppoAttributes());
 
     // Get our assigned action
     Optional<String> stringAssignment = EppoClient.getInstance().getStringAssignment(
@@ -401,7 +486,7 @@ public class EppoClientTest {
     );
 
     // Verify assignment
-    assertFalse(stringAssignment.isEmpty());
+    assertTrue(stringAssignment.isPresent());
     assertEquals("adidas", stringAssignment.get());
 
     // Verify experiment assignment log
@@ -425,43 +510,52 @@ public class EppoClientTest {
     assertEquals("adidas", capturedBanditLog.action);
     assertEquals(0.2899, capturedBanditLog.actionProbability, 0.0002);
     assertEquals("falcon v123", capturedBanditLog.modelVersion);
-    assertEquals(Map.of("days_since_signup", 130.0), capturedBanditLog.subjectNumericAttributes);
-    assertEquals(Map.of(
-      "gender_identity", "female",
-      "is_premium", "false",
-      "numeric_string", "123"
-    ), capturedBanditLog.subjectCategoricalAttributes);
-    assertEquals(Map.of(
-      "brand_affinity", 0.1,
-      "num_brand_purchases", 5.0
-    ), capturedBanditLog.actionNumericAttributes);
-    assertEquals(Map.of("in_email_campaign", "true"), capturedBanditLog.actionCategoricalAttributes);
+
+    Map<String, Double> expectedSubjectNumericAttributes = new HashMap<>();
+    expectedSubjectNumericAttributes.put("days_since_signup", 130.0);
+    assertEquals(expectedSubjectNumericAttributes, capturedBanditLog.subjectNumericAttributes);
+
+    Map<String, String> expectedSubjectCategoricalAttributes = new HashMap<>();
+    expectedSubjectCategoricalAttributes.put("gender_identity", "female");
+    expectedSubjectCategoricalAttributes.put("is_premium", "false");
+    expectedSubjectCategoricalAttributes.put("numeric_string", "123");
+    assertEquals(expectedSubjectCategoricalAttributes, capturedBanditLog.subjectCategoricalAttributes);
+
+    Map<String, Double> expectedActionNumericAttributes = new HashMap<>();
+    expectedActionNumericAttributes.put("brand_affinity", 0.1);
+    expectedActionNumericAttributes.put("num_brand_purchases", 5.0);
+    assertEquals(expectedActionNumericAttributes, capturedBanditLog.actionNumericAttributes);
+
+    Map<String, String> expectedActionCategoricalAttributes = new HashMap<>();
+    expectedActionCategoricalAttributes.put("in_email_campaign", "true");
+    assertEquals(expectedActionCategoricalAttributes, capturedBanditLog.actionCategoricalAttributes);
   }
 
   @Test
   public void testBanditModelActionAssignmentFullContext() {
-    EppoAttributes subjectAttributes = new EppoAttributes(Map.of(
-      "gender_identity", EppoValue.valueOf("male"),
-      "account_age", EppoValue.valueOf(3)
-    ));
+    EppoAttributes subjectAttributes = new EppoAttributes();
+    subjectAttributes.put("gender_identity", EppoValue.valueOf("male"));
+    subjectAttributes.put("account_age", EppoValue.valueOf(3));
 
-    Map<String, EppoAttributes> actionAttributes = Map.of(
-      "nike", new EppoAttributes(Map.of(
-          "brand_affinity", EppoValue.valueOf(0.05),
-          "purchased_last_30_days", EppoValue.valueOf(true),
-          "loyalty_tier", EppoValue.valueOf("gold")
-        )),
-      "adidas", new EppoAttributes(Map.of(
-          "brand_affinity", EppoValue.valueOf(0.30),
-          "purchased_last_30_days", EppoValue.valueOf(true),
-          "loyalty_tier", EppoValue.valueOf("gold")
-        )),
-      "puma", new EppoAttributes(Map.of(
-          "brand_affinity", EppoValue.valueOf(1.00),
-          "purchased_last_30_days", EppoValue.valueOf(false),
-          "loyalty_tier", EppoValue.valueOf("bronze")
-        ))
-    );
+    Map<String, EppoAttributes> actionAttributes = new HashMap<>();
+
+    EppoAttributes nikeAttributes = new EppoAttributes();
+    nikeAttributes.put("brand_affinity", EppoValue.valueOf(0.05));
+    nikeAttributes.put("purchased_last_30_days", EppoValue.valueOf(true));
+    nikeAttributes.put("loyalty_tier", EppoValue.valueOf("gold"));
+    actionAttributes.put("nike", nikeAttributes);
+
+    EppoAttributes adidasAttributes = new EppoAttributes();
+    adidasAttributes.put("brand_affinity", EppoValue.valueOf(0.30));
+    adidasAttributes.put("purchased_last_30_days", EppoValue.valueOf(true));
+    adidasAttributes.put("loyalty_tier", EppoValue.valueOf("gold"));
+    actionAttributes.put("adidas", adidasAttributes);
+
+    EppoAttributes pumaAttributes = new EppoAttributes();
+    pumaAttributes.put("brand_affinity", EppoValue.valueOf(1.00));
+    pumaAttributes.put("purchased_last_30_days", EppoValue.valueOf(false));
+    pumaAttributes.put("loyalty_tier", EppoValue.valueOf("bronze"));
+    actionAttributes.put("puma", pumaAttributes);
 
     // Get our assigned action
     Optional<String> stringAssignment = EppoClient.getInstance().getStringAssignment(
@@ -483,7 +577,7 @@ public class EppoClientTest {
   @Test
   public void testBanditModelActionAssignmentNoContext() {
     EppoAttributes subjectAttributes = new EppoAttributes();
-    Set<String> actions = Set.of("nike", "adidas", "puma");
+    Set<String> actions = Stream.of("nike", "adidas", "puma").collect(Collectors.toSet());
 
     // Get our assigned action
     Optional<String> stringAssignment = EppoClient.getInstance().getStringAssignment(
@@ -505,13 +599,12 @@ public class EppoClientTest {
   @Test
   public void testBanditControlAction() {
 
-    Set<String> banditActions = Set.of("option1", "option2", "option3");
+    Set<String> banditActions = Stream.of("option1", "option2", "option3").collect(Collectors.toSet());
 
-    EppoAttributes subjectAttributes = new EppoAttributes(Map.of(
-      "account_age", EppoValue.valueOf(90),
-      "loyalty_tier", EppoValue.valueOf("gold"),
-      "is_account_admin", EppoValue.valueOf(false)
-    ));
+    EppoAttributes subjectAttributes = new EppoAttributes();
+    subjectAttributes.put("account_age", EppoValue.valueOf(90));
+    subjectAttributes.put("loyalty_tier", EppoValue.valueOf("gold"));
+    subjectAttributes.put("is_account_admin", EppoValue.valueOf(false));
 
     // Attempt to get a bandit assignment
     Optional<String> stringAssignment = EppoClient.getInstance().getStringAssignment(
@@ -522,16 +615,15 @@ public class EppoClientTest {
     );
 
     // Verify assignment
-    assertFalse(stringAssignment.isEmpty());
+    assertTrue(stringAssignment.isPresent());
     assertEquals("control", stringAssignment.get());
 
     // Manually log an action
 
-    EppoAttributes controlActionAttributes = new EppoAttributes(Map.of(
-      "brand", EppoValue.valueOf("skechers"),
-      "num_past_purchases", EppoValue.valueOf(0),
-      "has_promo_code", EppoValue.valueOf(true)
-    ));
+    EppoAttributes controlActionAttributes = new EppoAttributes();
+    controlActionAttributes.put("brand", EppoValue.valueOf("skechers"));
+    controlActionAttributes.put("num_past_purchases", EppoValue.valueOf(0));
+    controlActionAttributes.put("has_promo_code", EppoValue.valueOf(true));
 
     Exception banditLoggingException = EppoClient.getInstance().logNonBanditAction(
       "subject10",
@@ -563,15 +655,29 @@ public class EppoClientTest {
     assertEquals("option0", capturedBanditLog.action);
     assertNull(capturedBanditLog.actionProbability);
     assertNull(capturedBanditLog.modelVersion);
-    assertEquals(Map.of("account_age", 90.0), capturedBanditLog.subjectNumericAttributes);
-    assertEquals(Map.of("loyalty_tier", "gold", "is_account_admin", "false"), capturedBanditLog.subjectCategoricalAttributes);
-    assertEquals(Map.of("num_past_purchases", 0.0), capturedBanditLog.actionNumericAttributes);
-    assertEquals(Map.of("brand", "skechers", "has_promo_code", "true"), capturedBanditLog.actionCategoricalAttributes);
+
+    Map<String, Double> expectedSubjectNumericAttributes = new HashMap<>();
+    expectedSubjectNumericAttributes.put("account_age", 90.0);
+    assertEquals(expectedSubjectNumericAttributes, capturedBanditLog.subjectNumericAttributes);
+
+    Map<String, String> expectedSubjectCategoricalAttributes = new HashMap<>();
+    expectedSubjectCategoricalAttributes.put("loyalty_tier", "gold");
+    expectedSubjectCategoricalAttributes.put("is_account_admin", "false");
+    assertEquals(expectedSubjectCategoricalAttributes, capturedBanditLog.subjectCategoricalAttributes);
+
+    Map<String, Double> expectedActionNumericAttributes = new HashMap<>();
+    expectedActionNumericAttributes.put("num_past_purchases", 0.0);
+    assertEquals(expectedActionNumericAttributes, capturedBanditLog.actionNumericAttributes);
+
+    Map<String, String> expectedActionCategoricalAttributes = new HashMap<>();
+    expectedActionCategoricalAttributes.put("brand", "skechers");
+    expectedActionCategoricalAttributes.put("has_promo_code", "true");
+    assertEquals(expectedActionCategoricalAttributes, capturedBanditLog.actionCategoricalAttributes);
   }
 
   @Test
   public void testBanditNotInAllocation() {
-    Set<String> banditActions = Set.of("option1", "option2", "option3");
+    Set<String> banditActions = Stream.of("option1", "option2", "option3").collect(Collectors.toSet());
 
     // Attempt to get a bandit assignment
     Optional<String> stringAssignment = EppoClient.getInstance().getStringAssignment(
@@ -582,6 +688,6 @@ public class EppoClientTest {
     );
 
     // Verify assignment
-    assertTrue(stringAssignment.isEmpty());
+    assertFalse(stringAssignment.isPresent());
   }
 }

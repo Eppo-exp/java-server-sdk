@@ -41,7 +41,7 @@ public class EppoClient {
      * @param subjectAttributes
      * @return
      */
-    private Optional<EppoValue> getAssignmentValue(
+    protected Optional<EppoValue> getAssignmentValue(
             String subjectKey,
             String flagKey,
             EppoAttributes subjectAttributes,
@@ -118,7 +118,7 @@ public class EppoClient {
 
         // Find matched rule
         Optional<Rule> rule = RuleValidator.findMatchingRule(subjectAttributes, configuration.getRules());
-        if (rule.isEmpty()) {
+        if (!rule.isPresent()) {
             log.info("[Eppo SDK] No assigned variation. The subject attributes did not match any targeting rules");
             return null;
         }
@@ -226,24 +226,33 @@ public class EppoClient {
             EppoAttributes subjectAttributes,
             Map<String, EppoAttributes> actionsWithAttributes
     ) {
-        Optional<EppoValue> value = this.getAssignmentValue(subjectKey, experimentKey, subjectAttributes, actionsWithAttributes);
-        if (value.isEmpty()) {
+        try {
+            Optional<EppoValue> value = this.getAssignmentValue(subjectKey, experimentKey, subjectAttributes, actionsWithAttributes);
+            if (!value.isPresent()) {
+                return Optional.empty();
+            }
+
+            EppoValue eppoValue = value.get();
+
+            switch (type) {
+                case NUMBER:
+                    return Optional.of(eppoValue.doubleValue());
+                case BOOLEAN:
+                    return Optional.of(eppoValue.boolValue());
+                case ARRAY_OF_STRING:
+                    return Optional.of(eppoValue.arrayValue());
+                case JSON_NODE:
+                    return Optional.of(eppoValue.jsonNodeValue());
+                default: // strings and null
+                    return Optional.of(eppoValue.stringValue());
+            }
+        } catch (Exception e) {
+          // if graceful mode
+          if (this.eppoClientConfig.isGracefulMode()) {
+            log.warn("[Eppo SDK] Error getting assignment value: " + e.getMessage());
             return Optional.empty();
-        }
-
-        EppoValue eppoValue = value.get();
-
-        switch (type) {
-            case NUMBER:
-                return Optional.of(eppoValue.doubleValue());
-            case BOOLEAN:
-                return Optional.of(eppoValue.boolValue());
-            case ARRAY_OF_STRING:
-                return Optional.of(eppoValue.arrayValue());
-            case JSON_NODE:
-                return Optional.of(eppoValue.jsonNodeValue());
-            default: // strings and null
-                return Optional.of(eppoValue.stringValue());
+          }
+          throw e;
         }
     }
 
@@ -295,7 +304,7 @@ public class EppoClient {
      */
     public Optional<String> getStringAssignment(String subjectKey, String flagKey,
             EppoAttributes subjectAttributes) {
-        return this.getStringAssignment(subjectKey, flagKey, subjectAttributes, Set.of());
+        return this.getStringAssignment(subjectKey, flagKey, subjectAttributes, new HashSet<>());
     }
 
     /**
@@ -532,7 +541,7 @@ public class EppoClient {
 
     private Map<String, Double> numericAttributes(EppoAttributes eppoAttributes) {
         if (eppoAttributes == null) {
-            return Map.of();
+            return new HashMap<>();
         }
         return eppoAttributes.entrySet().stream().filter(e -> e.getValue().isNumeric()
         ).collect(Collectors.toMap(
@@ -543,7 +552,7 @@ public class EppoClient {
 
     private Map<String, String> categoricalAttributes(EppoAttributes eppoAttributes) {
         if (eppoAttributes == null) {
-            return Map.of();
+            return new HashMap<>();
         }
         return eppoAttributes.entrySet().stream().filter(e -> !e.getValue().isNumeric() && !e.getValue().isNull()
         ).collect(Collectors.toMap(

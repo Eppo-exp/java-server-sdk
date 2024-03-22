@@ -4,6 +4,8 @@ import com.eppo.sdk.deserializer.EppoValueDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -120,7 +122,7 @@ public class EppoValue {
             case BOOLEAN:
                 return this.boolValue.toString();
             case ARRAY_OF_STRING:
-                return List.of(this.stringArrayValue).toString();
+                return Collections.singletonList(this.stringArrayValue).toString();
             case JSON_NODE:
                 return this.jsonValue.toString();
             default: // NULL

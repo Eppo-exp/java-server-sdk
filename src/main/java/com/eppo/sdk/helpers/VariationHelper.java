@@ -15,7 +15,7 @@ public class VariationHelper {
                 .filter(config -> Shard.isShardInRange(shard, config.getShardRange()))
                 .findFirst();
 
-        if (variation.isEmpty()) {
+        if (!variation.isPresent()) {
             throw new NoSuchElementException("Variation shards configured incorrectly for input "+inputKey);
         }
 

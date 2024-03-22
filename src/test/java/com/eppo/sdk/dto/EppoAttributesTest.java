@@ -11,12 +11,11 @@ class EppoAttributesTest {
 
     @Test
     void testSerializeEppoAttributesToJSONString() throws JSONException {
-        EppoAttributes eppoAttributes = new EppoAttributes(Map.of(
-          "boolean", EppoValue.valueOf(false),
-          "number", EppoValue.valueOf(1.234),
-          "string", EppoValue.valueOf("hello"),
-          "null", EppoValue.nullValue()
-        ));
+        EppoAttributes eppoAttributes = new EppoAttributes();
+        eppoAttributes.put("boolean", EppoValue.valueOf(false));
+        eppoAttributes.put("number", EppoValue.valueOf(1.234));
+        eppoAttributes.put("string", EppoValue.valueOf("hello"));
+        eppoAttributes.put("null", EppoValue.nullValue());
 
         String serializedJSONString = eppoAttributes.serializeToJSONString();
         String expectedJson = "{ \"boolean\": false, \"number\": 1.234, \"string\": \"hello\", \"null\": null }";

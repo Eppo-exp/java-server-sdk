@@ -16,4 +16,11 @@ public class EppoClientConfig {
     private String baseURL = Constants.DEFAULT_BASE_URL;
     private IAssignmentLogger assignmentLogger;
     private IBanditLogger banditLogger;
+
+    /**
+     * When set to true, the client will not throw an exception when it encounters
+     * an error.
+     */
+    @Builder.Default
+    private boolean isGracefulMode = true;
 }

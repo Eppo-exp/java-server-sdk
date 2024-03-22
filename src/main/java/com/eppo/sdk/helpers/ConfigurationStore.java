@@ -75,12 +75,10 @@ public class ConfigurationStore {
      *
      * @param key
      * @return
-     * @throws NetworkException
-     * @throws NetworkRequestNotAllowed
      * @throws ExperimentConfigurationNotFound
      */
     public ExperimentConfiguration getExperimentConfiguration(String key)
-            throws NetworkException, NetworkRequestNotAllowed, ExperimentConfigurationNotFound {
+            throws ExperimentConfigurationNotFound {
         try {
             return this.experimentConfigurationCache.get(key);
         } catch (Exception e) {
@@ -124,7 +122,7 @@ public class ConfigurationStore {
 
         if (loadBandits) {
             Optional<BanditParametersResponse> banditResponse = this.banditParametersRequestor.fetchConfiguration();
-            if (banditResponse.isEmpty() || banditResponse.get().getBandits() == null) {
+            if (!banditResponse.isPresent() || banditResponse.get().getBandits() == null) {
                 log.warn("Unexpected empty bandit parameter response");
                 return;
             }
