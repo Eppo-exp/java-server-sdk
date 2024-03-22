@@ -4,10 +4,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Field;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class AppDetailsTest {
 
@@ -32,13 +33,21 @@ public class AppDetailsTest {
 
   @Test
   public void testAppPropertyReadFailure() {
-    ClassLoader mockClassloader = Mockito.mock(ClassLoader.class);
-    Mockito.when(mockClassloader.getResourceAsStream("app.properties")).thenReturn(null);
+    InputStream throwingInputStream = new InputStream() {
+      @Override
+      public int read() throws IOException {
+        throw new IOException("Intentional Exception For Test");
+      }
+    };
+
+    // Override the getResourceAsStream method to return the custom InputStream
+    ClassLoader mockClassLoader = Mockito.mock(ClassLoader.class);
+    Mockito.when(mockClassLoader.getResourceAsStream("app.properties")).thenReturn(throwingInputStream);
 
     ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
     try {
-      Thread.currentThread().setContextClassLoader(mockClassloader);
-      AppDetails.getInstance(); // Initialize with mock class loader
+      Thread.currentThread().setContextClassLoader(mockClassLoader);
+      AppDetails.getInstance();
     } finally {
       Thread.currentThread().setContextClassLoader(originalClassLoader);
     }
