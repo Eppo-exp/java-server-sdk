@@ -32,8 +32,8 @@ public class AppDetailsTest {
 
   @Test
   public void testAppPropertyReadFailure() {
-      ClassLoader mockClassloader = Mockito.mock(ClassLoader.class);
-      Mockito.when(mockClassloader.getResourceAsStream("app.properties")).thenReturn(null);
+    ClassLoader mockClassloader = Mockito.mock(ClassLoader.class);
+    Mockito.when(mockClassloader.getResourceAsStream("app.properties")).thenReturn(null);
 
     ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
     try {
