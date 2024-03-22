@@ -126,6 +126,7 @@ public class EppoClientTest {
 
   @BeforeEach
   void init() {
+    System.out.println(">>>> BEFORE EACH START");
     mockAssignmentLogger = mock(IAssignmentLogger.class);
     mockBanditLogger = mock(IBanditLogger.class);
 
@@ -148,8 +149,10 @@ public class EppoClientTest {
       .baseURL("http://localhost:4001")
       .assignmentLogger(mockAssignmentLogger)
       .banditLogger(mockBanditLogger)
+      .isGracefulMode(false)
       .build();
     EppoClient.init(config);
+    System.out.println(">>>> BEFORE EACH END");
   }
 
   @AfterEach
