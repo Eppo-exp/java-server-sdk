@@ -1,0 +1,101 @@
+{
+  "updatedAt": "2023-09-13T04:52:06.462Z",
+  "bandits": [
+    {
+      "banditKey": "banner-bandit",
+      "modelName": "falcon",
+      "updatedAt": "2023-09-13T04:52:06.462Z",
+      "modelVersion": "v123",
+      "modelData": {
+        "gamma": 1.0,
+        "defaultActionScore": 0.0,
+        "actionProbabilityFloor": 0.0,
+        "coefficients": [
+          {
+            "actionKey": "nike",
+            "intercept": 1.0,
+            "actionNumericCoefficients": [
+              {
+                "attributeKey": "brand_affinity",
+                "coefficient": 1.0,
+                "missingValueCoefficient": -0.1
+              }
+            ],
+            "actionCategoricalCoefficients": [
+              {
+                "attributeKey": "loyalty_tier",
+                "values": [
+                  { "value": "gold", "coefficient": 4.5 },
+                  { "value": "silver", "coefficient": 3.2 },
+                  { "value": "bronze", "coefficient": 1.9 }
+                ],
+                "missingValueCoefficient": 0.0
+              }
+            ],
+            "subjectNumericCoefficients": [
+              {
+                "attributeKey": "account_age",
+                "coefficient": 0.3,
+                "missingValueCoefficient": 0.0
+              }
+            ],
+            "subjectCategoricalCoefficients": [
+              {
+                "attributeKey": "gender_identity",
+                "values": [
+                  { "value": "female", "coefficient": 0.5 },
+                  { "value": "male", "coefficient": -0.5 }
+                ],
+                "missingValueCoefficient": 2.3
+              }
+            ]
+          },
+          {
+            "actionKey": "adidas",
+            "intercept": 1.1,
+            "actionNumericCoefficients": [
+              {
+                "attributeKey": "brand_affinity",
+                "coefficient": 2.0,
+                "missingValueCoefficient": 1.2
+              }
+            ],
+            "actionCategoricalCoefficients": [
+              {
+                "attributeKey": "purchased_last_30_days",
+                "values": [
+                  { "value": "true", "coefficient": 9.0 },
+                  { "value": "false", "coefficient": 0.0 }
+                ],
+                "missingValueCoefficient": 0.0
+              }
+            ],
+            "subjectNumericCoefficients": [],
+            "subjectCategoricalCoefficients": [
+              {
+                "attributeKey": "gender_identity",
+                "values": [
+                  { "value": "female", "coefficient": 0.0 },
+                  { "value": "male", "coefficient": 0.3 }
+                ],
+                "missingValueCoefficient": 0.45
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "banditKey": "cold-start-bandit",
+      "modelName": "falcon",
+      "updatedAt": "2023-09-13T04:52:06.462Z",
+      "modelVersion": "cold start",
+      "modelData": {
+        "gamma": 1.0,
+        "defaultActionScore": 0.0,
+        "actionProbabilityFloor": 0.0,
+        "coefficients": []
+      }
+    }
+  ]
+}

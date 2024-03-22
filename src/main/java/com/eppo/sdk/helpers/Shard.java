@@ -12,7 +12,7 @@ import java.security.NoSuchAlgorithmException;
 public class Shard {
 
     /**
-     * This function is used to convert input into md4 hex
+     * This function is used to convert input into md5 hex
      *
      * @param input
      * @return
@@ -42,9 +42,9 @@ public class Shard {
      * @return
      */
     public static int getShard(String input, int maxShardValue) {
-        String hashText = Shard.getHex(input);
+        StringBuilder hashText = new StringBuilder(Shard.getHex(input));
         while (hashText.length() < 32) {
-            hashText = "0" + hashText;
+            hashText.insert(0, "0");
         }
         return (int) (Long.parseLong(hashText.substring(0, 8), 16) % maxShardValue);
     }

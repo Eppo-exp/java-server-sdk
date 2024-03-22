@@ -32,9 +32,13 @@ public class Constants {
      */
     public static final String RAC_ENDPOINT = "/randomized_assignment/v3/config";
 
+    public static final String BANDIT_ENDPOINT = "/randomized_assignment/v3/bandits";
+
 
     /**
      * Caching Settings
      */
     public static final String EXPERIMENT_CONFIGURATION_CACHE_KEY = "experiment-configuration";
+    public static final String BANDIT_PARAMETER_CACHE_KEY = "bandit-parameter";
+
 }

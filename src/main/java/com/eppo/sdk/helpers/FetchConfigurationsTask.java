@@ -20,6 +20,7 @@ public class FetchConfigurationsTask extends TimerTask {
     // Uncaught runtime exceptions will prevent this task from being rescheduled.
     // As a result, the SDK will continue functioning using the in-memory cache, but will never attempt
     // to synchronize with Eppo Cloud again.
+    // TODO: retry on failed fetches
     try {
       configurationStore.fetchAndSetExperimentConfiguration();
     } catch (Exception e) {
