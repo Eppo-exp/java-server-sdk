@@ -33,20 +33,21 @@ public class AppDetailsTest {
 
   @Test
   public void testAppPropertyReadFailure() {
-    InputStream throwingInputStream = new InputStream() {
+    // Override the getResourceAsStream method to return the custom InputStream
+    System.out.println(">>>> mocking stuff");
+    ClassLoader mockClassLoader = Mockito.mock(ClassLoader.class);
+    Mockito.when(mockClassLoader.getResourceAsStream("app.properties")).thenReturn(new InputStream() {
       @Override
       public int read() throws IOException {
+        System.out.println(">>>> throwing intentional error");
         throw new IOException("Intentional Exception For Test");
       }
-    };
-
-    // Override the getResourceAsStream method to return the custom InputStream
-    ClassLoader mockClassLoader = Mockito.mock(ClassLoader.class);
-    Mockito.when(mockClassLoader.getResourceAsStream("app.properties")).thenReturn(throwingInputStream);
+    });
 
     ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
     try {
       Thread.currentThread().setContextClassLoader(mockClassLoader);
+      System.out.println(">>>> get instance");
       AppDetails.getInstance();
     } finally {
       Thread.currentThread().setContextClassLoader(originalClassLoader);
