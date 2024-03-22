@@ -1,5 +1,8 @@
 package com.eppo.sdk.helpers;
 
+import com.eppo.sdk.EppoClient;
+import com.eppo.sdk.dto.EppoAttributes;
+import com.eppo.sdk.exception.ExperimentConfigurationNotFound;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -9,6 +12,10 @@ import java.io.InputStream;
 import java.lang.reflect.Field;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.spy;
 
 public class AppDetailsTest {
 
@@ -34,10 +41,11 @@ public class AppDetailsTest {
   /*
   @Test
   public void testAppPropertyReadFailure() {
-    // Override the getResourceAsStream method to return the custom InputStream
-    System.out.println(">>>> mocking stuff");
-    ClassLoader mockClassLoader = Mockito.mock(ClassLoader.class);
-    Mockito.when(mockClassLoader.getResourceAsStream("app.properties")).thenReturn(new InputStream() {
+
+    ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
+    ClassLoader spyCassLoader = spy(originalClassLoader);
+
+
       @Override
       public int read() throws IOException {
         System.out.println(">>>> throwing intentional error");
@@ -45,7 +53,7 @@ public class AppDetailsTest {
       }
     });
 
-    ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
+
     try {
       Thread.currentThread().setContextClassLoader(mockClassLoader);
       System.out.println(">>>> get instance");

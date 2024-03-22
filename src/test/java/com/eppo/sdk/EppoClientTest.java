@@ -123,7 +123,7 @@ public class EppoClientTest {
   }
 
   @BeforeEach
-  void init() {
+  public void init() {
     System.out.println(">>>> BEFORE EACH");
     setupMockRacServer();
     EppoClientConfig config = EppoClientConfig.builder()
@@ -148,12 +148,12 @@ public class EppoClientTest {
   }
 
   @AfterEach
-  void teardown() {
+  public void teardown() {
     this.mockServer.stop();
   }
 
   @Test()
-  void testGracefulModeOn() {
+  public void testGracefulModeOn() {
     EppoClientConfig config = EppoClientConfig.builder()
       .apiKey("mock-api-key")
       .baseURL("http://localhost:4001")
@@ -188,7 +188,7 @@ public class EppoClientTest {
   }
 
   @Test()
-  void testGracefulModeOff() {
+  public void testGracefulModeOff() {
     EppoClientConfig config = EppoClientConfig.builder()
       .apiKey("mock-api-key")
       .baseURL("http://localhost:4001")
@@ -221,7 +221,7 @@ public class EppoClientTest {
 
   @ParameterizedTest
   @MethodSource("getAssignmentTestData")
-  void testAssignments(AssignmentTestCase testCase) throws IOException {
+  public void testAssignments(AssignmentTestCase testCase) throws IOException {
     switch (testCase.valueType) {
       case NUMERIC:
         List<Double> expectedDoubleAssignments = Converter.convertToDecimal(testCase.expectedAssignments);
