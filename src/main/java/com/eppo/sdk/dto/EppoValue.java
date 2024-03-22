@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -12,93 +13,99 @@ import java.util.List;
  */
 @JsonDeserialize(using = EppoValueDeserializer.class)
 public class EppoValue {
-    private String value;
-    private JsonNode node;
-    private EppoValueType type = EppoValueType.NULL;
-    private List<String> array;
+    private final EppoValueType type;
+    private String stringValue;
+    private Double doubleValue;
+    private Boolean boolValue;
+    private JsonNode jsonValue;
+    private List<String> stringArrayValue;
 
-    public EppoValue() {
+    private EppoValue(String stringValue) {
+        this.stringValue = stringValue;
+        this.type = stringValue != null ? EppoValueType.STRING : EppoValueType.NULL;
     }
 
-    public EppoValue(String value, EppoValueType type) {
-        this.value = value;
-        this.type = type;
+    private EppoValue(Double doubleValue) {
+        this.doubleValue = doubleValue;
+        this.type = doubleValue != null ? EppoValueType.NUMBER : EppoValueType.NULL;
+    }
+    private EppoValue(Boolean boolValue) {
+        this.boolValue = boolValue;
+        this.type = boolValue != null ? EppoValueType.BOOLEAN : EppoValueType.NULL;
     }
 
-    public EppoValue(List<String> array) {
-        this.array = array;
-        this.type = EppoValueType.ARRAY_OF_STRING;
+    private EppoValue(List<String> stringArrayValue) {
+        this.stringArrayValue = stringArrayValue;
+        this.type = stringArrayValue != null ? EppoValueType.ARRAY_OF_STRING : EppoValueType.NULL;
     }
 
-    public EppoValue(JsonNode node) {
-        this.node = node;
-        this.value = node.toString();
+    private EppoValue(JsonNode jsonValue) {
+        this.jsonValue = jsonValue;
         this.type = EppoValueType.JSON_NODE;
     }
 
-    public EppoValue(EppoValueType type) {
-        this.type = type;
+    public static EppoValue valueOf(String stringValue) {
+        return new EppoValue(stringValue);
     }
 
-    public static EppoValue valueOf(String value) {
-        return new EppoValue(value, EppoValueType.STRING);
+    public static EppoValue valueOf(double doubleValue) {
+        return new EppoValue(doubleValue);
     }
 
-    public static EppoValue valueOf(double value) {
-        return new EppoValue(Double.toString(value), EppoValueType.NUMBER);
+    public static EppoValue valueOf(boolean boolValue) {
+        return new EppoValue(boolValue);
     }
 
-    public static EppoValue valueOf(boolean value) {
-        return new EppoValue(Boolean.toString(value), EppoValueType.BOOLEAN);
-    }
-
-    public static EppoValue valueOf(JsonNode node) {
-        return new EppoValue(node);
+    public static EppoValue valueOf(JsonNode jsonValue) {
+        return new EppoValue(jsonValue);
     }
 
     public static EppoValue valueOf(List<String> value) {
         return new EppoValue(value);
     }
 
-    public static EppoValue valueOf() {
-        return new EppoValue(EppoValueType.NULL);
+    public static EppoValue nullValue() {
+        return new EppoValue((String)null);
     }
 
     public double doubleValue() {
-        return Double.parseDouble(value);
+        return this.doubleValue;
     }
 
     public String stringValue() {
-        return value;
+        return this.stringValue;
     }
 
     public boolean boolValue() {
-        return Boolean.valueOf(value);
+        return this.boolValue;
     }
 
     public JsonNode jsonNodeValue() {
-        return this.node;
+        return this.jsonValue;
     }
 
     public List<String> arrayValue() {
-        return array;
+        return this.stringArrayValue;
+    }
+
+    public boolean isString() {
+        return this.type == EppoValueType.STRING;
     }
 
     public boolean isNumeric() {
-        try {
-            Double.parseDouble(value);
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
+        return this.type == EppoValueType.NUMBER;
+    }
+
+    public boolean isBoolean() {
+        return this.type == EppoValueType.BOOLEAN;
     }
 
     public boolean isArray() {
         return type == EppoValueType.ARRAY_OF_STRING;
     }
 
-    public boolean isBool() {
-        return type == EppoValueType.BOOLEAN;
+    public boolean isJson() {
+        return type == EppoValueType.JSON_NODE;
     }
 
     public boolean isNull() {
@@ -107,12 +114,19 @@ public class EppoValue {
 
     @Override
     public String toString() {
-        if (this.isArray()) {
-            // Assuming this.array is an array, use Arrays.asList() for compatibility with Java 8
-            return Arrays.asList(this.array).toString();
-        } else if (this.type == EppoValueType.JSON_NODE) {
-            return this.node.toString();
+        switch(this.type) {
+            case STRING:
+                return this.stringValue;
+            case NUMBER:
+                return this.doubleValue.toString();
+            case BOOLEAN:
+                return this.boolValue.toString();
+            case ARRAY_OF_STRING:
+                return Collections.singletonList(this.stringArrayValue).toString();
+            case JSON_NODE:
+                return this.jsonValue.toString();
+            default: // NULL
+                return "";
         }
-        return this.value;
     }
 }

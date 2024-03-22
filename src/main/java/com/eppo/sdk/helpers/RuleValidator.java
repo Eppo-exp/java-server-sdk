@@ -1,7 +1,7 @@
 package com.eppo.sdk.helpers;
 
 import com.eppo.sdk.dto.EppoValue;
-import com.eppo.sdk.dto.SubjectAttributes;
+import com.eppo.sdk.dto.EppoAttributes;
 import com.eppo.sdk.exception.InvalidSubjectAttribute;
 import com.github.zafarkhaja.semver.Version;
 import com.eppo.sdk.dto.Condition;
@@ -63,8 +63,9 @@ public class RuleValidator {
      * @return
      */
     public static Optional<Rule> findMatchingRule(
-            SubjectAttributes subjectAttributes,
-            List<Rule> rules) {
+            EppoAttributes subjectAttributes,
+            List<Rule> rules
+    ) {
         for (Rule rule : rules) {
             if (RuleValidator.matchesRule(subjectAttributes, rule)) {
                 return Optional.of(rule);
@@ -82,10 +83,10 @@ public class RuleValidator {
      * @throws InvalidSubjectAttribute
      */
     private static boolean matchesRule(
-            SubjectAttributes subjectAttributes,
-            Rule rule) throws InvalidSubjectAttribute {
-        List<Boolean> conditionEvaluations = RuleValidator.evaluateRuleConditions(subjectAttributes,
-                rule.getConditions());
+            EppoAttributes subjectAttributes,
+            Rule rule
+    ) throws InvalidSubjectAttribute {
+        List<Boolean> conditionEvaluations = RuleValidator.evaluateRuleConditions(subjectAttributes, rule.getConditions());
         return !conditionEvaluations.contains(false);
     }
 
@@ -98,8 +99,9 @@ public class RuleValidator {
      * @throws InvalidSubjectAttribute
      */
     private static boolean evaluateCondition(
-            SubjectAttributes subjectAttributes,
-            Condition condition) throws InvalidSubjectAttribute {
+            EppoAttributes subjectAttributes,
+            Condition condition
+    ) throws InvalidSubjectAttribute {
         if (subjectAttributes.containsKey(condition.attribute)) {
             EppoValue value = subjectAttributes.get(condition.attribute);
             Optional<Version> valueSemVer = Version.tryParse(value.stringValue());
@@ -172,8 +174,9 @@ public class RuleValidator {
      * @throws InvalidSubjectAttribute
      */
     private static List<Boolean> evaluateRuleConditions(
-            SubjectAttributes subjectAttributes,
-            List<Condition> conditions) throws InvalidSubjectAttribute {
+            EppoAttributes subjectAttributes,
+            List<Condition> conditions
+    ) throws InvalidSubjectAttribute {
         return conditions.stream()
                 .map((condition) -> {
                     try {

@@ -12,7 +12,7 @@ public class AssignmentLogData {
     public String variation;
     public Date timestamp;
     public String subject;
-    public SubjectAttributes subjectAttributes;
+    public EppoAttributes subjectAttributes;
 
     public AssignmentLogData(
             String experiment,
@@ -20,7 +20,7 @@ public class AssignmentLogData {
             String allocation,
             String variation,
             String subject,
-            SubjectAttributes subjectAttributes
+            EppoAttributes subjectAttributes
     ) {
         this.experiment = experiment;
         this.featureFlag = featureFlag;

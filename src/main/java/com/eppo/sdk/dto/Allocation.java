@@ -6,6 +6,6 @@ import lombok.Data;
 
 @Data
 public class Allocation {
-  private float percentExposure;
+  private double percentExposure;
   private List<Variation> variations;
 }

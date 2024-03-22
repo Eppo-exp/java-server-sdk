@@ -5,39 +5,32 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.extern.slf4j.Slf4j;
 
-import com.eppo.sdk.constants.Constants;
-import com.eppo.sdk.dto.ExperimentConfigurationResponse;
 import com.eppo.sdk.exception.InvalidApiKeyException;
 import org.apache.http.HttpResponse;
 import org.apache.http.util.EntityUtils;
 
 import java.util.Optional;
 
-/**
- * Experiment Configuration Requestor Class
- */
 @Slf4j
-public class ExperimentConfigurationRequestor {
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
-            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-    private EppoHttpClient eppoHttpClient;
+public class ConfigurationRequestor<T> {
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    private final Class<T> responseClass;
+    private final EppoHttpClient eppoHttpClient;
+    private final String endpoint;
 
-    public ExperimentConfigurationRequestor(EppoHttpClient eppoHttpClient) {
+    public ConfigurationRequestor(Class<T> responseClass, EppoHttpClient eppoHttpClient, String endpoint) {
+        this.responseClass = responseClass;
         this.eppoHttpClient = eppoHttpClient;
+        this.endpoint = endpoint;
     }
 
-    /**
-     * This function is used to fetch Experiment Configuration
-     *
-     * @return
-     */
-    public Optional<ExperimentConfigurationResponse> fetchExperimentConfiguration() {
-        ExperimentConfigurationResponse config = null;
+    public Optional<T> fetchConfiguration() {
+        T config = null;
         try {
-            HttpResponse response = this.eppoHttpClient.get(Constants.RAC_ENDPOINT);
+            HttpResponse response = this.eppoHttpClient.get(this.endpoint);
             int statusCode = response.getStatusLine().getStatusCode();
             if (statusCode == 200) {
-                config = OBJECT_MAPPER.readValue(EntityUtils.toString(response.getEntity()), ExperimentConfigurationResponse.class);
+              config = OBJECT_MAPPER.readValue(EntityUtils.toString(response.getEntity()), this.responseClass);
             }
             if (statusCode == 401) { // unauthorized - invalid API key
                 throw new InvalidApiKeyException("Unauthorized: invalid Eppo API key.");

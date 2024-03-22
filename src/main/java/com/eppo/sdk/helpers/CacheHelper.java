@@ -1,6 +1,7 @@
 package com.eppo.sdk.helpers;
 
 import com.eppo.sdk.constants.Constants;
+import com.eppo.sdk.dto.BanditParameters;
 import com.eppo.sdk.dto.ExperimentConfiguration;
 import org.ehcache.Cache;
 import org.ehcache.CacheManager;
@@ -33,6 +34,17 @@ public class CacheHelper {
                                 String.class, ExperimentConfiguration.class,
                                 ResourcePoolsBuilder.heap(maxEntries)
                         )
+        );
+    }
+
+    public Cache<String, BanditParameters> createBanditParameterCache(int maxEntries) {
+        return this.cacheManager.createCache(
+          Constants.BANDIT_PARAMETER_CACHE_KEY,
+          CacheConfigurationBuilder
+            .newCacheConfigurationBuilder(
+              String.class, BanditParameters.class,
+              ResourcePoolsBuilder.heap(maxEntries)
+            )
         );
     }
 }

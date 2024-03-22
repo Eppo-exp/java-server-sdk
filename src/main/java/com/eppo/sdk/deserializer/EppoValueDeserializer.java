@@ -81,7 +81,7 @@ public class EppoValueDeserializer extends StdDeserializer<EppoValue> {
             case POJO:
                 return EppoValue.valueOf(node);
             default:
-                return EppoValue.valueOf();
+                return EppoValue.nullValue();
         }
     }
 }
