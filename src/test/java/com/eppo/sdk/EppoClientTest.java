@@ -3,9 +3,10 @@ package com.eppo.sdk;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 
 import java.io.File;
 import java.io.IOException;
@@ -36,7 +37,6 @@ import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 
 import lombok.Data;
-import org.mockito.ArgumentMatchers;
 
 @ExtendWith(WireMockExtension.class)
 public class EppoClientTest {
@@ -144,7 +144,7 @@ public class EppoClientTest {
     this.mockServer.start();
     String racResponseJson = getMockRandomizedAssignmentResponse();
     this.mockServer.stubFor(
-      WireMock.get(WireMock.urlMatching(".*randomized_assignment.*")).willReturn(WireMock.okJson(racResponseJson)));
+        WireMock.get(WireMock.urlMatching(".*randomized_assignment.*")).willReturn(WireMock.okJson(racResponseJson)));
   }
 
   @AfterEach
@@ -171,8 +171,8 @@ public class EppoClientTest {
     EppoClient spyClient = spy(realClient);
 
     doThrow(new ExperimentConfigurationNotFound("Exception thrown by mock")).when(spyClient)
-      .getAssignmentValue(anyString(),
-        anyString(), ArgumentMatchers.any(), ArgumentMatchers.any());
+        .getAssignmentValue(anyString(),
+            anyString(), any(EppoAttributes.class), any());
 
     assertDoesNotThrow(() -> spyClient.getBooleanAssignment("subject1", "experiment1"));
     assertDoesNotThrow(() -> spyClient.getDoubleAssignment("subject1", "experiment1"));
@@ -206,10 +206,8 @@ public class EppoClientTest {
     EppoClient spyClient = spy(realClient);
 
     doThrow(new ExperimentConfigurationNotFound("Exception thrown by mock")).when(spyClient).getAssignmentValue(
-      anyString(),
-      anyString(),
-      ArgumentMatchers.any(),
-      ArgumentMatchers.any());
+        anyString(),
+        anyString(), any(EppoAttributes.class), any());
 
     assertThrows(ExperimentConfigurationNotFound.class,
       () -> spyClient.getBooleanAssignment("subject1", "experiment1"));

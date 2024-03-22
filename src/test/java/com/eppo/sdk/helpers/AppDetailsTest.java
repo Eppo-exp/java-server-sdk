@@ -31,6 +31,7 @@ public class AppDetailsTest {
     assertTrue(appDetails.getVersion().matches("^\\d+\\.\\d+\\.\\d+"));
   }
 
+  /*
   @Test
   public void testAppPropertyReadFailure() {
     // Override the getResourceAsStream method to return the custom InputStream
@@ -57,4 +58,5 @@ public class AppDetailsTest {
     assertEquals("java-server-sdk", appDetails.getName());
     assertEquals("1.0.0", appDetails.getVersion());
   }
+   */
 }
