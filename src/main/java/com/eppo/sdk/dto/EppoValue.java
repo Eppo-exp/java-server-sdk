@@ -86,8 +86,24 @@ public class EppoValue {
         return this.stringArrayValue;
     }
 
+    public boolean isString() {
+        return this.type == EppoValueType.STRING;
+    }
+
     public boolean isNumeric() {
         return this.type == EppoValueType.NUMBER;
+    }
+
+    public boolean isBoolean() {
+        return this.type == EppoValueType.BOOLEAN;
+    }
+
+    public boolean isArray() {
+        return type == EppoValueType.ARRAY_OF_STRING;
+    }
+
+    public boolean isJson() {
+        return type == EppoValueType.JSON_NODE;
     }
 
     public boolean isNull() {

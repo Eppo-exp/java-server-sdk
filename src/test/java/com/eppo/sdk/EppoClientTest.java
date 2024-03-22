@@ -313,7 +313,7 @@ public class EppoClientTest {
     verify(mockBanditLogger, times(1)).logBanditAction(banditLogCaptor.capture());
     BanditLogData capturedBanditLog = banditLogCaptor.getValue();
     assertEquals("cold-start-bandit-experiment-bandit", capturedBanditLog.experiment);
-    assertEquals("cold-start-bandit", capturedBanditLog.variation);
+    assertEquals("cold-start-bandit", capturedBanditLog.banditKey);
     assertEquals("subject1", capturedBanditLog.subject);
     assertEquals(Map.of(), capturedBanditLog.subjectNumericAttributes);
     assertEquals(Map.of(), capturedBanditLog.subjectCategoricalAttributes);
@@ -356,7 +356,7 @@ public class EppoClientTest {
     verify(mockBanditLogger, times(1)).logBanditAction(banditLogCaptor.capture());
     BanditLogData capturedBanditLog = banditLogCaptor.getValue();
     assertEquals("uninitialized-bandit-experiment-bandit", capturedBanditLog.experiment);
-    assertEquals("this-bandit-does-not-exist", capturedBanditLog.variation);
+    assertEquals("this-bandit-does-not-exist", capturedBanditLog.banditKey);
     assertEquals("subject8", capturedBanditLog.subject);
     assertEquals(Map.of(), capturedBanditLog.subjectNumericAttributes);
     assertEquals(Map.of(), capturedBanditLog.subjectCategoricalAttributes);
@@ -420,7 +420,7 @@ public class EppoClientTest {
     verify(mockBanditLogger, times(1)).logBanditAction(banditLogCaptor.capture());
     BanditLogData capturedBanditLog = banditLogCaptor.getValue();
     assertEquals("banner-bandit-experiment-bandit", capturedBanditLog.experiment);
-    assertEquals("banner-bandit", capturedBanditLog.variation);
+    assertEquals("banner-bandit", capturedBanditLog.banditKey);
     assertEquals("subject2", capturedBanditLog.subject);
     assertEquals("adidas", capturedBanditLog.action);
     assertEquals(0.2899, capturedBanditLog.actionProbability, 0.0002);
@@ -558,7 +558,7 @@ public class EppoClientTest {
     verify(mockBanditLogger, times(1)).logBanditAction(banditLogCaptor.capture());
     BanditLogData capturedBanditLog = banditLogCaptor.getValue();
     assertEquals("cold-start-bandit-experiment-bandit", capturedBanditLog.experiment);
-    assertEquals("control", capturedBanditLog.variation);
+    assertEquals("control", capturedBanditLog.banditKey);
     assertEquals("subject10", capturedBanditLog.subject);
     assertEquals("option0", capturedBanditLog.action);
     assertNull(capturedBanditLog.actionProbability);

@@ -10,7 +10,7 @@ public class BanditLogData {
   public Date timestamp;
 
   public String experiment;
-  public String variation;
+  public String banditKey;
   public String subject;
   public String action;
   public Double actionProbability;
@@ -22,7 +22,7 @@ public class BanditLogData {
 
   public BanditLogData(
     String experiment,
-    String variation,
+    String banditKey,
     String subject,
     String action,
     Double actionProbability,
@@ -34,7 +34,7 @@ public class BanditLogData {
   ) {
     this.timestamp = new Date();
     this.experiment = experiment;
-    this.variation = variation;
+    this.banditKey = banditKey;
     this.subject = subject;
     this.action = action;
     this.actionProbability = actionProbability;
