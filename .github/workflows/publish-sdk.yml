@@ -12,7 +12,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           java-version: '8'
-          distribution: 'adopt'
+          distribution: 'temurin'
           server-id: ossrh
           server-username: MAVEN_USERNAME
           server-password: MAVEN_PASSWORD
@@ -22,16 +22,20 @@ jobs:
       - name: Download test data
         run: make test-data
 
-      - name: Deploy package
-        run: mvn clean deploy
+      - name: Publish package with debug logging
+        run: mvn --batch-mode deploy -X
         env:
           MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
           MAVEN_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
 
-      - name: Publish package
-        run: mvn nexus-staging:release
+      - name: Close the staging repository
+        run: mvn nexus-staging:close -X
         env:
           MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
           MAVEN_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
-      
+
+      - name: Release the staging repository
+        run: mvn nexus-staging:release -X
+        env:
+          MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+          MAVEN_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
