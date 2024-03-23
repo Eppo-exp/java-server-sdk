@@ -7,7 +7,7 @@ on:
 
 jobs:
   lint-test-sdk:
-    runs-on: ubuntu-latest
+    runs-on: osx-latest
     strategy:
       matrix:
         java-version: ['8', '11', '17'] # Define the Java versions to test against
