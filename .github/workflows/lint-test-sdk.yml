@@ -19,6 +19,7 @@ jobs:
         with:
           java-version: ${{ matrix.java-version }}
           distribution: 'adopt'
+          architecture: 'x64''
 
       - name: Run tests
         run: make test
