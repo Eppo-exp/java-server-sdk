@@ -1,21 +1,13 @@
 package com.eppo.sdk.helpers;
 
-import com.eppo.sdk.EppoClient;
-import com.eppo.sdk.dto.EppoAttributes;
-import com.eppo.sdk.exception.ExperimentConfigurationNotFound;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.Field;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.spy;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class AppDetailsTest {
 
@@ -38,26 +30,15 @@ public class AppDetailsTest {
     assertTrue(appDetails.getVersion().matches("^\\d+\\.\\d+\\.\\d+"));
   }
 
-  /*
   @Test
   public void testAppPropertyReadFailure() {
+      ClassLoader mockClassloader = Mockito.mock(ClassLoader.class);
+      Mockito.when(mockClassloader.getResourceAsStream("app.properties")).thenReturn(null);
 
     ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
-    ClassLoader spyCassLoader = spy(originalClassLoader);
-
-
-      @Override
-      public int read() throws IOException {
-        System.out.println(">>>> throwing intentional error");
-        throw new IOException("Intentional Exception For Test");
-      }
-    });
-
-
     try {
-      Thread.currentThread().setContextClassLoader(mockClassLoader);
-      System.out.println(">>>> get instance");
-      AppDetails.getInstance();
+      Thread.currentThread().setContextClassLoader(mockClassloader);
+      AppDetails.getInstance(); // Initialize with mock class loader
     } finally {
       Thread.currentThread().setContextClassLoader(originalClassLoader);
     }
@@ -66,5 +47,4 @@ public class AppDetailsTest {
     assertEquals("java-server-sdk", appDetails.getName());
     assertEquals("1.0.0", appDetails.getVersion());
   }
-   */
 }
