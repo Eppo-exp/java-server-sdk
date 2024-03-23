@@ -5,8 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.spy;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
 
 import java.io.File;
 import java.io.IOException;
@@ -183,7 +181,7 @@ public class EppoClientTest {
             anyString(),
             anyString(),
             any(EppoAttributes.class),
-            anyMapOf(String.class, EppoAttributes.class)
+            anyMap()
         );
 
     assertDoesNotThrow(() -> spyClient.getBooleanAssignment("subject1", "experiment1"));
@@ -222,7 +220,7 @@ public class EppoClientTest {
             anyString(),
             anyString(),
             any(EppoAttributes.class),
-            anyMapOf(String.class, EppoAttributes.class)
+            any()
         );
 
     assertThrows(ExperimentConfigurationNotFound.class,
