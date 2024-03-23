@@ -569,7 +569,6 @@ public class EppoClient {
      * @return
      */
     public static synchronized EppoClient init(EppoClientConfig eppoClientConfig) {
-        System.out.println(">>>> Initializing Eppo Client");
         InputValidator.validateNotBlank(eppoClientConfig.getApiKey(), "An API key is required");
         if (eppoClientConfig.getAssignmentLogger() == null) {
             throw new InvalidInputException("An assignment logging implementation is required");
@@ -616,8 +615,6 @@ public class EppoClient {
         // Create Eppo Client
         EppoClient eppoClient = new EppoClient(configurationStore, poller, eppoClientConfig);
         EppoClient.instance = eppoClient;
-
-        System.out.println(">>>> Eppo Client Initialized");
 
         return eppoClient;
     }
