@@ -18,8 +18,8 @@ jobs:
         uses: actions/setup-java@v4
         with:
           java-version: ${{ matrix.java-version }}
-          distribution: 'adopt'
-          architecture: 'x64''
+          distribution: 'temurin'
+          architecture: 'x64'
 
       - name: Run tests
         run: make test
