@@ -304,11 +304,12 @@ public class EppoClient {
      */
     public Optional<String> getStringAssignment(String subjectKey, String flagKey,
             EppoAttributes subjectAttributes) {
-        return this.getStringAssignment(subjectKey, flagKey, subjectAttributes, new HashSet<>());
+        Optional<String> typedAssignment = (Optional<String>) this.getTypedAssignment(EppoValueType.STRING, subjectKey, flagKey, subjectAttributes, new HashMap<>());
+        return typedAssignment;
     }
 
     /**
-     * Maps a subject to a variation for a given flag/bandit/experiment.
+     * Maps a subject to a variation for a given flag/experiment that has bandit variation.
      *
      * @param subjectKey identifier of the experiment subject, for example a user ID.
      * @param flagKey flagKey feature flag, bandit, or experiment identifier
@@ -318,22 +319,22 @@ public class EppoClient {
      * @param actions used by bandits to know the actions (potential assignments) available.
      * @return the variation string assigned to the subject, or null if an unrecoverable error was encountered.
      */
-    public Optional<String> getStringAssignment(
-            String subjectKey,
-            String flagKey,
-            EppoAttributes subjectAttributes,
-            Set<String> actions
+    public Optional<String> getBanditAssignment(
+      String subjectKey,
+      String flagKey,
+      EppoAttributes subjectAttributes,
+      Set<String> actions
     ) {
         Map<String, EppoAttributes> actionsWithEmptyAttributes = actions.stream()
-                .collect(Collectors.toMap(
-                        key -> key,
-                        value -> new EppoAttributes()
-                ));
-        return this.getStringAssignment(subjectKey, flagKey, subjectAttributes, actionsWithEmptyAttributes);
+          .collect(Collectors.toMap(
+            key -> key,
+            value -> new EppoAttributes()
+          ));
+        return this.getBanditAssignment(subjectKey, flagKey, subjectAttributes, actionsWithEmptyAttributes);
     }
 
     /**
-     * Maps a subject to a variation for a given flag/bandit/experiment.
+     * Maps a subject to a variation for a given flag/experiment that contains a bandit variation.
      *
      * @param subjectKey identifier of the experiment subject, for example a user ID.
      * @param flagKey flagKey feature flag, bandit, or experiment identifier
@@ -344,11 +345,11 @@ public class EppoClient {
      *                              attributes associated with that option.
      * @return the variation string assigned to the subject, or null if an unrecoverable error was encountered.
      */
-    public Optional<String> getStringAssignment(
-            String subjectKey,
-            String flagKey,
-            EppoAttributes subjectAttributes,
-            Map<String, EppoAttributes> actionsWithAttributes
+    Optional<String> getBanditAssignment(
+      String subjectKey,
+      String flagKey,
+      EppoAttributes subjectAttributes,
+      Map<String, EppoAttributes> actionsWithAttributes
     ) {
         @SuppressWarnings("unchecked")
         Optional<String> typedAssignment = (Optional<String>) this.getTypedAssignment(EppoValueType.STRING, subjectKey, flagKey, subjectAttributes, actionsWithAttributes);

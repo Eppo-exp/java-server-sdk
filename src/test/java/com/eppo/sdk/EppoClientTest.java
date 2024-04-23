@@ -138,7 +138,7 @@ public class EppoClientTest {
     );
     String banditResponseJson = getMockRandomizedAssignmentResponse("src/test/resources/bandits/bandits-parameters-1.json");
     this.mockServer.stubFor(
-      WireMock.get(WireMock.urlMatching(".*randomized_assignment/v3/bandits\\?.*"))
+      WireMock.get(WireMock.urlMatching(".*flag-config/v1/bandits\\?.*"))
         .willReturn(WireMock.okJson(banditResponseJson))
     );
 
@@ -368,7 +368,7 @@ public class EppoClientTest {
     Set<String> banditActions = Stream.of("option1", "option2", "option3").collect(Collectors.toSet());
 
     // Attempt to get a bandit assignment
-    Optional<String> stringAssignment = EppoClient.getInstance().getStringAssignment(
+    Optional<String> stringAssignment = EppoClient.getInstance().getBanditAssignment(
       "subject1",
       "cold-start-bandit-experiment",
       new EppoAttributes(),
@@ -411,7 +411,7 @@ public class EppoClientTest {
     Set<String> banditActions = Stream.of("option1", "option2", "option3").collect(Collectors.toSet());
 
     // Attempt to get a bandit assignment
-    Optional<String> stringAssignment = EppoClient.getInstance().getStringAssignment(
+    Optional<String> stringAssignment = EppoClient.getInstance().getBanditAssignment(
       "subject8",
       "uninitialized-bandit-experiment",
       new EppoAttributes(),
@@ -476,7 +476,7 @@ public class EppoClientTest {
     actionsWithAttributes.put("puma", new EppoAttributes());
 
     // Get our assigned action
-    Optional<String> stringAssignment = EppoClient.getInstance().getStringAssignment(
+    Optional<String> stringAssignment = EppoClient.getInstance().getBanditAssignment(
       "subject2",
       "banner-bandit-experiment",
       subjectAttributes,
@@ -556,7 +556,7 @@ public class EppoClientTest {
     actionAttributes.put("puma", pumaAttributes);
 
     // Get our assigned action
-    Optional<String> stringAssignment = EppoClient.getInstance().getStringAssignment(
+    Optional<String> stringAssignment = EppoClient.getInstance().getBanditAssignment(
       "subject30",
       "banner-bandit-experiment",
       subjectAttributes,
@@ -578,7 +578,7 @@ public class EppoClientTest {
     Set<String> actions = Stream.of("nike", "adidas", "puma").collect(Collectors.toSet());
 
     // Get our assigned action
-    Optional<String> stringAssignment = EppoClient.getInstance().getStringAssignment(
+    Optional<String> stringAssignment = EppoClient.getInstance().getBanditAssignment(
       "subject39",
       "banner-bandit-experiment",
       subjectAttributes,
@@ -605,7 +605,7 @@ public class EppoClientTest {
     subjectAttributes.put("is_account_admin", EppoValue.valueOf(false));
 
     // Attempt to get a bandit assignment
-    Optional<String> stringAssignment = EppoClient.getInstance().getStringAssignment(
+    Optional<String> stringAssignment = EppoClient.getInstance().getBanditAssignment(
             "subject10",
             "cold-start-bandit-experiment",
             subjectAttributes,
@@ -678,7 +678,7 @@ public class EppoClientTest {
     Set<String> banditActions = Stream.of("option1", "option2", "option3").collect(Collectors.toSet());
 
     // Attempt to get a bandit assignment
-    Optional<String> stringAssignment = EppoClient.getInstance().getStringAssignment(
+    Optional<String> stringAssignment = EppoClient.getInstance().getBanditAssignment(
             "subject2",
             "cold-start-bandit",
             new EppoAttributes(),
