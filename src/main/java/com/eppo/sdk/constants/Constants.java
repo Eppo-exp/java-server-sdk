@@ -32,7 +32,7 @@ public class Constants {
      */
     public static final String RAC_ENDPOINT = "/randomized_assignment/v3/config";
 
-    public static final String BANDIT_ENDPOINT = "/randomized_assignment/v3/bandits";
+    public static final String BANDIT_ENDPOINT = "/flag-config/v1/bandits";
 
 
     /**
