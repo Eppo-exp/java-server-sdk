@@ -345,7 +345,7 @@ public class EppoClient {
      *                              attributes associated with that option.
      * @return the variation string assigned to the subject, or null if an unrecoverable error was encountered.
      */
-    Optional<String> getBanditAssignment(
+    public Optional<String> getBanditAssignment(
       String subjectKey,
       String flagKey,
       EppoAttributes subjectAttributes,
