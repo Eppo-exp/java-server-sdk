@@ -118,7 +118,19 @@ public class EppoValue {
             case STRING:
                 return this.stringValue;
             case NUMBER:
-                return this.doubleValue.toString();
+                // By default, `String.valueOf(<double>)` will include at least one decimal place.
+                // Though numeric flags can either be integers or floating-point types. And target
+                // rule logic will cast a number type to a String before evaluating `oneOf` or `notOneOf`
+                // rules.
+                // The logic below ensures the cast to string better represents the intended numeric
+                // field type.
+                //
+                // @see https://docs.geteppo.com/feature-flagging/flag-variations#numeric-flags
+                // @see https://docs.geteppo.com/feature-flagging/targeting#supported-rule-operators
+                if (this.doubleValue.intValue() == this.doubleValue) {
+                    return String.valueOf(this.doubleValue.intValue());
+                }
+                return String.valueOf(this.doubleValue);
             case BOOLEAN:
                 return this.boolValue.toString();
             case ARRAY_OF_STRING:
