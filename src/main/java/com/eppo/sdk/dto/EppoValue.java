@@ -112,6 +112,13 @@ public class EppoValue {
         return type == EppoValueType.NULL;
     }
 
+    /**
+     * Converts the EppoValue into a string representation.
+     * NOTE: Take care when updating this method as it's currently used
+     * by the IN and NOT IN target rule evaluations.
+     *
+     * @return String the string representation of the EppoValue
+     */
     @Override
     public String toString() {
         switch(this.type) {
