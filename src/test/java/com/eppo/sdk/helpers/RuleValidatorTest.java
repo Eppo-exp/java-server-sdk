@@ -71,6 +71,44 @@ class RuleValidatorTest {
         addConditionToRule(rule, condition);
     }
 
+    public void addOneOfConditionWithIntegers(Rule rule) {
+        Condition condition = new Condition();
+        List<String> values = new ArrayList<>();
+        values.add("1");
+        values.add("2");
+
+        condition.value = EppoValue.valueOf(values);
+        condition.attribute = "oneOf";
+        condition.operator = OperatorType.ONE_OF;
+
+        addConditionToRule(rule, condition);
+    }
+
+    public void addOneOfConditionWithDoubles(Rule rule) {
+        Condition condition = new Condition();
+        List<String> values = new ArrayList<>();
+        values.add("1.5");
+        values.add("2.7");
+
+        condition.value = EppoValue.valueOf(values);
+        condition.attribute = "oneOf";
+        condition.operator = OperatorType.ONE_OF;
+
+        addConditionToRule(rule, condition);
+    }
+
+    public void addOneOfConditionWithBoolean(Rule rule) {
+        Condition condition = new Condition();
+        List<String> values = new ArrayList<>();
+        values.add("true");
+
+        condition.value = EppoValue.valueOf(values);
+        condition.attribute = "oneOf";
+        condition.operator = OperatorType.ONE_OF;
+
+        addConditionToRule(rule, condition);
+    }
+
     public void addNotOneOfCondition(Rule rule) {
         Condition condition = new Condition();
         List<String> values = new ArrayList<>();
@@ -224,6 +262,62 @@ class RuleValidatorTest {
         subjectAttributes.put("oneOf", EppoValue.valueOf("value1"));
 
         Assertions.assertFalse(RuleValidator.findMatchingRule(subjectAttributes, rules).isPresent());
+    }
+
+    @DisplayName("findMatchingRule() with oneOf rule on a string")
+    @Test
+    void testMatchesAnyRuleWithOneOfRuleOnString() {
+        List<Rule> rules = new ArrayList<>();
+        Rule rule = createRule(new ArrayList<>());
+        addOneOfCondition(rule);
+        rules.add(rule);
+
+        EppoAttributes subjectAttributes = new EppoAttributes();
+        subjectAttributes.put("oneOf", EppoValue.valueOf("value1"));
+
+        Assertions.assertTrue(RuleValidator.findMatchingRule(subjectAttributes, rules).isPresent());
+    }
+
+    @DisplayName("findMatchingRule() with oneOf rule on an integer")
+    @Test
+    void testMatchesAnyRuleWithOneOfRuleOnInteger() {
+        List<Rule> rules = new ArrayList<>();
+        Rule rule = createRule(new ArrayList<>());
+        addOneOfConditionWithIntegers(rule);
+        rules.add(rule);
+
+        EppoAttributes subjectAttributes = new EppoAttributes();
+        subjectAttributes.put("oneOf", EppoValue.valueOf(2));
+
+        Assertions.assertTrue(RuleValidator.findMatchingRule(subjectAttributes, rules).isPresent());
+    }
+
+    @DisplayName("findMatchingRule() with oneOf rule on a double")
+    @Test
+    void testMatchesAnyRuleWithOneOfRuleOnDouble() {
+        List<Rule> rules = new ArrayList<>();
+        Rule rule = createRule(new ArrayList<>());
+        addOneOfConditionWithDoubles(rule);
+        rules.add(rule);
+
+        EppoAttributes subjectAttributes = new EppoAttributes();
+        subjectAttributes.put("oneOf", EppoValue.valueOf(1.5));
+
+        Assertions.assertTrue(RuleValidator.findMatchingRule(subjectAttributes, rules).isPresent());
+    }
+
+    @DisplayName("findMatchingRule() with oneOf rule on a boolean")
+    @Test
+    void testMatchesAnyRuleWithOneOfRuleOnBoolean() {
+        List<Rule> rules = new ArrayList<>();
+        Rule rule = createRule(new ArrayList<>());
+        addOneOfConditionWithBoolean(rule);
+        rules.add(rule);
+
+        EppoAttributes subjectAttributes = new EppoAttributes();
+        subjectAttributes.put("oneOf", EppoValue.valueOf(true));
+
+        Assertions.assertTrue(RuleValidator.findMatchingRule(subjectAttributes, rules).isPresent());
     }
 
 }

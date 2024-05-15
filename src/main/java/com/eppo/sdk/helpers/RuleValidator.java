@@ -153,9 +153,9 @@ public class RuleValidator {
                         return Compare.compareRegex(value.stringValue(),
                                 Pattern.compile(condition.value.stringValue()));
                     case ONE_OF:
-                        return Compare.isOneOf(value.stringValue(), condition.value.arrayValue());
+                        return Compare.isOneOf(value.toString(), condition.value.arrayValue());
                     case NOT_ONE_OF:
-                        return !Compare.isOneOf(value.stringValue(), condition.value.arrayValue());
+                        return !Compare.isOneOf(value.toString(), condition.value.arrayValue());
                 }
             } catch (Exception e) {
                 return false;
