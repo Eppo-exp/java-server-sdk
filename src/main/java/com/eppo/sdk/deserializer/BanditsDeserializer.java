@@ -112,11 +112,13 @@ public class BanditsDeserializer extends StdDeserializer<Map<String, BanditParam
         categoricalAttributeCoefficientsArrayNode.iterator().forEachRemaining(categoricalAttributeCoefficientsNode -> {
             String attributeKey = categoricalAttributeCoefficientsNode.get("attributeKey").asText();
             Double missingValueCoefficient = categoricalAttributeCoefficientsNode.get("missingValueCoefficient").asDouble();
+
             Map<String, Double> valueCoefficients = new HashMap<>();
-            JsonNode valuesNode = categoricalAttributeCoefficientsNode.get("values");
-            valuesNode.iterator().forEachRemaining(valueNode -> {
-                String value = valueNode.get("value").asText();
-                Double coefficient = valueNode.get("coefficient").asDouble();
+            JsonNode valuesNode = categoricalAttributeCoefficientsNode.get("valueCoefficients");
+            Iterator<Map.Entry<String, JsonNode>> coefficientIterator = valuesNode.fields();
+            coefficientIterator.forEachRemaining(field -> {
+                String value = field.getKey();
+                Double coefficient = field.getValue().asDouble();
                 valueCoefficients.put(value, coefficient);
             });
 
