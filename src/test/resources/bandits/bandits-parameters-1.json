@@ -24,11 +24,11 @@
             "actionCategoricalCoefficients": [
               {
                 "attributeKey": "loyalty_tier",
-                "values": [
-                  { "value": "gold", "coefficient": 4.5 },
-                  { "value": "silver", "coefficient": 3.2 },
-                  { "value": "bronze", "coefficient": 1.9 }
-                ],
+                "valueCoefficients": {
+                  "gold": 4.5,
+                  "silver": 3.2,
+                  "bronze": 1.9
+                },
                 "missingValueCoefficient": 0.0
               }
             ],
@@ -42,10 +42,10 @@
             "subjectCategoricalCoefficients": [
               {
                 "attributeKey": "gender_identity",
-                "values": [
-                  { "value": "female", "coefficient": 0.5 },
-                  { "value": "male", "coefficient": -0.5 }
-                ],
+                "valueCoefficients": {
+                  "female": 0.5,
+                  "male": -0.5
+                },
                 "missingValueCoefficient": 2.3
               }
             ]
@@ -63,10 +63,10 @@
             "actionCategoricalCoefficients": [
               {
                 "attributeKey": "purchased_last_30_days",
-                "values": [
-                  { "value": "true", "coefficient": 9.0 },
-                  { "value": "false", "coefficient": 0.0 }
-                ],
+                "valueCoefficients": {
+                  "true": 9.0,
+                  "false": 0.0
+                },
                 "missingValueCoefficient": 0.0
               }
             ],
@@ -74,10 +74,10 @@
             "subjectCategoricalCoefficients": [
               {
                 "attributeKey": "gender_identity",
-                "values": [
-                  { "value": "female", "coefficient": 0.0 },
-                  { "value": "male", "coefficient": 0.3 }
-                ],
+                "valueCoefficients": {
+                  "female": 0.0,
+                  "male": 0.3
+                },
                 "missingValueCoefficient": 0.45
               }
             ]
