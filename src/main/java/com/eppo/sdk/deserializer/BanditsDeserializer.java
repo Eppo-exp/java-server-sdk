@@ -53,9 +53,10 @@ public class BanditsDeserializer extends StdDeserializer<Map<String, BanditParam
             JsonNode coefficientsNode = modelDataNode.get("coefficients");
 
             Map<String, BanditCoefficients> coefficients = new HashMap<>();
-            coefficientsNode.iterator().forEachRemaining(actionCoefficientsNode -> {
-                BanditCoefficients actionCoefficients = this.parseActionCoefficientsNode(actionCoefficientsNode);
-                coefficients.put(actionCoefficients.getActionKey(), actionCoefficients);
+            Iterator<Map.Entry<String, JsonNode>> coefficientIterator = coefficientsNode.fields();
+            coefficientIterator.forEachRemaining(field -> {
+                BanditCoefficients actionCoefficients = this.parseActionCoefficientsNode(field.getValue());
+                coefficients.put(field.getKey(), actionCoefficients);
             });
 
             modelData.setCoefficients(coefficients);
