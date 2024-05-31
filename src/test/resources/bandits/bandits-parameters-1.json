@@ -10,8 +10,8 @@
         "gamma": 1.0,
         "defaultActionScore": 0.0,
         "actionProbabilityFloor": 0.0,
-        "coefficients": [
-          {
+        "coefficients": {
+          "nike": {
             "actionKey": "nike",
             "intercept": 1.0,
             "actionNumericCoefficients": [
@@ -50,7 +50,7 @@
               }
             ]
           },
-          {
+          "adidas": {
             "actionKey": "adidas",
             "intercept": 1.1,
             "actionNumericCoefficients": [
@@ -82,7 +82,7 @@
               }
             ]
           }
-        ]
+        }
       }
     },
     {
@@ -94,7 +94,7 @@
         "gamma": 1.0,
         "defaultActionScore": 0.0,
         "actionProbabilityFloor": 0.0,
-        "coefficients": []
+        "coefficients": {}
       }
     }
   ]
