@@ -1,16 +1,11 @@
 package com.eppo.sdk.helpers;
 
-import org.apache.http.Header;
-import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.client.HttpClients;
 
-import java.net.URI;
-import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -20,24 +15,21 @@ import java.util.stream.Stream;
  * Eppo Http Client Class
  */
 public class EppoHttpClient {
-
-    private Map<String, String> defaultParams = new HashMap<>();
-    private String baseURl;
-
+    private final Map<String, String> defaultParams = new HashMap<>();
+    private final String baseUrl;
     private int requestTimeOutMillis = 3000; // 3 secs
-
-    private RequestConfig config = RequestConfig.custom()
+    private final RequestConfig config = RequestConfig.custom()
             .setConnectTimeout(requestTimeOutMillis)
             .setConnectionRequestTimeout(requestTimeOutMillis)
             .setSocketTimeout(requestTimeOutMillis).build();
 
-    private HttpClient httpClient = HttpClientBuilder.create().setDefaultRequestConfig(config).build();
+    private final HttpClient httpClient = HttpClientBuilder.create().setDefaultRequestConfig(config).build();
 
-    public EppoHttpClient(String apikey, String sdkName, String sdkVersion, String baseURl) {
+    public EppoHttpClient(String apikey, String sdkName, String sdkVersion, String baseUrl) {
         this.defaultParams.put("apiKey", apikey);
         this.defaultParams.put("sdkName", sdkName);
         this.defaultParams.put("sdkVersion", sdkVersion);
-        this.baseURl = baseURl;
+        this.baseUrl = baseUrl;
     }
 
     public EppoHttpClient(
@@ -50,7 +42,7 @@ public class EppoHttpClient {
         this.defaultParams.put("apiKey", apikey);
         this.defaultParams.put("sdkName", sdkName);
         this.defaultParams.put("sdkVersion", sdkVersion);
-        this.baseURl = baseUrl;
+        this.baseUrl = baseUrl;
         this.requestTimeOutMillis = requestTimeOutMillis;
     }
 
@@ -87,7 +79,7 @@ public class EppoHttpClient {
                 );
 
         // Build URL
-        final String newUrl = this.urlBuilder(this.baseURl + url, allParams);
+        final String newUrl = this.urlBuilder(this.baseUrl + url, allParams);
         HttpGet getRequest = new HttpGet(newUrl);
 
 

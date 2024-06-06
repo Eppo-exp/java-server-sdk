@@ -1,11 +1,11 @@
 package com.eppo.sdk.helpers;
 
+import cloud.eppo.rac.exception.InvalidApiKeyException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.extern.slf4j.Slf4j;
 
-import com.eppo.sdk.exception.InvalidApiKeyException;
 import org.apache.http.HttpResponse;
 import org.apache.http.util.EntityUtils;
 

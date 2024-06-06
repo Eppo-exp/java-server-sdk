@@ -6,7 +6,7 @@ Refer to our [SDK documentation](https://docs.geteppo.com/feature-flags/sdks/ser
 
 ## Contributing
 
-A version of Java 8 is required to locally compile the SDK.
+Java 8 is required to locally compile the SDK.
 
 ### Apple M-Series
 

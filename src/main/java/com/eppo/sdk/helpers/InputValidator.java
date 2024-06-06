@@ -1,6 +1,6 @@
 package com.eppo.sdk.helpers;
 
-import com.eppo.sdk.exception.InvalidInputException;
+import cloud.eppo.rac.exception.InvalidInputException;
 
 /**
  * Input Validator Class

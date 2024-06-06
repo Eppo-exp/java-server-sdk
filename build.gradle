@@ -1,0 +1,119 @@
+plugins {
+  id 'java-library'
+  id 'maven-publish'
+  id 'signing'
+  id "com.diffplug.spotless" version "6.13.0"
+}
+
+group = 'cloud.eppo'
+version = '0.0.1-SNAPSHOT'
+ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
+
+repositories {
+  mavenCentral()
+  mavenLocal()
+}
+
+dependencies {
+  implementation 'cloud.eppo:sdk-common-jvm:0.0.1-SNAPSHOT'
+  implementation 'org.projectlombok:lombok:1.18.24'
+  implementation 'com.github.zafarkhaja:java-semver:0.10.2'
+  implementation 'com.fasterxml.jackson.core:jackson-databind:2.17.1'
+  implementation 'org.apache.httpcomponents:httpclient:4.5.14'
+  implementation 'ch.qos.logback:logback-classic:1.4.12'
+  implementation 'org.ehcache:ehcache:3.9.8'
+  testImplementation platform('org.junit:junit-bom:5.10.0')
+  testImplementation 'org.junit.jupiter:junit-jupiter'
+  testImplementation 'com.github.tomakehurst:wiremock-jre8:2.35.2'
+  testImplementation 'org.mockito:mockito-core:4.11.0'
+  testImplementation 'org.skyscreamer:jsonassert:1.5.1'
+}
+
+test {
+  useJUnitPlatform()
+}
+
+spotless {
+  ratchetFrom 'origin/main'
+
+  format 'misc', {
+    // define the files to apply `misc` to
+    target '*.gradle', '.gitattributes', '.gitignore'
+
+    // define the steps to apply to those files
+    trimTrailingWhitespace()
+    indentWithSpaces(2) // or spaces. Takes an integer argument if you don't like 4
+    endWithNewline()
+  }
+  java {
+    // apply a specific flavor of google-java-format
+    googleJavaFormat('1.7')
+    // fix formatting of type annotations
+    formatAnnotations()
+  }
+}
+
+java {
+  withJavadocJar()
+  withSourcesJar()
+}
+
+publishing {
+  publications {
+    mavenJava(MavenPublication) {
+      artifactId = 'sdk-jvm'
+      from components.java
+      versionMapping {
+        usage('java-api') {
+          fromResolutionOf('runtimeClasspath')
+        }
+        usage('java-runtime') {
+          fromResolutionResult()
+        }
+      }
+      pom {
+        name = 'Eppo JVM SDK'
+        description = 'Eppo SDK for JVM'
+        url = 'https://github.com/Eppo-exp/sdk-common-jvm'
+        licenses {
+          license {
+            name = 'MIT License'
+            url = 'http://www.opensource.org/licenses/mit-license.php'
+          }
+        }
+        developers {
+          developer {
+            name = 'Eppo'
+            email = 'https://geteppo.com'
+          }
+        }
+        scm {
+          connection = 'scm:git:git://example.com/my-library.git'
+          developerConnection = 'scm:git:ssh://example.com/my-library.git'
+          url = 'http://example.com/my-library/'
+        }
+      }
+    }
+  }
+  repositories {
+    maven {
+      // change URLs to point to your repos, e.g. http://my.org/repo
+      def releasesRepoUrl = layout.buildDirectory.dir('repos/releases')
+      def snapshotsRepoUrl = layout.buildDirectory.dir('repos/snapshots')
+      url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
+    }
+  }
+}
+
+signing {
+  // only sign release versions
+  required { isReleaseVersion && gradle.taskGraph.hasTask("publish") }
+  sign publishing.publications.mavenJava
+}
+
+
+javadoc {
+  if (JavaVersion.current().isJava9Compatible()) {
+    options.addBooleanOption('html5', true)
+  }
+}

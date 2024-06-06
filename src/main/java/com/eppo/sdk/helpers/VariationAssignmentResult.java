@@ -1,7 +1,7 @@
 package com.eppo.sdk.helpers;
 
-import com.eppo.sdk.dto.EppoAttributes;
-import com.eppo.sdk.dto.Variation;
+import cloud.eppo.rac.dto.EppoAttributes;
+import cloud.eppo.rac.dto.Variation;
 import lombok.Getter;
 
 @Getter
