@@ -77,7 +77,7 @@ java {
 publishing {
   publications {
     mavenJava(MavenPublication) {
-      artifactId = 'sdk-jvm'
+      artifactId = 'eppo-server-sdk'
       from components.java
       versionMapping {
         usage('java-api') {
