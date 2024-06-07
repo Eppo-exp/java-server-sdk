@@ -1,5 +1,6 @@
 package com.eppo.sdk.helpers;
 
+import cloud.eppo.ShardUtils;
 import cloud.eppo.rac.dto.Variation;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -9,11 +10,11 @@ public class VariationHelper {
 
   public static Variation selectVariation(
       String inputKey, int subjectShards, List<Variation> variations) {
-    int shard = Shard.getShard(inputKey, subjectShards);
+    int shard = ShardUtils.getShard(inputKey, subjectShards);
 
     Optional<Variation> variation =
         variations.stream()
-            .filter(config -> Shard.isShardInRange(shard, config.getShardRange()))
+            .filter(config -> ShardUtils.isShardInRange(shard, config.getShardRange()))
             .findFirst();
 
     if (!variation.isPresent()) {

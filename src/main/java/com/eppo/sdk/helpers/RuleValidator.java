@@ -11,15 +11,6 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-/**
- * Compare Function Interface
- *
- * @param <T>
- */
-interface IConditionFunc<T> {
-  public boolean check(T a, T b);
-}
-
 /** Compare Class */
 class Compare {
   /**

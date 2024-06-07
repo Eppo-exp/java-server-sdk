@@ -11,7 +11,6 @@ import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
 
 class BanditsDeserializerTest {
-
   private final ObjectMapper mapper = new ObjectMapper();
 
   @Test

@@ -1,5 +1,6 @@
 package com.eppo.sdk;
 
+import cloud.eppo.ShardUtils;
 import cloud.eppo.rac.Constants;
 import cloud.eppo.rac.dto.*;
 import cloud.eppo.rac.exception.EppoClientIsNotInitializedException;
@@ -431,14 +432,14 @@ public class EppoClient {
   /** This function is used to check if the Experiment is in the same */
   private boolean isInExperimentSample(
       String subjectKey, String experimentKey, int subjectShards, double percentageExposure) {
-    int shard = Shard.getShard("exposure-" + subjectKey + "-" + experimentKey, subjectShards);
+    int shard = ShardUtils.getShard("exposure-" + subjectKey + "-" + experimentKey, subjectShards);
     return shard <= percentageExposure * subjectShards;
   }
 
   /** This function is used to get override variations. */
   private EppoValue getSubjectVariationOverride(
       String subjectKey, ExperimentConfiguration experimentConfiguration) {
-    String hexedSubjectKey = Shard.getHex(subjectKey);
+    String hexedSubjectKey = ShardUtils.getHex(subjectKey);
     return experimentConfiguration
         .getTypedOverrides()
         .getOrDefault(hexedSubjectKey, EppoValue.nullValue());

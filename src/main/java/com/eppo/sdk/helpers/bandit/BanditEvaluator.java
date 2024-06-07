@@ -1,7 +1,8 @@
 package com.eppo.sdk.helpers.bandit;
 
+import cloud.eppo.ShardUtils;
+import cloud.eppo.model.ShardRange;
 import cloud.eppo.rac.dto.*;
-import com.eppo.sdk.helpers.Shard;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -43,7 +44,7 @@ public class BanditEvaluator {
 
   private static int hashToPositiveInt(String experimentKey, String subjectKey, String actionKey) {
     int SHUFFLE_SHARDS = 10000;
-    return Shard.getShard(experimentKey + "-" + subjectKey + "-" + actionKey, SHUFFLE_SHARDS);
+    return ShardUtils.getShard(experimentKey + "-" + subjectKey + "-" + actionKey, SHUFFLE_SHARDS);
   }
 
   private static List<Variation> generateVariations(
