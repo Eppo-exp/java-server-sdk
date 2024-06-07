@@ -47,4 +47,4 @@ test-data:
 
 .PHONY: test
 test: test-data build
-	./gradlew test
+	./gradlew check
