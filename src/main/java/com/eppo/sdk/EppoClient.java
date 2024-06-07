@@ -1,6 +1,7 @@
 package com.eppo.sdk;
 
 import cloud.eppo.ShardUtils;
+import cloud.eppo.Utils;
 import cloud.eppo.rac.Constants;
 import cloud.eppo.rac.dto.*;
 import cloud.eppo.rac.exception.EppoClientIsNotInitializedException;
@@ -439,7 +440,7 @@ public class EppoClient {
   /** This function is used to get override variations. */
   private EppoValue getSubjectVariationOverride(
       String subjectKey, ExperimentConfiguration experimentConfiguration) {
-    String hexedSubjectKey = ShardUtils.getHex(subjectKey);
+    String hexedSubjectKey = Utils.getMD5Hex(subjectKey);
     return experimentConfiguration
         .getTypedOverrides()
         .getOrDefault(hexedSubjectKey, EppoValue.nullValue());
