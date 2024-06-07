@@ -1,8 +1,6 @@
 package com.eppo.sdk.helpers;
 
-/**
- * Poller Task Interface
- */
+/** Poller Task Interface */
 public interface IPollerTask {
-    boolean run();
+  boolean run();
 }

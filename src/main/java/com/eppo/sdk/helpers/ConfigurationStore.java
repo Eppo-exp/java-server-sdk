@@ -6,13 +6,13 @@ import cloud.eppo.rac.exception.NetworkException;
 import cloud.eppo.rac.exception.NetworkRequestNotAllowed;
 import java.util.Map;
 import java.util.Optional;
-
-import lombok.extern.slf4j.Slf4j;
 import org.ehcache.Cache;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** Configuration Store Class */
-@Slf4j
 public class ConfigurationStore {
+  private static final Logger log = LoggerFactory.getLogger(ConfigurationStore.class);
   Cache<String, ExperimentConfiguration> experimentConfigurationCache;
   Cache<String, BanditParameters> banditParametersCache;
   ConfigurationRequestor<ExperimentConfigurationResponse> experimentConfigurationRequestor;
@@ -30,7 +30,7 @@ public class ConfigurationStore {
     this.banditParametersRequestor = banditParametersRequestor;
   }
 
-  public static final ConfigurationStore init(
+  public static ConfigurationStore init(
       Cache<String, ExperimentConfiguration> experimentConfigurationCache,
       ConfigurationRequestor<ExperimentConfigurationResponse> experimentConfigurationRequestor,
       Cache<String, BanditParameters> banditParametersCache,
@@ -47,19 +47,14 @@ public class ConfigurationStore {
     return ConfigurationStore.instance;
   }
 
-  /**
-   * This function is used to get initialized instance
-   *
-   * @return
-   */
-  public static final ConfigurationStore getInstance() {
+  /** This function is used to get initialized instance */
+  public static ConfigurationStore getInstance() {
     return ConfigurationStore.instance;
   }
 
   /**
    * This function is used to set experiment configuration to cache
    *
-   * @param key
    * @param experimentConfiguration
    */
   protected void setExperimentConfiguration(
@@ -70,8 +65,6 @@ public class ConfigurationStore {
   /**
    * This function is used to fetch experiment configuration
    *
-   * @param key
-   * @return
    * @throws ExperimentConfigurationNotFound
    */
   public ExperimentConfiguration getExperimentConfiguration(String key)

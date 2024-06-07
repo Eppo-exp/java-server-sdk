@@ -1,14 +1,11 @@
 package com.eppo.sdk.helpers;
 
 import cloud.eppo.rac.dto.ShardRange;
-
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-/**
- * Shard Class
- */
+/** Shard Class */
 public class Shard {
 
   /**
