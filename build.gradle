@@ -21,6 +21,9 @@ processResources {
 repositories {
   mavenCentral()
   mavenLocal()
+  maven {
+    url 'https://s01.oss.sonatype.org/content/repositories/snapshots/'
+  }
 }
 
 dependencies {
@@ -87,7 +90,7 @@ publishing {
       pom {
         name = 'Eppo JVM SDK'
         description = 'Eppo SDK for JVM'
-        url = 'https://github.com/Eppo-exp/sdk-common-jvm'
+        url = 'https://github.com/Eppo-exp/java-server-sdk'
         licenses {
           license {
             name = 'MIT License'
@@ -101,26 +104,27 @@ publishing {
           }
         }
         scm {
-          connection = 'scm:git:git://example.com/my-library.git'
-          developerConnection = 'scm:git:ssh://example.com/my-library.git'
-          url = 'http://example.com/my-library/'
+          connection = 'scm:git:git://github.com/Eppo-exp/java-server-sdk'
+          developerConnection = 'scm:git:ssh://github.com/Eppo-exp/java-server-sdk'
+          url = 'http://github.com/Eppo-exp/java-server-sdk'
         }
       }
     }
   }
   repositories {
     maven {
-      // change URLs to point to your repos, e.g. http://my.org/repo
-      def releasesRepoUrl = layout.buildDirectory.dir('repos/releases')
-      def snapshotsRepoUrl = layout.buildDirectory.dir('repos/snapshots')
+      def releasesRepoUrl = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
+      def snapshotsRepoUrl = "https://s01.oss.sonatype.org/content/repositories/snapshots/"
       url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
+      credentials {
+        username = ossrhUsername
+        password = ossrhPassword
+      }
     }
   }
 }
 
 signing {
-  // only sign release versions
-  required { isReleaseVersion && gradle.taskGraph.hasTask("publish") }
   sign publishing.publications.mavenJava
 }
 
