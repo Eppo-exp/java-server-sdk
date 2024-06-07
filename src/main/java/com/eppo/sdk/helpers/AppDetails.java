@@ -13,10 +13,10 @@ public class AppDetails {
   private final String name;
 
   public static AppDetails getInstance() {
-    if (AppDetails.instance == null) {
-      AppDetails.instance = new AppDetails();
+    if (instance == null) {
+      instance = new AppDetails();
     }
-    return AppDetails.instance;
+    return instance;
   }
 
   public AppDetails() {

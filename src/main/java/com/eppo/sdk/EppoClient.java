@@ -556,8 +556,8 @@ public class EppoClient {
             banditParametersRequestor);
 
     // Stop the polling process of any previously initialized client
-    if (EppoClient.instance != null) {
-      EppoClient.instance.poller.cancel();
+    if (instance != null) {
+      instance.poller.cancel();
     }
 
     // Start polling for experiment configurations
@@ -569,12 +569,8 @@ public class EppoClient {
             Constants.TIME_INTERVAL_IN_MILLIS,
             Constants.JITTER_INTERVAL_IN_MILLIS);
     fetchConfigurationsTask.run();
-
-    // Create Eppo Client
-    EppoClient eppoClient = new EppoClient(configurationStore, poller, eppoClientConfig);
-    EppoClient.instance = eppoClient;
-
-    return eppoClient;
+    instance = new EppoClient(configurationStore, poller, eppoClientConfig);
+    return instance;
   }
 
   /**
@@ -583,10 +579,10 @@ public class EppoClient {
    * @throws EppoClientIsNotInitializedException
    */
   public static EppoClient getInstance() throws EppoClientIsNotInitializedException {
-    if (EppoClient.instance == null) {
+    if (instance == null) {
       throw new EppoClientIsNotInitializedException("Eppo client is not initialized!");
     }
 
-    return EppoClient.instance;
+    return instance;
   }
 }

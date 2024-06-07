@@ -1,9 +1,13 @@
 package com.eppo.sdk.helpers;
 
 import cloud.eppo.rac.exception.InvalidApiKeyException;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Optional;
+
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 import org.apache.http.HttpResponse;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
@@ -11,7 +15,10 @@ import org.slf4j.LoggerFactory;
 
 public class ConfigurationRequestor<T> {
   private static final ObjectMapper OBJECT_MAPPER =
-      new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+      new ObjectMapper()
+          .registerModule(new ParameterNamesModule(JsonCreator.Mode.PROPERTIES))
+          .registerModule(new Jdk8Module())
+          .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
   private static final Logger log = LoggerFactory.getLogger(ConfigurationRequestor.class);
   private final Class<T> responseClass;
   private final EppoHttpClient eppoHttpClient;

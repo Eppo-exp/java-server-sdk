@@ -162,9 +162,7 @@ public class EppoClientTest {
   void testGracefulModeOn() {
     EppoClientConfig config =
         new EppoClientConfig("mock-api-key", "http://localhost:4001", logData -> {}, null);
-    EppoClient.init(config);
-    EppoClient realClient = EppoClient.getInstance();
-
+    EppoClient realClient = EppoClient.init(config);
     EppoClient spyClient = spy(realClient);
 
     doThrow(new ExperimentConfigurationNotFound("Exception thrown by mock"))
@@ -324,24 +322,29 @@ public class EppoClientTest {
   }
 
   private List<String> getStringAssignments(AssignmentTestCase testCase) {
+    //noinspection unchecked
     return (List<String>) this.getAssignments(testCase, AssignmentValueType.STRING);
   }
 
   private List<Double> getDoubleAssignments(AssignmentTestCase testCase) {
+    //noinspection unchecked
     return (List<Double>) this.getAssignments(testCase, AssignmentValueType.NUMERIC);
   }
 
   private List<Boolean> getBooleanAssignments(AssignmentTestCase testCase) {
+    //noinspection unchecked
     return (List<Boolean>) this.getAssignments(testCase, AssignmentValueType.BOOLEAN);
   }
 
   private List<JsonNode> getJSONAssignments(AssignmentTestCase testCase) {
+    //noinspection unchecked
     return (List<JsonNode>) this.getAssignments(testCase, AssignmentValueType.JSON);
   }
 
   private static Stream<Arguments> getAssignmentTestData() throws IOException {
     File testCaseFolder = new File("src/test/resources/assignment-v2/");
     File[] testCaseFiles = testCaseFolder.listFiles();
+    assertNotNull(testCaseFiles);
     List<Arguments> arguments = new ArrayList<>();
     for (File testCaseFile : testCaseFiles) {
       String json = FileUtils.readFileToString(testCaseFile, "UTF8");

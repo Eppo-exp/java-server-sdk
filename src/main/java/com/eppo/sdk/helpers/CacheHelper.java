@@ -18,12 +18,7 @@ public class CacheHelper {
     this.cacheManager.init();
   }
 
-  /**
-   * Create caching for Experiment Configuration
-   *
-   * @param maxEntries
-   * @return
-   */
+  /** Create caching for Experiment Configuration */
   public Cache<String, ExperimentConfiguration> createExperimentConfigurationCache(int maxEntries) {
     return this.cacheManager.createCache(
         Constants.EXPERIMENT_CONFIGURATION_CACHE_KEY,

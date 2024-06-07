@@ -5,6 +5,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.lang.reflect.Field;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -27,13 +29,15 @@ public class AppDetailsTest {
   public void testReadAppProperties() {
     AppDetails appDetails = AppDetails.getInstance();
     assertEquals("java-server-sdk", appDetails.getName());
-    assertTrue(appDetails.getVersion().matches("^\\d+\\.\\d+\\.\\d+"));
+    Pattern p = Pattern.compile("^\\d+\\.\\d+\\.\\d+");
+    Matcher matcher = p.matcher(appDetails.getVersion());
+    assertTrue(matcher.find());
   }
 
   @Test
   public void testAppPropertyReadFailure() {
       ClassLoader mockClassloader = Mockito.mock(ClassLoader.class);
-      Mockito.when(mockClassloader.getResourceAsStream("app.properties")).thenReturn(null);
+      Mockito.when(mockClassloader.getResourceAsStream("filteredResources/app.properties")).thenReturn(null);
 
     ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
     try {
