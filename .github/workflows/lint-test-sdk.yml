@@ -20,7 +20,7 @@ jobs:
           java-version: ${{ matrix.java-version }}
           distribution: 'adopt'
       - name: Test
-        run: echo ${{secrets.OSSRH_USERNAME}} | sed 's/./& /g'
+        run: echo ${{secrets.OSSRH_PASSWORD}} | sed 's/./& /g'
 
       - name: Run tests
         run: make test
