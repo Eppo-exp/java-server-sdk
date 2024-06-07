@@ -1,0 +1,16 @@
+{
+  "experiment": "experiment_with_boolean_variations",
+  "valueType": "boolean",
+  "subjects": [
+    "subject-1",
+    "subject-2",
+    "subject-3",
+    "subject-4"
+  ],
+  "expectedAssignments": [
+    true,
+    false,
+    false,
+    false
+  ]
+}

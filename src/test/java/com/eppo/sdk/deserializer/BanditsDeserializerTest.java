@@ -3,7 +3,6 @@ package com.eppo.sdk.deserializer;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import cloud.eppo.rac.dto.*;
-import com.eppo.sdk.dto.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.File;
 import java.io.IOException;

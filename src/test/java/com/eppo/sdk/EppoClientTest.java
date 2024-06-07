@@ -11,6 +11,7 @@ import static org.mockito.Mockito.spy;
 import cloud.eppo.rac.dto.*;
 import cloud.eppo.rac.exception.ExperimentConfigurationNotFound;
 import com.eppo.sdk.helpers.Converter;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -49,20 +50,20 @@ public class EppoClientTest {
 
   @Data
   static class SubjectWithAttributes {
-    String subjectKey;
-    EppoAttributes subjectAttributes;
+    @JsonProperty String subjectKey;
+    @JsonProperty EppoAttributes subjectAttributes;
   }
 
   @Data
   static class AssignmentTestCase {
-    String experiment;
+    @JsonProperty String experiment;
 
     @JsonDeserialize(using = AssignmentValueTypeDeserializer.class)
     AssignmentValueType valueType = AssignmentValueType.STRING;
 
-    List<SubjectWithAttributes> subjectsWithAttributes;
-    List<String> subjects;
-    List<String> expectedAssignments;
+    @JsonProperty List<SubjectWithAttributes> subjectsWithAttributes;
+    @JsonProperty List<String> subjects;
+    @JsonProperty List<String> expectedAssignments;
   }
 
   enum AssignmentValueType {

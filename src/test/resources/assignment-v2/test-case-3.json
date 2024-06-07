@@ -1,0 +1,52 @@
+{
+  "experiment": "targeting_rules_experiment",
+  "valueType": "string",
+  "subjectsWithAttributes": [
+    {
+      "subjectKey": "subject-1",
+      "subjectAttributes": {
+        "email": "team@geteppo.com"
+      }
+    },
+    {
+      "subjectKey": "subject-2",
+      "subjectAttributes": {
+        "email": "team@example.com"
+      }
+    },
+    {
+      "subjectKey": "subject-3",
+      "subjectAttributes": {
+        "device": "android",
+        "version": 0
+      }
+    },
+    {
+      "subjectKey": "subject-4",
+      "subjectAttributes": {
+        "device": "ios",
+        "version": 4
+      }
+    },
+    {
+      "subjectKey": "subject-5",
+      "subjectAttributes": {
+        "country": "China"
+      }
+    },
+    {
+      "subjectKey": "subject-6",
+      "subjectAttributes": {
+        "country": "US"
+      }
+    }
+  ],
+  "expectedAssignments": [
+    "treatment",
+    null,
+    null,
+    "control",
+    null,
+    "treatment"
+  ]
+}

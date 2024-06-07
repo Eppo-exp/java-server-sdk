@@ -1,0 +1,16 @@
+{
+  "experiment": "experiment_with_json_variations",
+  "valueType": "json",
+  "subjects": [
+    "subject-1",
+    "subject-2",
+    "subject-3",
+    "subject-4"
+  ],
+  "expectedAssignments": [
+    "{\"test\":false}",
+    "{\"test\":true}",
+    "{\"test\":true}",
+    "{\"test\":true}"
+  ]
+}

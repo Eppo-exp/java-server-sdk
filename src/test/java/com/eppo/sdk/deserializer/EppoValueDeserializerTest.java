@@ -6,12 +6,6 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-class SingleValue<T> {
-  public T value;
-}
-
-class SingleEppoValue extends SingleValue<EppoValue> {}
-
 class EppoValueDeserializerTest {
 
   private final ObjectMapper mapper = new ObjectMapper();
@@ -59,5 +53,12 @@ class EppoValueDeserializerTest {
         mapper.readValue("{\"value\": {\"test\" : \"test\"}}", SingleEppoValue.class);
     Assertions.assertEquals(
         0, object.value.jsonNodeValue().get("test").textValue().compareTo("test"));
+  }
+
+  static class SingleValue<T> {
+    public T value;
+  }
+
+  static class SingleEppoValue extends SingleValue<EppoValue> {
   }
 }
