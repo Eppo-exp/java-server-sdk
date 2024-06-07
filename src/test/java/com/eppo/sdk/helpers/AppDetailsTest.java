@@ -1,15 +1,14 @@
 package com.eppo.sdk.helpers;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.lang.reflect.Field;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 public class AppDetailsTest {
 
@@ -36,8 +35,9 @@ public class AppDetailsTest {
 
   @Test
   public void testAppPropertyReadFailure() {
-      ClassLoader mockClassloader = Mockito.mock(ClassLoader.class);
-      Mockito.when(mockClassloader.getResourceAsStream("filteredResources/app.properties")).thenReturn(null);
+    ClassLoader mockClassloader = Mockito.mock(ClassLoader.class);
+    Mockito.when(mockClassloader.getResourceAsStream("filteredResources/app.properties"))
+        .thenReturn(null);
 
     ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
     try {
