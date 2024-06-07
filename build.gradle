@@ -21,13 +21,11 @@ processResources {
 repositories {
   mavenCentral()
   mavenLocal()
-  maven {
-    url 'https://s01.oss.sonatype.org/content/repositories/snapshots/'
-  }
+  maven { url 'https://s01.oss.sonatype.org/content/repositories/snapshots/' }
 }
 
 dependencies {
-  implementation 'cloud.eppo:sdk-common-jvm:0.0.1-SNAPSHOT'
+  implementation 'cloud.eppo:sdk-common-jvm:1.0.0-SNAPSHOT'
   implementation 'com.github.zafarkhaja:java-semver:0.10.2'
   implementation 'com.fasterxml.jackson.core:jackson-databind:2.17.1'
   implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.17.1'
