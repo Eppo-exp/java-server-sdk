@@ -21,14 +21,10 @@ processResources {
 repositories {
   mavenCentral()
   mavenLocal()
-  maven { url 'https://jitpack.io' }
 }
 
 dependencies {
-  // replace the dependency below with maven central once start uploading the artifact there
-  // implementation 'cloud.eppo:sdk-common-jvm:0.0.1-SNAPSHOT'
-  implementation 'com.github.Eppo-exp:sdk-common-jdk:felipecsl--initial-dto-SNAPSHOT'
-
+  implementation 'cloud.eppo:sdk-common-jvm:0.0.1-SNAPSHOT'
   implementation 'com.github.zafarkhaja:java-semver:0.10.2'
   implementation 'com.fasterxml.jackson.core:jackson-databind:2.17.1'
   implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.17.1'
