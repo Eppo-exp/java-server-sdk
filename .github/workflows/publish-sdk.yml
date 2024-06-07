@@ -22,15 +22,8 @@ jobs:
       - name: Download test data
         run: make test-data
 
-      - name: Publish package with debug logging
-        run: mvn --batch-mode deploy -X
-        env:
-          MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
-          MAVEN_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-
-      - name: Release the staging repository
-        run: mvn nexus-staging:release -X
+      - name: Publish package to Maven Central
+        run: ./gradlew publish
         env:
           MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
           MAVEN_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
