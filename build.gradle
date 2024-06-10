@@ -122,7 +122,7 @@ publishing {
 
 signing {
   sign publishing.publications.mavenJava
-  if (project.hasProperty('CI')) {
+  if (System.env['CI']) {
     useInMemoryPgpKeys(System.env.GPG_PRIVATE_KEY, System.env.GPG_PASSPHRASE)
   }
 }
