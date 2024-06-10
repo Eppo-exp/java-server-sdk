@@ -5,6 +5,11 @@ on:
     paths:
       - '**/*'
 
+env:
+  ORG_GRADLE_PROJECT_ossrhUsername: ${{ secrets.OSSRH_USERNAME }}
+  ORG_GRADLE_PROJECT_ossrhPassword: ${{ secrets.OSSRH_PASSWORD }}
+  CI: true
+
 jobs:
   lint-test-sdk:
     runs-on: ubuntu-latest
@@ -24,6 +29,3 @@ jobs:
 
       - name: Run tests
         run: make test-data && ./gradlew check --no-daemon --stacktrace
-        env:
-          ORG_GRADLE_PROJECT_ossrhUsername: ${{ secrets.OSSRH_USERNAME }}
-          ORG_GRADLE_PROJECT_ossrhPassword: ${{ secrets.OSSRH_PASSWORD }}
