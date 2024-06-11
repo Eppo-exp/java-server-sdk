@@ -26,7 +26,7 @@ help: Makefile
 
 .PHONY: build
 build: test-data
-	mvn --batch-mode --update-snapshots package
+	./gradlew assemble
 
 ## test-data
 testDataDir := src/test/resources
@@ -47,4 +47,4 @@ test-data:
 
 .PHONY: test
 test: test-data build
-	mvn test
+	./gradlew check
