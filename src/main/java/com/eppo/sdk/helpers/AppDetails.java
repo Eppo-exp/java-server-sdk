@@ -26,7 +26,7 @@ public class AppDetails {
     } catch (Exception ex) {
       log.warn("Unable to read properties file", ex);
     }
-    this.version = prop.getProperty("app.version", "1.0.0");
+    this.version = prop.getProperty("app.version", "3.0.0");
     this.name = prop.getProperty("app.name", "java-server-sdk");
   }
 
