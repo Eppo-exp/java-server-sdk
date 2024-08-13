@@ -22,14 +22,12 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import java.io.File;
-
 import java.lang.reflect.Field;
 import java.util.stream.Stream;
-
 import org.apache.commons.io.FileUtils;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -45,7 +43,8 @@ public class EppoClientTest {
   private static WireMockServer mockServer;
 
   private static final String DUMMY_FLAG_API_KEY = "dummy-flags-api-key"; // Will load flags-v1
-  private static final String DUMMY_BANDIT_API_KEY = "dummy-bandits-api-key"; // Will load bandit-flags-v1
+  private static final String DUMMY_BANDIT_API_KEY =
+      "dummy-bandits-api-key"; // Will load bandit-flags-v1
   private AssignmentLogger mockAssignmentLogger;
   private BanditLogger mockBanditLogger;
 
@@ -55,20 +54,21 @@ public class EppoClientTest {
     mockServer.start();
 
     // If we get the dummy flag API key, return flags-v1.json
-    String ufcFlagsResponseJson =
-        readConfig(
-            "src/test/resources/shared/ufc/flags-v1.json");
+    String ufcFlagsResponseJson = readConfig("src/test/resources/shared/ufc/flags-v1.json");
     mockServer.stubFor(
-        WireMock.get(WireMock.urlMatching(".*flag-config/v1/config\\?.*apiKey="+DUMMY_FLAG_API_KEY+".*"))
+        WireMock.get(
+                WireMock.urlMatching(
+                    ".*flag-config/v1/config\\?.*apiKey=" + DUMMY_FLAG_API_KEY + ".*"))
             .willReturn(WireMock.okJson(ufcFlagsResponseJson)));
 
     // If we get the dummy bandit API key, return bandit-flags-v1.json
     String banditFlagsResponseJson =
-      readConfig(
-        "src/test/resources/shared/ufc/bandit-flags-v1.json");
+        readConfig("src/test/resources/shared/ufc/bandit-flags-v1.json");
     mockServer.stubFor(
-      WireMock.get(WireMock.urlMatching(".*flag-config/v1/config\\?.*apiKey="+DUMMY_BANDIT_API_KEY+".*"))
-        .willReturn(WireMock.okJson(banditFlagsResponseJson)));
+        WireMock.get(
+                WireMock.urlMatching(
+                    ".*flag-config/v1/config\\?.*apiKey=" + DUMMY_BANDIT_API_KEY + ".*"))
+            .willReturn(WireMock.okJson(banditFlagsResponseJson)));
 
     // Return bandit models (no need to switch on API key)
     String banditModelsResponseJson =
@@ -154,7 +154,7 @@ public class EppoClientTest {
     actions.put("reebok", rebookAttributes);
 
     BanditResult banditResult =
-      eppoClient.getBanditAction(flagKey, subjectKey, subjectAttributes, actions, "control");
+        eppoClient.getBanditAction(flagKey, subjectKey, subjectAttributes, actions, "control");
 
     // Verify assignment
     assertEquals("banner_bandit", banditResult.getVariation());
@@ -166,7 +166,7 @@ public class EppoClientTest {
 
     // Verify bandit logger called
     ArgumentCaptor<BanditAssignment> banditLogCaptor =
-      ArgumentCaptor.forClass(BanditAssignment.class);
+        ArgumentCaptor.forClass(BanditAssignment.class);
     verify(mockBanditLogger, times(1)).logBanditAssignment(banditLogCaptor.capture());
   }
 
@@ -180,22 +180,23 @@ public class EppoClientTest {
   public void testErrorGracefulModeOn() {
     initBuggyClient();
     EppoClient.getInstance().setIsGracefulFailureMode(true);
-    assertEquals(1.234, EppoClient.getInstance().getDoubleAssignment("numeric_flag", "subject1", 1.234));
+    assertEquals(
+        1.234, EppoClient.getInstance().getDoubleAssignment("numeric_flag", "subject1", 1.234));
   }
 
   @Test
   public void testErrorGracefulModeOff() {
     initBuggyClient();
     EppoClient.getInstance().setIsGracefulFailureMode(false);
-    assertThrows(Exception.class, () -> EppoClient.getInstance().getDoubleAssignment("numeric_flag", "subject1", 1.234));
+    assertThrows(
+        Exception.class,
+        () -> EppoClient.getInstance().getDoubleAssignment("numeric_flag", "subject1", 1.234));
   }
 
   @Test
   public void testReinitializeWithoutForcing() {
     EppoClient firstInstance = initClient(DUMMY_FLAG_API_KEY);
-    EppoClient secondInstance = new EppoClient.Builder()
-      .apiKey(DUMMY_FLAG_API_KEY)
-      .buildAndInit();
+    EppoClient secondInstance = new EppoClient.Builder().apiKey(DUMMY_FLAG_API_KEY).buildAndInit();
 
     assertSame(firstInstance, secondInstance);
   }
@@ -203,10 +204,8 @@ public class EppoClientTest {
   @Test
   public void testReinitializeWitForcing() {
     EppoClient firstInstance = initClient(DUMMY_FLAG_API_KEY);
-    EppoClient secondInstance = new EppoClient.Builder()
-      .apiKey(DUMMY_FLAG_API_KEY)
-      .forceReinitialize(true)
-      .buildAndInit();
+    EppoClient secondInstance =
+        new EppoClient.Builder().apiKey(DUMMY_FLAG_API_KEY).forceReinitialize(true).buildAndInit();
 
     assertNotSame(firstInstance, secondInstance);
   }
@@ -218,11 +217,12 @@ public class EppoClientTest {
     TestUtils.setBaseClientHttpClientOverrideField(httpClientSpy);
 
     new EppoClient.Builder()
-      .apiKey(DUMMY_FLAG_API_KEY)
-      .pollingIntervalMs(20)
-      .forceReinitialize(true)
-      .buildAndInit();
+        .apiKey(DUMMY_FLAG_API_KEY)
+        .pollingIntervalMs(20)
+        .forceReinitialize(true)
+        .buildAndInit();
 
+    // Method will be called immediately on init
     verify(httpClientSpy, times(1)).get(anyString());
 
     // Sleep for 25 ms to allow another polling cycle to complete
@@ -252,13 +252,13 @@ public class EppoClientTest {
     mockBanditLogger = mock(BanditLogger.class);
 
     return new EppoClient.Builder()
-      .apiKey(apiKey)
-      .host(TEST_HOST)
-      .assignmentLogger(mockAssignmentLogger)
-      .banditLogger(mockBanditLogger)
-      .isGracefulMode(false)
-      .forceReinitialize(true) // Useful for tests
-      .buildAndInit();
+        .apiKey(apiKey)
+        .host(TEST_HOST)
+        .assignmentLogger(mockAssignmentLogger)
+        .banditLogger(mockBanditLogger)
+        .isGracefulMode(false)
+        .forceReinitialize(true) // Useful for tests
+        .buildAndInit();
   }
 
   private void uninitClient() {

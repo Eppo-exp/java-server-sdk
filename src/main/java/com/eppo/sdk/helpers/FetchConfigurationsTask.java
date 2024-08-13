@@ -2,7 +2,6 @@ package com.eppo.sdk.helpers;
 
 import java.util.Timer;
 import java.util.TimerTask;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,10 +13,7 @@ public class FetchConfigurationsTask extends TimerTask {
   private final long jitterInMillis;
 
   public FetchConfigurationsTask(
-      Runnable runnable,
-      Timer timer,
-      long intervalInMillis,
-      long jitterInMillis) {
+      Runnable runnable, Timer timer, long intervalInMillis, long jitterInMillis) {
     this.runnable = runnable;
     this.timer = timer;
     this.intervalInMillis = intervalInMillis;

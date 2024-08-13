@@ -5,10 +5,9 @@ import cloud.eppo.logging.AssignmentLogger;
 import cloud.eppo.logging.BanditLogger;
 import com.eppo.sdk.helpers.AppDetails;
 import com.eppo.sdk.helpers.FetchConfigurationsTask;
+import java.util.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Timer;
 
 public class EppoClient extends BaseEppoClient {
   private static final Logger log = LoggerFactory.getLogger(EppoClient.class);
@@ -30,15 +29,15 @@ public class EppoClient extends BaseEppoClient {
   }
 
   private EppoClient(
-    String apiKey,
-    String host,
-    String sdkName,
-    String sdkVersion,
-    AssignmentLogger assignmentLogger,
-    BanditLogger banditLogger,
-    boolean isGracefulModel
-  ) {
-    super(apiKey, host, sdkName, sdkVersion, assignmentLogger, banditLogger, isGracefulModel, false);
+      String apiKey,
+      String host,
+      String sdkName,
+      String sdkVersion,
+      AssignmentLogger assignmentLogger,
+      BanditLogger banditLogger,
+      boolean isGracefulModel) {
+    super(
+        apiKey, host, sdkName, sdkVersion, assignmentLogger, banditLogger, isGracefulModel, false);
   }
 
   public static void stopPolling() {
@@ -98,14 +97,18 @@ public class EppoClient extends BaseEppoClient {
 
       if (instance != null) {
         if (forceReinitialize) { // TODO: unit test this
-          log.warn("Eppo SDK is already initialized, reinitializing since forceReinitialize is true");
+          log.warn(
+              "Eppo SDK is already initialized, reinitializing since forceReinitialize is true");
         } else {
-          log.warn("Eppo SDK is already initialized, skipping reinitialization since forceReinitialize is false");
+          log.warn(
+              "Eppo SDK is already initialized, skipping reinitialization since forceReinitialize is false");
           return instance;
         }
       }
 
-      instance = new EppoClient(apiKey, sdkName, sdkVersion, host, assignmentLogger, banditLogger, isGracefulMode);
+      instance =
+          new EppoClient(
+              apiKey, sdkName, sdkVersion, host, assignmentLogger, banditLogger, isGracefulMode);
 
       // Stop any active polling
       stopPolling();
@@ -113,11 +116,11 @@ public class EppoClient extends BaseEppoClient {
       // Set up polling for experiment configurations
       pollTimer = new Timer(true);
       FetchConfigurationsTask fetchConfigurationsTask =
-        new FetchConfigurationsTask(
-          () -> instance.loadConfiguration(),
-          pollTimer,
-          pollingIntervalMs,
-          pollingIntervalMs / DEFAULT_JITTER_INTERVAL_RATIO);
+          new FetchConfigurationsTask(
+              () -> instance.loadConfiguration(),
+              pollTimer,
+              pollingIntervalMs,
+              pollingIntervalMs / DEFAULT_JITTER_INTERVAL_RATIO);
 
       // Kick off the first fetch
       fetchConfigurationsTask.run();
