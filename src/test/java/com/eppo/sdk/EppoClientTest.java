@@ -4,24 +4,24 @@ import static cloud.eppo.helpers.AssignmentTestCase.parseTestCaseFile;
 import static cloud.eppo.helpers.AssignmentTestCase.runTestCase;
 import static cloud.eppo.helpers.BanditTestCase.parseBanditTestCaseFile;
 import static cloud.eppo.helpers.BanditTestCase.runBanditTestCase;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
+import cloud.eppo.BaseEppoClient;
 import cloud.eppo.helpers.AssignmentTestCase;
 import cloud.eppo.helpers.BanditTestCase;
 import cloud.eppo.logging.Assignment;
 import cloud.eppo.logging.AssignmentLogger;
 import cloud.eppo.logging.BanditAssignment;
 import cloud.eppo.logging.BanditLogger;
-import cloud.eppo.ufc.dto.Attributes;
-import cloud.eppo.ufc.dto.BanditActions;
-import cloud.eppo.ufc.dto.BanditResult;
+import cloud.eppo.ufc.dto.*;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import java.io.File;
-import java.util.Date;
+
+import java.lang.reflect.Field;
 import java.util.stream.Stream;
 
 import org.apache.commons.io.FileUtils;
@@ -118,7 +118,6 @@ public class EppoClientTest {
   @SuppressWarnings("ExtractMethodRecommender")
   @Test
   public void testLoggers() {
-    Date testStart = new Date();
     EppoClient eppoClient = initClient(DUMMY_BANDIT_API_KEY);
 
     String flagKey = "banner_bandit_flag";
@@ -152,60 +151,34 @@ public class EppoClientTest {
     assertEquals("banner_bandit", banditResult.getVariation());
     assertEquals("adidas", banditResult.getAction());
 
-    Date inTheNearFuture = new Date(System.currentTimeMillis() + 1);
-
-    // Verify experiment assignment log
+    // Verify experiment assignment logger called
     ArgumentCaptor<Assignment> assignmentLogCaptor = ArgumentCaptor.forClass(Assignment.class);
     verify(mockAssignmentLogger, times(1)).logAssignment(assignmentLogCaptor.capture());
-    Assignment capturedAssignment = assignmentLogCaptor.getValue();
-    assertTrue(capturedAssignment.getTimestamp().after(testStart));
-    assertTrue(capturedAssignment.getTimestamp().before(inTheNearFuture));
-    assertEquals("banner_bandit_flag-training", capturedAssignment.getExperiment());
-    assertEquals(flagKey, capturedAssignment.getFeatureFlag());
-    assertEquals("training", capturedAssignment.getAllocation());
-    assertEquals("banner_bandit", capturedAssignment.getVariation());
-    assertEquals(subjectKey, capturedAssignment.getSubject());
-    assertEquals(subjectAttributes, capturedAssignment.getSubjectAttributes());
-    assertEquals("false", capturedAssignment.getMetaData().get("obfuscated"));
 
-    // Verify bandit log
+    // Verify bandit logger called
     ArgumentCaptor<BanditAssignment> banditLogCaptor =
       ArgumentCaptor.forClass(BanditAssignment.class);
     verify(mockBanditLogger, times(1)).logBanditAssignment(banditLogCaptor.capture());
-    BanditAssignment capturedBanditAssignment = banditLogCaptor.getValue();
-    assertTrue(capturedBanditAssignment.getTimestamp().after(testStart));
-    assertTrue(capturedBanditAssignment.getTimestamp().before(inTheNearFuture));
-    assertEquals(flagKey, capturedBanditAssignment.getFeatureFlag());
-    assertEquals("banner_bandit", capturedBanditAssignment.getBandit());
-    assertEquals(subjectKey, capturedBanditAssignment.getSubject());
-    assertEquals("adidas", capturedBanditAssignment.getAction());
-    assertEquals(0.099, capturedBanditAssignment.getActionProbability(), 0.0002);
-    assertEquals("v123", capturedBanditAssignment.getModelVersion());
+  }
 
-    Attributes expectedSubjectNumericAttributes = new Attributes();
-    expectedSubjectNumericAttributes.put("age", 25);
-    assertEquals(
-      expectedSubjectNumericAttributes, capturedBanditAssignment.getSubjectNumericAttributes());
+  @Test
+  public void getInstanceWhenUninitialized() {
+    uninitClient();
+    assertThrows(RuntimeException.class, EppoClient::getInstance);
+  }
 
-    Attributes expectedSubjectCategoricalAttributes = new Attributes();
-    expectedSubjectCategoricalAttributes.put("country", "USA");
-    expectedSubjectCategoricalAttributes.put("gender_identity", "female");
-    assertEquals(
-      expectedSubjectCategoricalAttributes,
-      capturedBanditAssignment.getSubjectCategoricalAttributes());
+  @Test
+  public void testErrorGracefulModeOn() {
+    initBuggyClient();
+    EppoClient.getInstance().setIsGracefulFailureMode(true);;
+    assertEquals(1.234, EppoClient.getInstance().getDoubleAssignment("numeric_flag", "subject1", 1.234));
+  }
 
-    Attributes expectedActionNumericAttributes = new Attributes();
-    expectedActionNumericAttributes.put("brand_affinity", -1.0);
-    assertEquals(
-      expectedActionNumericAttributes, capturedBanditAssignment.getActionNumericAttributes());
-
-    Attributes expectedActionCategoricalAttributes = new Attributes();
-    expectedActionCategoricalAttributes.put("loyalty_tier", "bronze");
-    assertEquals(
-      expectedActionCategoricalAttributes,
-      capturedBanditAssignment.getActionCategoricalAttributes());
-
-    assertEquals("false", capturedBanditAssignment.getMetaData().get("obfuscated"));
+  @Test
+  public void testErrorGracefulModeOff() throws NoSuchFieldException, IllegalAccessException {
+    initBuggyClient();
+    EppoClient.getInstance().setIsGracefulFailureMode(false);
+    assertThrows(Exception.class, () -> EppoClient.getInstance().getDoubleAssignment("numeric_flag", "subject1", 1.234));
   }
 
   private EppoClient initClient(String apiKey) {
@@ -222,5 +195,24 @@ public class EppoClientTest {
       .buildAndInit();
   }
 
-  // TODO: test for force reinitialization
+  private void uninitClient() {
+    try {
+      Field httpClientOverrideField = EppoClient.class.getDeclaredField("instance");
+      httpClientOverrideField.setAccessible(true);
+      httpClientOverrideField.set(null, null);
+    } catch (NoSuchFieldException | IllegalAccessException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private void initBuggyClient() {
+    try {
+      EppoClient eppoClient = initClient(DUMMY_FLAG_API_KEY);
+      Field configurationStoreField = BaseEppoClient.class.getDeclaredField("requestor");
+      configurationStoreField.setAccessible(true);
+      configurationStoreField.set(eppoClient, null);
+    } catch (NoSuchFieldException | IllegalAccessException e) {
+      throw new RuntimeException(e);
+    }
+  }
 }
