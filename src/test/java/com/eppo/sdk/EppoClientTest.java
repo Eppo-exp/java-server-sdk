@@ -175,10 +175,31 @@ public class EppoClientTest {
   }
 
   @Test
-  public void testErrorGracefulModeOff() throws NoSuchFieldException, IllegalAccessException {
+  public void testErrorGracefulModeOff() {
     initBuggyClient();
     EppoClient.getInstance().setIsGracefulFailureMode(false);
     assertThrows(Exception.class, () -> EppoClient.getInstance().getDoubleAssignment("numeric_flag", "subject1", 1.234));
+  }
+
+  @Test
+  public void testReinitializeWithoutForcing() {
+    EppoClient firstInstance = initClient(DUMMY_FLAG_API_KEY);
+    EppoClient secondInstance = new EppoClient.Builder()
+      .apiKey(DUMMY_FLAG_API_KEY)
+      .buildAndInit();
+
+    assertSame(firstInstance, secondInstance);
+  }
+
+  @Test
+  public void testReinitializeWitForcing() {
+    EppoClient firstInstance = initClient(DUMMY_FLAG_API_KEY);
+    EppoClient secondInstance = new EppoClient.Builder()
+      .apiKey(DUMMY_FLAG_API_KEY)
+      .forceReinitialize(true)
+      .buildAndInit();
+
+    assertNotSame(firstInstance, secondInstance);
   }
 
   private EppoClient initClient(String apiKey) {
