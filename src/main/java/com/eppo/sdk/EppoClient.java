@@ -1,7 +1,6 @@
 package com.eppo.sdk;
 
 import cloud.eppo.BaseEppoClient;
-import cloud.eppo.ConfigurationStore;
 import cloud.eppo.logging.AssignmentLogger;
 import cloud.eppo.logging.BanditLogger;
 import com.eppo.sdk.helpers.AppDetails;
@@ -13,7 +12,6 @@ import java.util.Timer;
 
 public class EppoClient extends BaseEppoClient {
   private static final Logger log = LoggerFactory.getLogger(EppoClient.class);
-  private static EppoClient instance;
 
   private static final String DEFAULT_HOST = "https://fscdn.eppo.cloud";
   private static final boolean DEFAULT_IS_GRACEFUL_MODE = true;
@@ -22,17 +20,25 @@ public class EppoClient extends BaseEppoClient {
   public static final long TIME_INTERVAL_MS = 30 * 1000; // time interval
   public static final long JITTER_INTERVAL_MS = TIME_INTERVAL_MS / 10;
 
+  private static EppoClient instance;
+
+  public static EppoClient getInstance() {
+    if (instance == null) {
+      throw new IllegalStateException("Eppo SDK has not been initialized");
+    }
+    return instance;
+  }
+
   private EppoClient(
     String apiKey,
     String host,
     String sdkName,
     String sdkVersion,
-    ConfigurationStore configurationStore,
     AssignmentLogger assignmentLogger,
     BanditLogger banditLogger,
     boolean isGracefulModel
   ) {
-    super(apiKey, host, sdkName, sdkVersion, configurationStore, assignmentLogger, banditLogger, isGracefulModel);
+    super(apiKey, host, sdkName, sdkVersion, assignmentLogger, banditLogger, isGracefulModel, false);
   }
 
   public static class Builder {
@@ -73,18 +79,7 @@ public class EppoClient extends BaseEppoClient {
       return this;
     }
 
-    // TODO: rename BaseEppoClient back to EppoClient
-    // Have methods here be nice wrappers
-
     public EppoClient buildAndInit() {
-      if (apiKey == null) {
-        throw new IllegalArgumentException("Unable to initialize Eppo SDK due to missing API key");
-      }
-
-      if (instance != null) {
-        log.warn("Reinitializing an Eppo Client instance that was already initialized");
-      }
-
       AppDetails appDetails = AppDetails.getInstance();
       String sdkName = appDetails.getName();
       String sdkVersion = appDetails.getVersion();
@@ -98,16 +93,18 @@ public class EppoClient extends BaseEppoClient {
         }
       }
 
-      instance = new EppoClient(apiKey, sdkName, sdkVersion, host, new ConfigurationStore(), assignmentLogger, banditLogger, isGracefulMode);
+      instance = new EppoClient(apiKey, sdkName, sdkVersion, host, assignmentLogger, banditLogger, isGracefulMode);
 
-      // Start polling for experiment configurations
+      // Set up polling for experiment configurations
       Timer poller = new Timer(true);
       FetchConfigurationsTask fetchConfigurationsTask =
         new FetchConfigurationsTask(
-          instance,
+          () -> instance.loadConfiguration(),
           poller,
           TIME_INTERVAL_MS,
           JITTER_INTERVAL_MS);
+
+      // Kick off the first fetch
       fetchConfigurationsTask.run();
 
       return instance;
