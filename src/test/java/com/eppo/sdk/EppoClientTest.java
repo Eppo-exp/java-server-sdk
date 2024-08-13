@@ -9,8 +9,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 import cloud.eppo.BaseEppoClient;
+import cloud.eppo.EppoHttpClient;
 import cloud.eppo.helpers.AssignmentTestCase;
 import cloud.eppo.helpers.BanditTestCase;
+import cloud.eppo.helpers.TestUtils;
 import cloud.eppo.logging.Assignment;
 import cloud.eppo.logging.AssignmentLogger;
 import cloud.eppo.logging.BanditAssignment;
@@ -25,6 +27,7 @@ import java.lang.reflect.Field;
 import java.util.stream.Stream;
 
 import org.apache.commons.io.FileUtils;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
@@ -82,6 +85,12 @@ public class EppoClientTest {
     } catch (Exception e) {
       throw new RuntimeException("Error reading mock data: " + e.getMessage(), e);
     }
+  }
+
+  @AfterEach
+  public void cleanUp() {
+    TestUtils.setBaseClientHttpClientOverrideField(null);
+    EppoClient.stopPolling();
   }
 
   @AfterAll
@@ -170,7 +179,7 @@ public class EppoClientTest {
   @Test
   public void testErrorGracefulModeOn() {
     initBuggyClient();
-    EppoClient.getInstance().setIsGracefulFailureMode(true);;
+    EppoClient.getInstance().setIsGracefulFailureMode(true);
     assertEquals(1.234, EppoClient.getInstance().getDoubleAssignment("numeric_flag", "subject1", 1.234));
   }
 
@@ -200,6 +209,42 @@ public class EppoClientTest {
       .buildAndInit();
 
     assertNotSame(firstInstance, secondInstance);
+  }
+
+  @Test
+  public void testPolling() {
+    EppoHttpClient httpClient = new EppoHttpClient(TEST_HOST, DUMMY_FLAG_API_KEY, "java", "3.0.0");
+    EppoHttpClient httpClientSpy = spy(httpClient);
+    TestUtils.setBaseClientHttpClientOverrideField(httpClientSpy);
+
+    new EppoClient.Builder()
+      .apiKey(DUMMY_FLAG_API_KEY)
+      .pollingIntervalMs(20)
+      .forceReinitialize(true)
+      .buildAndInit();
+
+    verify(httpClientSpy, times(1)).get(anyString());
+
+    // Sleep for 25 ms to allow another polling cycle to complete
+    sleepUninterruptedly(25);
+
+    // Now, the method should have been called twice
+    verify(httpClientSpy, times(2)).get(anyString());
+
+    EppoClient.stopPolling();
+    sleepUninterruptedly(25);
+
+    // No more calls since stopped
+    verify(httpClientSpy, times(2)).get(anyString());
+  }
+
+  @SuppressWarnings("SameParameterValue")
+  private void sleepUninterruptedly(long sleepMs) {
+    try {
+      Thread.sleep(sleepMs);
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   private EppoClient initClient(String apiKey) {

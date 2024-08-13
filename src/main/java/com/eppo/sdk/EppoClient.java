@@ -16,11 +16,11 @@ public class EppoClient extends BaseEppoClient {
   private static final String DEFAULT_HOST = "https://fscdn.eppo.cloud";
   private static final boolean DEFAULT_IS_GRACEFUL_MODE = true;
   private static final boolean DEFAULT_FORCE_REINITIALIZE = false;
-
-  public static final long TIME_INTERVAL_MS = 30 * 1000; // time interval
-  public static final long JITTER_INTERVAL_MS = TIME_INTERVAL_MS / 10;
+  private static final long DEFAULT_POLLING_INTERVAL_MS = 30 * 1000;
+  private static final long DEFAULT_JITTER_INTERVAL_RATIO = 10;
 
   private static EppoClient instance;
+  private static Timer pollTimer;
 
   public static EppoClient getInstance() {
     if (instance == null) {
@@ -41,6 +41,12 @@ public class EppoClient extends BaseEppoClient {
     super(apiKey, host, sdkName, sdkVersion, assignmentLogger, banditLogger, isGracefulModel, false);
   }
 
+  public static void stopPolling() {
+    if (pollTimer != null) {
+      pollTimer.cancel();
+    }
+  }
+
   public static class Builder {
     private String apiKey;
     private String host = DEFAULT_HOST;
@@ -48,6 +54,7 @@ public class EppoClient extends BaseEppoClient {
     private BanditLogger banditLogger;
     private boolean isGracefulMode = DEFAULT_IS_GRACEFUL_MODE;
     private boolean forceReinitialize = DEFAULT_FORCE_REINITIALIZE;
+    private long pollingIntervalMs = DEFAULT_POLLING_INTERVAL_MS;
 
     public Builder apiKey(String apiKey) {
       this.apiKey = apiKey;
@@ -79,6 +86,11 @@ public class EppoClient extends BaseEppoClient {
       return this;
     }
 
+    public Builder pollingIntervalMs(long pollingIntervalMs) {
+      this.pollingIntervalMs = pollingIntervalMs;
+      return this;
+    }
+
     public EppoClient buildAndInit() {
       AppDetails appDetails = AppDetails.getInstance();
       String sdkName = appDetails.getName();
@@ -95,14 +107,17 @@ public class EppoClient extends BaseEppoClient {
 
       instance = new EppoClient(apiKey, sdkName, sdkVersion, host, assignmentLogger, banditLogger, isGracefulMode);
 
+      // Stop any active polling
+      stopPolling();
+
       // Set up polling for experiment configurations
-      Timer poller = new Timer(true);
+      pollTimer = new Timer(true);
       FetchConfigurationsTask fetchConfigurationsTask =
         new FetchConfigurationsTask(
           () -> instance.loadConfiguration(),
-          poller,
-          TIME_INTERVAL_MS,
-          JITTER_INTERVAL_MS);
+          pollTimer,
+          pollingIntervalMs,
+          pollingIntervalMs / DEFAULT_JITTER_INTERVAL_RATIO);
 
       // Kick off the first fetch
       fetchConfigurationsTask.run();
