@@ -44,6 +44,13 @@ dependencies {
 
 test {
   useJUnitPlatform()
+  testLogging {
+    events "started", "passed", "skipped", "failed"
+    exceptionFormat "full"
+    showExceptions true
+    showCauses true
+    showStackTraces true
+  }
 }
 
 spotless {
