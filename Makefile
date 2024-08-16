@@ -29,22 +29,20 @@ build: test-data
 	./gradlew assemble
 
 ## test-data
-testDataDir := src/test/resources
-banditsDataDir := ${testDataDir}/bandits
+testDataDir := src/test/resources/shared
 tempDir := ${testDataDir}/temp
-tempBanditsDir := ${tempDir}/bandits
 gitDataDir := ${tempDir}/sdk-test-data
 branchName := main
 githubRepoLink := https://github.com/Eppo-exp/sdk-test-data.git
 .PHONY: test-data
 test-data:
-	find ${testDataDir} -mindepth 1 ! -regex '^${banditsDataDir}.*' -delete
+	rm -rf $(testDataDir)
 	mkdir -p ${tempDir}
 	git clone -b ${branchName} --depth 1 --single-branch ${githubRepoLink} ${gitDataDir}
-	cp ${gitDataDir}/rac-experiments-v3.json ${testDataDir}
-	cp -r ${gitDataDir}/assignment-v2 ${testDataDir}
+	cp -r ${gitDataDir}/ufc ${testDataDir}
+	rm ${testDataDir}/ufc/bandit-tests/*.dynamic-typing.json
 	rm -rf ${tempDir}
 
 .PHONY: test
 test: test-data build
-	./gradlew check
+	./gradlew check --no-daemon

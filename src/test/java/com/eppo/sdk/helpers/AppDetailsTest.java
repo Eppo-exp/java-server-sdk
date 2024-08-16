@@ -49,6 +49,6 @@ public class AppDetailsTest {
 
     AppDetails appDetails = AppDetails.getInstance();
     assertEquals("java-server-sdk", appDetails.getName());
-    assertEquals("1.0.0", appDetails.getVersion());
+    assertEquals("3.0.0", appDetails.getVersion());
   }
 }
