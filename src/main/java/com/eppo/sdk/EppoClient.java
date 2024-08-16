@@ -10,10 +10,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Class used to ingest and use the flag and bandit configurations retrieved from Eppo
- * This class uses the Singleton pattern. First the singleton must be initialized
- * via it's Builder's buildAndInit() method.
- * Then call getInstance() to access the singleton and call methods to get
+ * Class used to ingest and use the flag and bandit configurations retrieved from Eppo This class
+ * uses the Singleton pattern. First the singleton must be initialized via it's Builder's
+ * buildAndInit() method. Then call getInstance() to access the singleton and call methods to get
  * assignments and bandit actions.
  */
 public class EppoClient extends BaseEppoClient {
@@ -47,18 +46,14 @@ public class EppoClient extends BaseEppoClient {
         apiKey, host, sdkName, sdkVersion, assignmentLogger, banditLogger, isGracefulModel, false);
   }
 
-  /**
-   * Stops the client from polling Eppo for updated flag and bandit configurations
-   */
+  /** Stops the client from polling Eppo for updated flag and bandit configurations */
   public static void stopPolling() {
     if (pollTimer != null) {
       pollTimer.cancel();
     }
   }
 
-  /**
-   * Builder pattern to initialize the EppoClient singleton
-   */
+  /** Builder pattern to initialize the EppoClient singleton */
   public static class Builder {
     private String apiKey;
     private AssignmentLogger assignmentLogger;
@@ -68,18 +63,15 @@ public class EppoClient extends BaseEppoClient {
     private long pollingIntervalMs = DEFAULT_POLLING_INTERVAL_MS;
     private String host = DEFAULT_HOST;
 
-    /**
-     * Sets the API Key--created within the eppo application--to use.
-     * This is required.
-     */
+    /** Sets the API Key--created within the eppo application--to use. This is required. */
     public Builder apiKey(String apiKey) {
       this.apiKey = apiKey;
       return this;
     }
 
     /**
-     * Assignment logger to use to record when variations were assigned.
-     * This is needed if you want Eppo to analyze experiments controlled by flags.
+     * Assignment logger to use to record when variations were assigned. This is needed if you want
+     * Eppo to analyze experiments controlled by flags.
      */
     public Builder assignmentLogger(AssignmentLogger assignmentLogger) {
       this.assignmentLogger = assignmentLogger;
@@ -87,8 +79,8 @@ public class EppoClient extends BaseEppoClient {
     }
 
     /**
-     * Bandit logger to use to record when a bandit has assigned an action.
-     * This is needed if you are using contextual multi-armed bandits.
+     * Bandit logger to use to record when a bandit has assigned an action. This is needed if you
+     * are using contextual multi-armed bandits.
      */
     public Builder banditLogger(BanditLogger banditLogger) {
       this.banditLogger = banditLogger;
@@ -96,9 +88,8 @@ public class EppoClient extends BaseEppoClient {
     }
 
     /**
-     * Sets the initial graceful mode of the client. When on (which is the default),
-     * flag evaluation errors will be caught, and the default value returned. When off,
-     * the errors will be rethrown.
+     * Sets the initial graceful mode of the client. When on (which is the default), flag evaluation
+     * errors will be caught, and the default value returned. When off, the errors will be rethrown.
      */
     public Builder isGracefulMode(boolean isGracefulMode) {
       this.isGracefulMode = isGracefulMode;
@@ -106,10 +97,10 @@ public class EppoClient extends BaseEppoClient {
     }
 
     /**
-     * Sets whether the singleton client should be recreated if one already has been.
-     * fetch an updated configuration. If true, a new client will be instantiated and a new
-     * fetch for configurations will be performed. If false (which is the default),
-     * initialization will be ignored and the previously initialized client will be used.
+     * Sets whether the singleton client should be recreated if one already has been. fetch an
+     * updated configuration. If true, a new client will be instantiated and a new fetch for
+     * configurations will be performed. If false (which is the default), initialization will be
+     * ignored and the previously initialized client will be used.
      */
     public Builder forceReinitialize(boolean forceReinitialize) {
       this.forceReinitialize = forceReinitialize;
@@ -117,8 +108,8 @@ public class EppoClient extends BaseEppoClient {
     }
 
     /**
-     * Sets how often the client should check for updated configurations, in milliseconds.
-     * The default is 30,000 (poll every 30 seconds).
+     * Sets how often the client should check for updated configurations, in milliseconds. The
+     * default is 30,000 (poll every 30 seconds).
      */
     public Builder pollingIntervalMs(long pollingIntervalMs) {
       this.pollingIntervalMs = pollingIntervalMs;
@@ -126,9 +117,8 @@ public class EppoClient extends BaseEppoClient {
     }
 
     /**
-     * Overrides the host from where it fetches configurations.
-     * This typically should not be explicitly set so that the default of the
-     * Fastly CDN is used.
+     * Overrides the host from where it fetches configurations. This typically should not be
+     * explicitly set so that the default of the Fastly CDN is used.
      */
     public Builder host(String host) {
       this.host = host;
