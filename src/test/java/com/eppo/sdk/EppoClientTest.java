@@ -10,6 +10,9 @@ import static org.mockito.Mockito.*;
 
 import cloud.eppo.BaseEppoClient;
 import cloud.eppo.EppoHttpClient;
+import cloud.eppo.api.Attributes;
+import cloud.eppo.api.BanditActions;
+import cloud.eppo.api.BanditResult;
 import cloud.eppo.helpers.AssignmentTestCase;
 import cloud.eppo.helpers.BanditTestCase;
 import cloud.eppo.helpers.TestUtils;
@@ -17,7 +20,6 @@ import cloud.eppo.logging.Assignment;
 import cloud.eppo.logging.AssignmentLogger;
 import cloud.eppo.logging.BanditAssignment;
 import cloud.eppo.logging.BanditLogger;
-import cloud.eppo.ufc.dto.*;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
