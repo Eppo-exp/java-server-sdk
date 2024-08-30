@@ -5,10 +5,25 @@ on:
     paths:
       - '**/*'
 
+  workflow_dispatch:
+
+  workflow_call:
+    inputs:
+      test_data_branch:
+        type: string
+        description: The branch in sdk-test-data to target for testcase files
+        required: false
+        default: main
+      sdk_branch:
+        type: string
+        description: The branch of the SDK to test
+        required: false
 env:
   ORG_GRADLE_PROJECT_ossrhUsername: ${{ secrets.OSSRH_USERNAME }}
   ORG_GRADLE_PROJECT_ossrhPassword: ${{ secrets.OSSRH_PASSWORD }}
   CI: true
+  SDK_BRANCH_NAME: ${{ inputs.sdk_branch  || github.head_ref || github.ref_name || 'main' }}
+  TEST_DATA_BRANCH_NAME: ${{ inputs.test_data_branch || 'main' }}
 
 jobs:
   lint-test-sdk:
@@ -17,8 +32,15 @@ jobs:
       matrix:
         java-version: ['8', '11', '17'] # Define the Java versions to test against
     steps:
+      - name: Display Testing Details
+        run: |
+          echo "Running SDK Test using"
+          echo "Test Data: sdk-test-data@${TEST_DATA_BRANCH_NAME}"
+          echo "SDK Branch: php-sdk@${SDK_BRANCH_NAME}"
       - uses: actions/checkout@v4
         with:
+          repository: Eppo-exp/java-server-sdk
+          ref: ${{ env.SDK_BRANCH_NAME }}
           fetch-depth: 0
 
       - name: Set up JDK ${{ matrix.java-version }}
@@ -28,4 +50,4 @@ jobs:
           distribution: 'adopt'
 
       - name: Run tests
-        run: make test-data && ./gradlew check --no-daemon --stacktrace
+        run: make test-data branchName=${{ env.TEST_DATA_BRANCH_NAME }} && ./gradlew check --no-daemon --stacktrace
