@@ -11,7 +11,7 @@ java {
 }
 
 group = 'cloud.eppo'
-version = '3.0.2-SNAPSHOT'
+version = '3.0.3-SNAPSHOT'
 ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
 
 import org.apache.tools.ant.filters.ReplaceTokens
@@ -31,7 +31,7 @@ repositories {
 
 dependencies {
   // Re-export classes and interfaces that will be used upstream
-  api 'cloud.eppo:sdk-common-jvm:3.0.2'
+  api 'cloud.eppo:sdk-common-jvm:3.1.1-SNAPSHOT'
 
   implementation 'com.github.zafarkhaja:java-semver:0.10.2'
   implementation 'com.fasterxml.jackson.core:jackson-databind:2.17.1'
