@@ -1,11 +1,13 @@
 package com.eppo.sdk;
 
 import cloud.eppo.BaseEppoClient;
+import cloud.eppo.api.Configuration;
 import cloud.eppo.logging.AssignmentLogger;
 import cloud.eppo.logging.BanditLogger;
 import com.eppo.sdk.helpers.AppDetails;
 import com.eppo.sdk.helpers.FetchConfigurationsTask;
 import java.util.Timer;
+import java.util.concurrent.CompletableFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,9 +43,20 @@ public class EppoClient extends BaseEppoClient {
       String sdkVersion,
       AssignmentLogger assignmentLogger,
       BanditLogger banditLogger,
-      boolean isGracefulModel) {
+      boolean isGracefulModel,
+      CompletableFuture<Configuration> initialConfiguration) {
     super(
-        apiKey, host, sdkName, sdkVersion, assignmentLogger, banditLogger, isGracefulModel, false);
+        apiKey,
+        host,
+        sdkName,
+        sdkVersion,
+        assignmentLogger,
+        banditLogger,
+        null,
+        isGracefulModel,
+        false,
+        true,
+        initialConfiguration);
   }
 
   /** Stops the client from polling Eppo for updated flag and bandit configurations */
@@ -62,6 +75,7 @@ public class EppoClient extends BaseEppoClient {
     private boolean forceReinitialize = DEFAULT_FORCE_REINITIALIZE;
     private long pollingIntervalMs = DEFAULT_POLLING_INTERVAL_MS;
     private String host = DEFAULT_HOST;
+    private CompletableFuture<Configuration> initialConfiguration;
 
     /** Sets the API Key--created within the eppo application--to use. This is required. */
     public Builder apiKey(String apiKey) {
@@ -125,6 +139,12 @@ public class EppoClient extends BaseEppoClient {
       return this;
     }
 
+    /** Sets the initial configuration for the client. */
+    public Builder initialConfiguration(CompletableFuture<Configuration> initialConfiguration) {
+      this.initialConfiguration = initialConfiguration;
+      return this;
+    }
+
     public EppoClient buildAndInit() {
       AppDetails appDetails = AppDetails.getInstance();
       String sdkName = appDetails.getName();
@@ -143,7 +163,14 @@ public class EppoClient extends BaseEppoClient {
 
       instance =
           new EppoClient(
-              apiKey, sdkName, sdkVersion, host, assignmentLogger, banditLogger, isGracefulMode);
+              apiKey,
+              sdkName,
+              sdkVersion,
+              host,
+              assignmentLogger,
+              banditLogger,
+              isGracefulMode,
+              initialConfiguration);
 
       // Stop any active polling
       stopPolling();
