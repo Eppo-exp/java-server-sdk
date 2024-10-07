@@ -276,7 +276,7 @@ public class EppoClientTest {
   private void initBuggyClient() {
     try {
       EppoClient eppoClient = initClient(DUMMY_FLAG_API_KEY);
-      Field configurationStoreField = BaseEppoClient.class.getDeclaredField("requestor");
+      Field configurationStoreField = BaseEppoClient.class.getDeclaredField("configurationStore");
       configurationStoreField.setAccessible(true);
       configurationStoreField.set(eppoClient, null);
     } catch (NoSuchFieldException | IllegalAccessException e) {

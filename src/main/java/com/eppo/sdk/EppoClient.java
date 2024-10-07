@@ -43,7 +43,17 @@ public class EppoClient extends BaseEppoClient {
       BanditLogger banditLogger,
       boolean isGracefulModel) {
     super(
-        apiKey, host, sdkName, sdkVersion, assignmentLogger, banditLogger, isGracefulModel, false);
+        apiKey,
+        host,
+        sdkName,
+        sdkVersion,
+        assignmentLogger,
+        banditLogger,
+        null,
+        isGracefulModel,
+        false,
+        true,
+        null);
   }
 
   /** Stops the client from polling Eppo for updated flag and bandit configurations */
