@@ -10,6 +10,7 @@ import com.eppo.sdk.helpers.AppDetails;
 import com.eppo.sdk.helpers.FetchConfigurationsTask;
 import java.util.Timer;
 import java.util.concurrent.TimeUnit;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,11 +44,11 @@ public class EppoClient extends BaseEppoClient {
       String host,
       String sdkName,
       String sdkVersion,
-      AssignmentLogger assignmentLogger,
-      BanditLogger banditLogger,
-      boolean isGracefulModel,
-      IAssignmentCache assignmentCache,
-      IAssignmentCache banditAssignmentCache) {
+      @Nullable AssignmentLogger assignmentLogger,
+      @Nullable BanditLogger banditLogger,
+      boolean isGracefulMode,
+      @Nullable IAssignmentCache assignmentCache,
+      @Nullable IAssignmentCache banditAssignmentCache) {
     super(
         apiKey,
         host,
@@ -56,7 +57,7 @@ public class EppoClient extends BaseEppoClient {
         assignmentLogger,
         banditLogger,
         null,
-        isGracefulModel,
+        isGracefulMode,
         false,
         true,
         null,
