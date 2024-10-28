@@ -1,11 +1,16 @@
 package com.eppo.sdk;
 
 import cloud.eppo.BaseEppoClient;
+import cloud.eppo.api.IAssignmentCache;
+import cloud.eppo.cache.ExpiringInMemoryAssignmentCache;
+import cloud.eppo.cache.LRUInMemoryAssignmentCache;
 import cloud.eppo.logging.AssignmentLogger;
 import cloud.eppo.logging.BanditLogger;
 import com.eppo.sdk.helpers.AppDetails;
 import com.eppo.sdk.helpers.FetchConfigurationsTask;
 import java.util.Timer;
+import java.util.concurrent.TimeUnit;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,9 +44,11 @@ public class EppoClient extends BaseEppoClient {
       String host,
       String sdkName,
       String sdkVersion,
-      AssignmentLogger assignmentLogger,
-      BanditLogger banditLogger,
-      boolean isGracefulModel) {
+      @Nullable AssignmentLogger assignmentLogger,
+      @Nullable BanditLogger banditLogger,
+      boolean isGracefulMode,
+      @Nullable IAssignmentCache assignmentCache,
+      @Nullable IAssignmentCache banditAssignmentCache) {
     super(
         apiKey,
         host,
@@ -50,10 +57,12 @@ public class EppoClient extends BaseEppoClient {
         assignmentLogger,
         banditLogger,
         null,
-        isGracefulModel,
+        isGracefulMode,
         false,
         true,
-        null);
+        null,
+        assignmentCache,
+        banditAssignmentCache);
   }
 
   /** Stops the client from polling Eppo for updated flag and bandit configurations */
@@ -72,6 +81,12 @@ public class EppoClient extends BaseEppoClient {
     private boolean forceReinitialize = DEFAULT_FORCE_REINITIALIZE;
     private long pollingIntervalMs = DEFAULT_POLLING_INTERVAL_MS;
     private String host = DEFAULT_HOST;
+
+    // Assignment and bandit caching on by default. To disable, call
+    // `builder.assignmentCache(null).banditAssignmentCache(null);`
+    private IAssignmentCache assignmentCache = new LRUInMemoryAssignmentCache(100);
+    private IAssignmentCache banditAssignmentCache =
+        new ExpiringInMemoryAssignmentCache(10, TimeUnit.MINUTES);
 
     /** Sets the API Key--created within the eppo application--to use. This is required. */
     public Builder apiKey(String apiKey) {
@@ -135,6 +150,16 @@ public class EppoClient extends BaseEppoClient {
       return this;
     }
 
+    public Builder assignmentCache(IAssignmentCache assignmentCache) {
+      this.assignmentCache = assignmentCache;
+      return this;
+    }
+
+    public Builder banditAssignmentCache(IAssignmentCache banditAssignmentCache) {
+      this.banditAssignmentCache = banditAssignmentCache;
+      return this;
+    }
+
     public EppoClient buildAndInit() {
       AppDetails appDetails = AppDetails.getInstance();
       String sdkName = appDetails.getName();
@@ -153,7 +178,15 @@ public class EppoClient extends BaseEppoClient {
 
       instance =
           new EppoClient(
-              apiKey, sdkName, sdkVersion, host, assignmentLogger, banditLogger, isGracefulMode);
+              apiKey,
+              sdkName,
+              sdkVersion,
+              host,
+              assignmentLogger,
+              banditLogger,
+              isGracefulMode,
+              assignmentCache,
+              banditAssignmentCache);
 
       // Stop any active polling
       stopPolling();
