@@ -1,10 +1,7 @@
-package com.eppo.sdk;
+package cloud.eppo;
 
-import cloud.eppo.BaseEppoClient;
 import cloud.eppo.logging.AssignmentLogger;
 import cloud.eppo.logging.BanditLogger;
-import com.eppo.sdk.helpers.AppDetails;
-import com.eppo.sdk.helpers.FetchConfigurationsTask;
 import java.util.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,7 +50,10 @@ public class EppoClient extends BaseEppoClient {
         isGracefulModel,
         false,
         true,
-        null);
+        null,
+        null, // TODO assignmentCache,
+        null // TODO banditCache
+        );
   }
 
   /** Stops the client from polling Eppo for updated flag and bandit configurations */

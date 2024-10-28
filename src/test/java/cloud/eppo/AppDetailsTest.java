@@ -1,4 +1,4 @@
-package com.eppo.sdk.helpers;
+package cloud.eppo;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -15,7 +15,7 @@ public class AppDetailsTest {
   @BeforeEach
   public void nullOutInstanceToReset() {
     try {
-      Class<?> appDetailsClass = Class.forName("com.eppo.sdk.helpers.AppDetails");
+      Class<?> appDetailsClass = Class.forName("cloud.eppo.AppDetails");
       Field instanceField = appDetailsClass.getDeclaredField("instance");
       instanceField.setAccessible(true);
       instanceField.set(null, null);
