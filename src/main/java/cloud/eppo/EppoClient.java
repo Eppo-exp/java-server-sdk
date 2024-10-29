@@ -1,6 +1,8 @@
 package cloud.eppo;
 
 import cloud.eppo.api.IAssignmentCache;
+import cloud.eppo.cache.ExpiringInMemoryAssignmentCache;
+import cloud.eppo.cache.LRUInMemoryAssignmentCache;
 import cloud.eppo.logging.AssignmentLogger;
 import cloud.eppo.logging.BanditLogger;
 import java.util.Timer;
