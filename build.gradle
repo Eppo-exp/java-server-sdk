@@ -11,7 +11,7 @@ java {
 }
 
 group = 'cloud.eppo'
-version = '3.2.0-SNAPSHOT'
+version = '4.0.0-SNAPSHOT'
 ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
 
 import org.apache.tools.ant.filters.ReplaceTokens
@@ -30,7 +30,6 @@ repositories {
 }
 
 dependencies {
-  // Re-export classes and interfaces that will be used upstream
   api 'cloud.eppo:sdk-common-jvm:3.5.0'
 
   implementation 'com.github.zafarkhaja:java-semver:0.10.2'
@@ -46,7 +45,7 @@ dependencies {
   testImplementation 'org.junit.jupiter:junit-jupiter'
   testImplementation 'com.github.tomakehurst:wiremock-jre8:2.35.2'
   testImplementation 'org.mockito:mockito-core:4.11.0'
-  testImplementation 'com.squareup.okhttp3:okhttp:4.9.1'
+  testImplementation 'com.squareup.okhttp3:okhttp:4.12.0'
 }
 
 test {

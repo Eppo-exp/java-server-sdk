@@ -1,4 +1,4 @@
-package com.eppo.sdk;
+package cloud.eppo;
 
 import static cloud.eppo.helpers.AssignmentTestCase.parseTestCaseFile;
 import static cloud.eppo.helpers.AssignmentTestCase.runTestCase;
@@ -8,8 +8,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
-import cloud.eppo.BaseEppoClient;
-import cloud.eppo.EppoHttpClient;
 import cloud.eppo.api.Attributes;
 import cloud.eppo.api.BanditActions;
 import cloud.eppo.api.BanditResult;

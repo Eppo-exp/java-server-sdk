@@ -1,18 +1,18 @@
-package com.eppo.sdk.helpers;
+package cloud.eppo;
 
 import java.util.Timer;
 import java.util.TimerTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class FetchConfigurationsTask extends TimerTask {
+class FetchConfigurationsTask extends TimerTask {
   private static final Logger log = LoggerFactory.getLogger(FetchConfigurationsTask.class);
   private final Runnable runnable;
   private final Timer timer;
   private final long intervalInMillis;
   private final long jitterInMillis;
 
-  public FetchConfigurationsTask(
+  FetchConfigurationsTask(
       Runnable runnable, Timer timer, long intervalInMillis, long jitterInMillis) {
     this.runnable = runnable;
     this.timer = timer;

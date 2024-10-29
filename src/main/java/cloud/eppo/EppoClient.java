@@ -1,13 +1,10 @@
-package com.eppo.sdk;
+package cloud.eppo;
 
-import cloud.eppo.BaseEppoClient;
 import cloud.eppo.api.IAssignmentCache;
 import cloud.eppo.cache.ExpiringInMemoryAssignmentCache;
 import cloud.eppo.cache.LRUInMemoryAssignmentCache;
 import cloud.eppo.logging.AssignmentLogger;
 import cloud.eppo.logging.BanditLogger;
-import com.eppo.sdk.helpers.AppDetails;
-import com.eppo.sdk.helpers.FetchConfigurationsTask;
 import java.util.Timer;
 import java.util.concurrent.TimeUnit;
 import org.jetbrains.annotations.Nullable;
