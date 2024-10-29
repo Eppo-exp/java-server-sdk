@@ -59,8 +59,7 @@ public class EppoClient extends BaseEppoClient {
         true,
         null,
         assignmentCache,
-        banditAssignmentCache
-    );
+        banditAssignmentCache);
   }
 
   /** Stops the client from polling Eppo for updated flag and bandit configurations */
