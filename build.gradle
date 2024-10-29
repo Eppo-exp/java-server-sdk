@@ -38,8 +38,9 @@ dependencies {
   implementation 'org.slf4j:slf4j-api:2.0.13'
   // Logback classic 1.3.x is compatible with java 8
   implementation 'ch.qos.logback:logback-classic:1.3.14'
+  implementation 'org.jetbrains:annotations:13.0'
 
-  testImplementation 'cloud.eppo:sdk-common-jvm:3.5.0-SNAPSHOT:tests'
+  testImplementation 'cloud.eppo:sdk-common-jvm:3.5.0:tests'
   testImplementation platform('org.junit:junit-bom:5.10.2')
   testImplementation 'org.junit.jupiter:junit-jupiter'
   testImplementation 'com.github.tomakehurst:wiremock-jre8:2.35.2'
