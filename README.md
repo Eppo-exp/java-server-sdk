@@ -1,4 +1,6 @@
-[![Test and lint SDK](https://github.com/Eppo-exp/java-server-sdk/actions/workflows/lint-test-sdk.yml/badge.svg)](https://github.com/Eppo-exp/java-server-sdk/actions/workflows/lint-test-sdk.yml)
+[![Test and lint SDK](https://github.com/Eppo-exp/java-server-sdk/actions/workflows/lint-test-sdk.yml/badge.svg)](https://github.com/Eppo-exp/java-server-sdk/actions/workflows/lint-test-sdk.yml)  
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/cloud.eppo/eppo-server-sdk/badge.svg)](https://maven-badges.herokuapp.com/maven-central/cloud.eppo/eppo-server-sdk)
+
 # Eppo Server-Side SDK for Java
 
 ## Usage
