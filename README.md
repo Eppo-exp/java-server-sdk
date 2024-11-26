@@ -1,3 +1,4 @@
+[![Test and lint SDK](https://github.com/Eppo-exp/java-server-sdk/actions/workflows/lint-test-sdk.yml/badge.svg)](https://github.com/Eppo-exp/java-server-sdk/actions/workflows/lint-test-sdk.yml)
 # Eppo Server-Side SDK for Java
 
 ## Usage
