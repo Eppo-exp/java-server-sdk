@@ -270,6 +270,7 @@ public class EppoClientTest {
     // Initialize and the exception should be thrown.
     try {
       initFailingGracefulClient(false);
+      fail("Exception should have been thrown");
     } catch (RuntimeException e) {
       // Expected
       assertEquals("Intentional Error", e.getMessage());
