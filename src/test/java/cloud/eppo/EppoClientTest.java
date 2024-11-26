@@ -4,7 +4,6 @@ import static cloud.eppo.helpers.AssignmentTestCase.parseTestCaseFile;
 import static cloud.eppo.helpers.AssignmentTestCase.runTestCase;
 import static cloud.eppo.helpers.BanditTestCase.parseBanditTestCaseFile;
 import static cloud.eppo.helpers.BanditTestCase.runBanditTestCase;
-import static cloud.eppo.helpers.TestUtils.mockHttpError;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;

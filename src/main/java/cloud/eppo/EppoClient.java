@@ -197,9 +197,11 @@ public class EppoClient extends BaseEppoClient {
               pollingIntervalMs,
               pollingIntervalMs / DEFAULT_JITTER_INTERVAL_RATIO);
 
+      fetchConfigurationsTask.scheduleNext();
+
       // Kick off the first fetch, respecting graceful mode.
       try {
-        fetchConfigurationsTask.run();
+        instance.loadConfiguration();
       } catch (RuntimeException e) {
         log.error("Encountered Exception while loading configuration", e);
         if (!isGracefulMode) {
