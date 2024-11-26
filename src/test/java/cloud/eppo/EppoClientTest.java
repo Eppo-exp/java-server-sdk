@@ -4,6 +4,7 @@ import static cloud.eppo.helpers.AssignmentTestCase.parseTestCaseFile;
 import static cloud.eppo.helpers.AssignmentTestCase.runTestCase;
 import static cloud.eppo.helpers.BanditTestCase.parseBanditTestCaseFile;
 import static cloud.eppo.helpers.BanditTestCase.runBanditTestCase;
+import static cloud.eppo.helpers.TestUtils.mockHttpError;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
@@ -23,6 +24,7 @@ import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import java.io.File;
 import java.lang.reflect.Field;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.AfterAll;
@@ -238,6 +240,71 @@ public class EppoClientTest {
     verify(httpClientSpy, times(2)).get(anyString());
   }
 
+  @Test
+  public void testGracefulInitializationFailure() {
+    // Set up bad HTTP response
+    mockHttpError();
+
+    // Initialize and no exception should be thrown.
+    assertDoesNotThrow(() -> initFailingGracefulClient(true));
+  }
+
+  @Test
+  public void testClientMakesDefaultAssignmentsAfterFailingToInitialize() {
+    // Set up bad HTTP response
+    mockHttpError();
+
+    // Initialize and no exception should be thrown.
+    try {
+      EppoClient eppoClient = initFailingGracefulClient(true);
+      assertEquals("default", eppoClient.getStringAssignment("experiment1", "subject1", "default"));
+    } catch (Exception e) {
+      fail("Unexpected exception: " + e);
+    }
+  }
+
+  @Test
+  public void testClientMakesDefaultAssignmentsAfterFailingToInitializeNonGracefulMode() {
+    // Set up bad HTTP response
+    mockHttpError();
+
+    // Initialize and the exception should be thrown.
+    try {
+      initFailingGracefulClient(false);
+    } catch (RuntimeException e) {
+      // Expected
+      assertEquals("Intentional Error", e.getMessage());
+    } finally {
+      assertEquals(
+          "default",
+          EppoClient.getInstance().getStringAssignment("experiment1", "subject1", "default"));
+    }
+  }
+
+  @Test
+  public void testNonGracefulInitializationFailure() {
+    // Set up bad HTTP response
+    mockHttpError();
+
+    // Initialize and assert exception thrown
+    assertThrows(Exception.class, () -> initFailingGracefulClient(false));
+  }
+
+  public static void mockHttpError() {
+    // Create a mock instance of EppoHttpClient
+    EppoHttpClient mockHttpClient = mock(EppoHttpClient.class);
+
+    // Mock sync get
+    when(mockHttpClient.get(anyString())).thenThrow(new RuntimeException("Intentional Error"));
+
+    // Mock async get
+    CompletableFuture<byte[]> mockAsyncResponse = new CompletableFuture<>();
+    when(mockHttpClient.getAsync(anyString())).thenReturn(mockAsyncResponse);
+    mockAsyncResponse.completeExceptionally(new RuntimeException("Intentional Error"));
+
+    setBaseClientHttpClientOverrideField(mockHttpClient);
+  }
+
   @SuppressWarnings("SameParameterValue")
   private void sleepUninterruptedly(long sleepMs) {
     try {
@@ -261,6 +328,20 @@ public class EppoClientTest {
         .buildAndInit();
   }
 
+  private EppoClient initFailingGracefulClient(boolean isGracefulMode) {
+    mockAssignmentLogger = mock(AssignmentLogger.class);
+    mockBanditLogger = mock(BanditLogger.class);
+
+    return new EppoClient.Builder()
+        .apiKey(DUMMY_FLAG_API_KEY)
+        .host("blag")
+        .assignmentLogger(mockAssignmentLogger)
+        .banditLogger(mockBanditLogger)
+        .isGracefulMode(isGracefulMode)
+        .forceReinitialize(true) // Useful for tests
+        .buildAndInit();
+  }
+
   private void uninitClient() {
     try {
       Field httpClientOverrideField = EppoClient.class.getDeclaredField("instance");
@@ -277,6 +358,18 @@ public class EppoClientTest {
       Field configurationStoreField = BaseEppoClient.class.getDeclaredField("configurationStore");
       configurationStoreField.setAccessible(true);
       configurationStoreField.set(eppoClient, null);
+    } catch (NoSuchFieldException | IllegalAccessException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public static void setBaseClientHttpClientOverrideField(EppoHttpClient httpClient) {
+    // Uses reflection to set a static override field used for tests (e.g., httpClientOverride)
+    try {
+      Field httpClientOverrideField = BaseEppoClient.class.getDeclaredField("httpClientOverride");
+      httpClientOverrideField.setAccessible(true);
+      httpClientOverrideField.set(null, httpClient);
+      httpClientOverrideField.setAccessible(false);
     } catch (NoSuchFieldException | IllegalAccessException e) {
       throw new RuntimeException(e);
     }
