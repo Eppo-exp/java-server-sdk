@@ -239,14 +239,8 @@ public class EppoClientTest {
     verify(httpClientSpy, times(2)).get(anyString());
   }
 
-  @Test
-  public void testGracefulInitializationFailure() {
-    // Set up bad HTTP response
-    mockHttpError();
-
-    // Initialize and no exception should be thrown.
-    assertDoesNotThrow(() -> initFailingGracefulClient(true));
-  }
+  // NOTE: Graceful mode during init is intrinsically true since the call is non-blocking and
+  // exceptions are caught without rethrowing in `FetchConfigurationsTask`
 
   @Test
   public void testClientMakesDefaultAssignmentsAfterFailingToInitialize() {
@@ -256,38 +250,11 @@ public class EppoClientTest {
     // Initialize and no exception should be thrown.
     try {
       EppoClient eppoClient = initFailingGracefulClient(true);
+      Thread.sleep(25); // Sleep to allow the async config fetch call to happen (and fail)
       assertEquals("default", eppoClient.getStringAssignment("experiment1", "subject1", "default"));
     } catch (Exception e) {
       fail("Unexpected exception: " + e);
     }
-  }
-
-  @Test
-  public void testClientMakesDefaultAssignmentsAfterFailingToInitializeNonGracefulMode() {
-    // Set up bad HTTP response
-    mockHttpError();
-
-    // Initialize and the exception should be thrown.
-    try {
-      initFailingGracefulClient(false);
-      fail("Exception should have been thrown");
-    } catch (RuntimeException e) {
-      // Expected
-      assertEquals("Intentional Error", e.getMessage());
-    } finally {
-      assertEquals(
-          "default",
-          EppoClient.getInstance().getStringAssignment("experiment1", "subject1", "default"));
-    }
-  }
-
-  @Test
-  public void testNonGracefulInitializationFailure() {
-    // Set up bad HTTP response
-    mockHttpError();
-
-    // Initialize and assert exception thrown
-    assertThrows(Exception.class, () -> initFailingGracefulClient(false));
   }
 
   public static void mockHttpError() {

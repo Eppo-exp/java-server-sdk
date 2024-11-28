@@ -28,10 +28,6 @@ class FetchConfigurationsTask extends TimerTask {
     } catch (Exception e) {
       log.error("[Eppo SDK] Error fetching experiment configuration", e);
     }
-    scheduleNext();
-  }
-
-  public void scheduleNext() {
 
     long delay = this.intervalInMillis - (long) (Math.random() * this.jitterInMillis);
     FetchConfigurationsTask nextTask =
