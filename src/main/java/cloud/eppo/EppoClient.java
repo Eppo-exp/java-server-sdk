@@ -20,7 +20,6 @@ import org.slf4j.LoggerFactory;
 public class EppoClient extends BaseEppoClient {
   private static final Logger log = LoggerFactory.getLogger(EppoClient.class);
 
-  private static final String DEFAULT_HOST = "https://fscdn.eppo.cloud";
   private static final boolean DEFAULT_IS_GRACEFUL_MODE = true;
   private static final boolean DEFAULT_FORCE_REINITIALIZE = false;
   private static final long DEFAULT_POLLING_INTERVAL_MS = 30 * 1000;
@@ -77,7 +76,7 @@ public class EppoClient extends BaseEppoClient {
     private boolean isGracefulMode = DEFAULT_IS_GRACEFUL_MODE;
     private boolean forceReinitialize = DEFAULT_FORCE_REINITIALIZE;
     private long pollingIntervalMs = DEFAULT_POLLING_INTERVAL_MS;
-    private String host = DEFAULT_HOST;
+    private String host = Constants.DEFAULT_BASE_URL;
 
     // Assignment and bandit caching on by default. To disable, call
     // `builder.assignmentCache(null).banditAssignmentCache(null);`
