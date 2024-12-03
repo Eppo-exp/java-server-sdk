@@ -40,7 +40,7 @@ test-data:
 	mkdir -p ${tempDir}
 	git clone -b ${branchName} --depth 1 --single-branch ${githubRepoLink} ${gitDataDir}
 	cp -r ${gitDataDir}/ufc ${testDataDir}
-	rm ${testDataDir}/ufc/bandit-tests/*.dynamic-typing.json
+	rm -f ${testDataDir}/ufc/bandit-tests/*.dynamic-typing.json
 	rm -rf ${tempDir}
 
 .PHONY: test
