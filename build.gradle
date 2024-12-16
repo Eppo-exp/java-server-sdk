@@ -30,7 +30,7 @@ repositories {
 }
 
 dependencies {
-  api 'cloud.eppo:sdk-common-jvm:3.5.2'
+  api 'cloud.eppo:sdk-common-jvm:3.5.0'
 
   implementation 'com.github.zafarkhaja:java-semver:0.10.2'
   implementation 'com.fasterxml.jackson.core:jackson-databind:2.17.1'

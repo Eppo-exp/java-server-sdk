@@ -197,6 +197,8 @@ public class EppoClient extends BaseEppoClient {
               pollingIntervalMs / DEFAULT_JITTER_INTERVAL_RATIO);
 
       // Kick off the first fetch
+      // Graceful mode is implicit here because `FetchConfigurationsTask` catches and logs errors
+      // without rethrowing.
       fetchConfigurationsTask.run();
 
       return instance;
