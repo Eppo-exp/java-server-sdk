@@ -37,7 +37,7 @@ public class EppoClient extends BaseEppoClient {
 
   private EppoClient(
       String apiKey,
-      String host,
+      String baseUrl,
       String sdkName,
       String sdkVersion,
       @Nullable AssignmentLogger assignmentLogger,
@@ -47,7 +47,7 @@ public class EppoClient extends BaseEppoClient {
       @Nullable IAssignmentCache banditAssignmentCache) {
     super(
         apiKey,
-        host,
+        baseUrl,
         sdkName,
         sdkVersion,
         assignmentLogger,
