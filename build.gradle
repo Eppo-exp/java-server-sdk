@@ -11,7 +11,7 @@ java {
 }
 
 group = 'cloud.eppo'
-version = '4.0.1'
+version = '3.2.0-SNAPSHOT'
 ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
 
 import org.apache.tools.ant.filters.ReplaceTokens

@@ -9,7 +9,7 @@
 
 ```groovy
 dependencies {
-  implementation 'cloud.eppo:eppo-server-sdk:4.0.1'
+  implementation 'cloud.eppo:eppo-server-sdk:3.1.0'
 }
 ```
 
@@ -58,6 +58,6 @@ repositories {
 }
 
 dependencies {
-  implementation 'cloud.eppo:eppo-server-sdk:3.0.2-SNAPSHOT'
+  implementation 'cloud.eppo:eppo-server-sdk:3.2.0-SNAPSHOT'
 }
 ```
