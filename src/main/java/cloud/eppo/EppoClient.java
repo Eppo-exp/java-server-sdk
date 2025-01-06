@@ -20,7 +20,6 @@ import org.slf4j.LoggerFactory;
 public class EppoClient extends BaseEppoClient {
   private static final Logger log = LoggerFactory.getLogger(EppoClient.class);
 
-  private static final String DEFAULT_HOST = "https://fscdn.eppo.cloud";
   private static final boolean DEFAULT_IS_GRACEFUL_MODE = true;
   private static final boolean DEFAULT_FORCE_REINITIALIZE = false;
   private static final long DEFAULT_POLLING_INTERVAL_MS = 30 * 1000;
@@ -38,9 +37,9 @@ public class EppoClient extends BaseEppoClient {
 
   private EppoClient(
       String apiKey,
-      String host,
       String sdkName,
       String sdkVersion,
+      @Nullable String baseUrl,
       @Nullable AssignmentLogger assignmentLogger,
       @Nullable BanditLogger banditLogger,
       boolean isGracefulMode,
@@ -48,9 +47,10 @@ public class EppoClient extends BaseEppoClient {
       @Nullable IAssignmentCache banditAssignmentCache) {
     super(
         apiKey,
-        host,
         sdkName,
         sdkVersion,
+        null,
+        baseUrl,
         assignmentLogger,
         banditLogger,
         null,
@@ -77,7 +77,7 @@ public class EppoClient extends BaseEppoClient {
     private boolean isGracefulMode = DEFAULT_IS_GRACEFUL_MODE;
     private boolean forceReinitialize = DEFAULT_FORCE_REINITIALIZE;
     private long pollingIntervalMs = DEFAULT_POLLING_INTERVAL_MS;
-    private String host = DEFAULT_HOST;
+    private String apiBaseUrl = null;
 
     // Assignment and bandit caching on by default. To disable, call
     // `builder.assignmentCache(null).banditAssignmentCache(null);`
@@ -139,11 +139,11 @@ public class EppoClient extends BaseEppoClient {
     }
 
     /**
-     * Overrides the host from where it fetches configurations. This typically should not be
-     * explicitly set so that the default of the Fastly CDN is used.
+     * Overrides the base URL from where the SDK fetches configurations. This typically should not
+     * be explicitly set so that the default API URL is used.
      */
-    public Builder host(String host) {
-      this.host = host;
+    public Builder apiBaseUrl(String apiBaseUrl) {
+      this.apiBaseUrl = apiBaseUrl;
       return this;
     }
 
@@ -178,7 +178,7 @@ public class EppoClient extends BaseEppoClient {
               apiKey,
               sdkName,
               sdkVersion,
-              host,
+              apiBaseUrl,
               assignmentLogger,
               banditLogger,
               isGracefulMode,

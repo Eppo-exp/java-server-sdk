@@ -287,7 +287,7 @@ public class EppoClientTest {
 
     return new EppoClient.Builder()
         .apiKey(apiKey)
-        .host(TEST_HOST)
+        .apiBaseUrl(Constants.appendApiPathToHost(TEST_HOST))
         .assignmentLogger(mockAssignmentLogger)
         .banditLogger(mockBanditLogger)
         .isGracefulMode(false)
@@ -301,7 +301,7 @@ public class EppoClientTest {
 
     return new EppoClient.Builder()
         .apiKey(DUMMY_FLAG_API_KEY)
-        .host("blag")
+        .apiBaseUrl("blag")
         .assignmentLogger(mockAssignmentLogger)
         .banditLogger(mockBanditLogger)
         .isGracefulMode(isGracefulMode)
