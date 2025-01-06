@@ -39,7 +39,6 @@ public class EppoClient extends BaseEppoClient {
       String apiKey,
       String sdkName,
       String sdkVersion,
-      @Nullable @Deprecated String host,
       @Nullable String baseUrl,
       @Nullable AssignmentLogger assignmentLogger,
       @Nullable BanditLogger banditLogger,
@@ -50,7 +49,7 @@ public class EppoClient extends BaseEppoClient {
         apiKey,
         sdkName,
         sdkVersion,
-        host,
+        null,
         baseUrl,
         assignmentLogger,
         banditLogger,
@@ -78,7 +77,6 @@ public class EppoClient extends BaseEppoClient {
     private boolean isGracefulMode = DEFAULT_IS_GRACEFUL_MODE;
     private boolean forceReinitialize = DEFAULT_FORCE_REINITIALIZE;
     private long pollingIntervalMs = DEFAULT_POLLING_INTERVAL_MS;
-    private String host = null; // TODO remove with next major version bump.
     private String apiBaseUrl = null;
 
     // Assignment and bandit caching on by default. To disable, call
@@ -141,16 +139,6 @@ public class EppoClient extends BaseEppoClient {
     }
 
     /**
-     * Overrides the host from where it fetches configurations. This typically should not be
-     * explicitly set so that the default of the Fastly CDN is used. @Deprecated - use `apiBaseUrl`
-     * instead
-     */
-    public Builder host(String host) {
-      this.host = host;
-      return this;
-    }
-
-    /**
      * Overrides the base URL from where the SDK fetches configurations. This typically should not
      * be explicitly set so that the default API URL is used.
      */
@@ -190,7 +178,6 @@ public class EppoClient extends BaseEppoClient {
               apiKey,
               sdkName,
               sdkVersion,
-              host, // TODO remove with next major version bump.
               apiBaseUrl,
               assignmentLogger,
               banditLogger,
