@@ -5,7 +5,6 @@ import cloud.eppo.cache.ExpiringInMemoryAssignmentCache;
 import cloud.eppo.cache.LRUInMemoryAssignmentCache;
 import cloud.eppo.logging.AssignmentLogger;
 import cloud.eppo.logging.BanditLogger;
-import java.util.Timer;
 import java.util.concurrent.TimeUnit;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -26,7 +25,6 @@ public class EppoClient extends BaseEppoClient {
   private static final long DEFAULT_JITTER_INTERVAL_RATIO = 10;
 
   private static EppoClient instance;
-  private static Timer pollTimer;
 
   public static EppoClient getInstance() {
     if (instance == null) {
@@ -64,10 +62,9 @@ public class EppoClient extends BaseEppoClient {
 
   /** Stops the client from polling Eppo for updated flag and bandit configurations */
   public static void stopPollingSafe() {
-    if (pollTimer != null) {
-      pollTimer.cancel();
+    if (instance != null) {
+      instance.stopPolling();
     }
-
   }
 
   /** Builder pattern to initialize the EppoClient singleton */
@@ -164,6 +161,7 @@ public class EppoClient extends BaseEppoClient {
       String sdkVersion = appDetails.getVersion();
 
       if (instance != null) {
+        instance.stopPolling();
         if (forceReinitialize) {
           log.warn(
               "Eppo SDK is already initialized, reinitializing since forceReinitialize is true");
@@ -189,19 +187,13 @@ public class EppoClient extends BaseEppoClient {
       // Stop any active polling
       stopPollingSafe();
 
-      // Set up polling for experiment configurations
-      pollTimer = new Timer(true);
-      FetchConfigurationsTask fetchConfigurationsTask =
-          new FetchConfigurationsTask(
-              () -> instance.loadConfiguration(),
-              pollTimer,
-              pollingIntervalMs,
-              pollingIntervalMs / DEFAULT_JITTER_INTERVAL_RATIO);
+      // start polling, if enabled.
+      if (pollingIntervalMs > 0) {
+        instance.startPolling(pollingIntervalMs, pollingIntervalMs / DEFAULT_JITTER_INTERVAL_RATIO);
+      }
 
-      // Kick off the first fetch
-      // Graceful mode is implicit here because `FetchConfigurationsTask` catches and logs errors
-      // without rethrowing.
-      fetchConfigurationsTask.run();
+      // Fetch configuration
+      instance.loadConfiguration();
 
       return instance;
     }
