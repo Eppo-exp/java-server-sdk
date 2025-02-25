@@ -60,13 +60,6 @@ public class EppoClient extends BaseEppoClient {
         banditAssignmentCache);
   }
 
-  /** Stops the client from polling Eppo for updated flag and bandit configurations */
-  public static void stopPollingSafe() {
-    if (instance != null) {
-      instance.stopPolling();
-    }
-  }
-
   /** Builder pattern to initialize the EppoClient singleton */
   public static class Builder {
     private String apiKey;
@@ -161,6 +154,7 @@ public class EppoClient extends BaseEppoClient {
       String sdkVersion = appDetails.getVersion();
 
       if (instance != null) {
+        // Stop any active polling.
         instance.stopPolling();
         if (forceReinitialize) {
           log.warn(
@@ -184,16 +178,13 @@ public class EppoClient extends BaseEppoClient {
               assignmentCache,
               banditAssignmentCache);
 
-      // Stop any active polling
-      stopPollingSafe();
+      // Fetch first configuration
+      instance.loadConfiguration();
 
       // start polling, if enabled.
       if (pollingIntervalMs > 0) {
         instance.startPolling(pollingIntervalMs, pollingIntervalMs / DEFAULT_JITTER_INTERVAL_RATIO);
       }
-
-      // Fetch configuration
-      instance.loadConfiguration();
 
       return instance;
     }

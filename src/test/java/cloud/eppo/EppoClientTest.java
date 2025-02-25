@@ -91,7 +91,11 @@ public class EppoClientTest {
   @AfterEach
   public void cleanUp() {
     TestUtils.setBaseClientHttpClientOverrideField(null);
-    EppoClient.stopPollingSafe();
+    try {
+      EppoClient.getInstance().stopPolling();
+    } catch (IllegalStateException ex) {
+      // pass: Indicates that the singleton Eppo Client has not yet been initialized.
+    }
   }
 
   @AfterAll
@@ -232,7 +236,7 @@ public class EppoClientTest {
     // Now, the method should have been called twice
     verify(httpClientSpy, times(2)).get(anyString());
 
-    EppoClient.stopPollingSafe();
+    EppoClient.getInstance().stopPolling();
     sleepUninterruptedly(25);
 
     // No more calls since stopped
