@@ -63,10 +63,11 @@ public class EppoClient extends BaseEppoClient {
   }
 
   /** Stops the client from polling Eppo for updated flag and bandit configurations */
-  public static void stopPolling() {
+  public static void stopPollingSafe() {
     if (pollTimer != null) {
       pollTimer.cancel();
     }
+
   }
 
   /** Builder pattern to initialize the EppoClient singleton */
@@ -186,7 +187,7 @@ public class EppoClient extends BaseEppoClient {
               banditAssignmentCache);
 
       // Stop any active polling
-      stopPolling();
+      stopPollingSafe();
 
       // Set up polling for experiment configurations
       pollTimer = new Timer(true);

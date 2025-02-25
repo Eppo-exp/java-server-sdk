@@ -91,7 +91,7 @@ public class EppoClientTest {
   @AfterEach
   public void cleanUp() {
     TestUtils.setBaseClientHttpClientOverrideField(null);
-    EppoClient.stopPolling();
+    EppoClient.stopPollingSafe();
   }
 
   @AfterAll
@@ -232,7 +232,7 @@ public class EppoClientTest {
     // Now, the method should have been called twice
     verify(httpClientSpy, times(2)).get(anyString());
 
-    EppoClient.stopPolling();
+    EppoClient.stopPollingSafe();
     sleepUninterruptedly(25);
 
     // No more calls since stopped
