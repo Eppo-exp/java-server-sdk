@@ -11,6 +11,7 @@ import static org.mockito.Mockito.*;
 import cloud.eppo.api.Attributes;
 import cloud.eppo.api.BanditActions;
 import cloud.eppo.api.BanditResult;
+import cloud.eppo.api.Configuration;
 import cloud.eppo.helpers.AssignmentTestCase;
 import cloud.eppo.helpers.BanditTestCase;
 import cloud.eppo.helpers.TestUtils;
@@ -18,6 +19,7 @@ import cloud.eppo.logging.Assignment;
 import cloud.eppo.logging.AssignmentLogger;
 import cloud.eppo.logging.BanditAssignment;
 import cloud.eppo.logging.BanditLogger;
+import cloud.eppo.ufc.dto.VariationType;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
@@ -91,7 +93,11 @@ public class EppoClientTest {
   @AfterEach
   public void cleanUp() {
     TestUtils.setBaseClientHttpClientOverrideField(null);
-    EppoClient.stopPolling();
+    try {
+      EppoClient.getInstance().stopPolling();
+    } catch (IllegalStateException ex) {
+      // pass: Indicates that the singleton Eppo Client has not yet been initialized.
+    }
   }
 
   @AfterAll
@@ -232,7 +238,7 @@ public class EppoClientTest {
     // Now, the method should have been called twice
     verify(httpClientSpy, times(2)).get(anyString());
 
-    EppoClient.stopPolling();
+    EppoClient.getInstance().stopPolling();
     sleepUninterruptedly(25);
 
     // No more calls since stopped
@@ -255,6 +261,15 @@ public class EppoClientTest {
     } catch (Exception e) {
       fail("Unexpected exception: " + e);
     }
+  }
+
+  @Test
+  public void testGetConfiguration() {
+    EppoClient eppoClient = initClient(DUMMY_FLAG_API_KEY);
+    Configuration configuration = eppoClient.getConfiguration();
+    assertNotNull(configuration);
+    assertNotNull(configuration.getFlag("numeric_flag"));
+    assertEquals(VariationType.NUMERIC, configuration.getFlagType("numeric_flag"));
   }
 
   public static void mockHttpError() {
