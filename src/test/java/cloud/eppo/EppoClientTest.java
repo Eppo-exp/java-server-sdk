@@ -203,7 +203,7 @@ public class EppoClientTest {
   @Test
   public void testReinitializeWithoutForcing() {
     EppoClient firstInstance = initClient(DUMMY_FLAG_API_KEY);
-    EppoClient secondInstance = new EppoClient.Builder().apiKey(DUMMY_FLAG_API_KEY).buildAndInit();
+    EppoClient secondInstance = EppoClient.builder(DUMMY_FLAG_API_KEY).buildAndInit();
 
     assertSame(firstInstance, secondInstance);
   }
@@ -212,7 +212,7 @@ public class EppoClientTest {
   public void testReinitializeWitForcing() {
     EppoClient firstInstance = initClient(DUMMY_FLAG_API_KEY);
     EppoClient secondInstance =
-        new EppoClient.Builder().apiKey(DUMMY_FLAG_API_KEY).forceReinitialize(true).buildAndInit();
+        EppoClient.builder(DUMMY_FLAG_API_KEY).forceReinitialize(true).buildAndInit();
 
     assertNotSame(firstInstance, secondInstance);
   }
@@ -223,8 +223,7 @@ public class EppoClientTest {
     EppoHttpClient httpClientSpy = spy(httpClient);
     TestUtils.setBaseClientHttpClientOverrideField(httpClientSpy);
 
-    new EppoClient.Builder()
-        .apiKey(DUMMY_FLAG_API_KEY)
+    EppoClient.builder(DUMMY_FLAG_API_KEY)
         .pollingIntervalMs(20)
         .forceReinitialize(true)
         .buildAndInit();
@@ -300,8 +299,7 @@ public class EppoClientTest {
     mockAssignmentLogger = mock(AssignmentLogger.class);
     mockBanditLogger = mock(BanditLogger.class);
 
-    return new EppoClient.Builder()
-        .apiKey(apiKey)
+    return EppoClient.builder(apiKey)
         .apiBaseUrl(Constants.appendApiPathToHost(TEST_HOST))
         .assignmentLogger(mockAssignmentLogger)
         .banditLogger(mockBanditLogger)
@@ -314,8 +312,7 @@ public class EppoClientTest {
     mockAssignmentLogger = mock(AssignmentLogger.class);
     mockBanditLogger = mock(BanditLogger.class);
 
-    return new EppoClient.Builder()
-        .apiKey(DUMMY_FLAG_API_KEY)
+    return EppoClient.builder(DUMMY_FLAG_API_KEY)
         .apiBaseUrl("blag")
         .assignmentLogger(mockAssignmentLogger)
         .banditLogger(mockBanditLogger)

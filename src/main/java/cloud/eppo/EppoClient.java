@@ -6,6 +6,7 @@ import cloud.eppo.cache.LRUInMemoryAssignmentCache;
 import cloud.eppo.logging.AssignmentLogger;
 import cloud.eppo.logging.BanditLogger;
 import java.util.concurrent.TimeUnit;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +35,7 @@ public class EppoClient extends BaseEppoClient {
   }
 
   private EppoClient(
-      String apiKey,
+      String sdkKey,
       String sdkName,
       String sdkVersion,
       @Nullable String baseUrl,
@@ -44,7 +45,7 @@ public class EppoClient extends BaseEppoClient {
       @Nullable IAssignmentCache assignmentCache,
       @Nullable IAssignmentCache banditAssignmentCache) {
     super(
-        apiKey,
+        sdkKey,
         sdkName,
         sdkVersion,
         null,
@@ -60,9 +61,18 @@ public class EppoClient extends BaseEppoClient {
         banditAssignmentCache);
   }
 
+  /**
+   * Creates a new EppoClient Builder object with the specified SDK Key.
+   *
+   * @param sdkKey (see <a href="https://docs.geteppo.com/sdks/sdk-keys/">SDK Keys</a>)
+   */
+  public static Builder builder(@NotNull String sdkKey) {
+    return new Builder(sdkKey);
+  }
+
   /** Builder pattern to initialize the EppoClient singleton */
   public static class Builder {
-    private String apiKey;
+    private final String sdkKey;
     private AssignmentLogger assignmentLogger;
     private BanditLogger banditLogger;
     private boolean isGracefulMode = DEFAULT_IS_GRACEFUL_MODE;
@@ -76,10 +86,8 @@ public class EppoClient extends BaseEppoClient {
     private IAssignmentCache banditAssignmentCache =
         new ExpiringInMemoryAssignmentCache(10, TimeUnit.MINUTES);
 
-    /** Sets the API Key--created within the eppo application--to use. This is required. */
-    public Builder apiKey(String apiKey) {
-      this.apiKey = apiKey;
-      return this;
+    private Builder(@NotNull String sdkKey) {
+      this.sdkKey = sdkKey;
     }
 
     /**
@@ -168,7 +176,7 @@ public class EppoClient extends BaseEppoClient {
 
       instance =
           new EppoClient(
-              apiKey,
+              sdkKey,
               sdkName,
               sdkVersion,
               apiBaseUrl,
