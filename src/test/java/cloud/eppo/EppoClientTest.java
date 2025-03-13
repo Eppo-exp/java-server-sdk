@@ -25,7 +25,10 @@ import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import java.io.File;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Stream;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.AfterAll;
@@ -50,6 +53,8 @@ public class EppoClientTest {
       "dummy-bandits-api-key"; // Will load bandit-flags-v1
   private AssignmentLogger mockAssignmentLogger;
   private BanditLogger mockBanditLogger;
+
+  private static final byte[] EMPTY_CONFIG = "{\"flags\":{}}".getBytes();
 
   @BeforeAll
   public static void initMockServer() {
@@ -271,6 +276,47 @@ public class EppoClientTest {
     assertEquals(VariationType.NUMERIC, configuration.getFlagType("numeric_flag"));
   }
 
+  @Test
+  public void testConfigurationChangeListener() throws ExecutionException, InterruptedException {
+    List<Configuration> received = new ArrayList<>();
+
+    // Set up a changing response from the "server"
+    EppoHttpClient mockHttpClient = mock(EppoHttpClient.class);
+
+    // Mock sync get to return empty
+    when(mockHttpClient.get(anyString())).thenReturn(EMPTY_CONFIG);
+
+    // Mock async get to return empty
+    when(mockHttpClient.get(anyString())).thenReturn(EMPTY_CONFIG);
+
+    setBaseClientHttpClientOverrideField(mockHttpClient);
+
+    EppoClient.Builder clientBuilder =
+        EppoClient.builder(DUMMY_FLAG_API_KEY)
+            .forceReinitialize(true)
+            .onConfigurationChange(received::add)
+            .isGracefulMode(false);
+
+    // Initialize and no exception should be thrown.
+    EppoClient eppoClient = clientBuilder.buildAndInit();
+
+    verify(mockHttpClient, times(1)).get(anyString());
+    assertEquals(1, received.size());
+
+    // Now, return the boolean flag config so that the config has changed.
+    when(mockHttpClient.get(anyString())).thenReturn(BOOL_FLAG_CONFIG);
+
+    // Trigger a reload of the client
+    eppoClient.loadConfiguration();
+
+    assertEquals(2, received.size());
+
+    // Reload the client again; the config hasn't changed, but Java doesn't check eTag (yet)
+    eppoClient.loadConfiguration();
+
+    assertEquals(3, received.size());
+  }
+
   public static void mockHttpError() {
     // Create a mock instance of EppoHttpClient
     EppoHttpClient mockHttpClient = mock(EppoHttpClient.class);
@@ -353,4 +399,40 @@ public class EppoClientTest {
       throw new RuntimeException(e);
     }
   }
+
+  private static final byte[] BOOL_FLAG_CONFIG =
+      ("{\n"
+              + "  \"createdAt\": \"2024-04-17T19:40:53.716Z\",\n"
+              + "  \"format\": \"SERVER\",\n"
+              + "  \"environment\": {\n"
+              + "    \"name\": \"Test\"\n"
+              + "  },\n"
+              + "  \"flags\": {\n"
+              + "    \"9a2025738dde19ff44cd30b9d2967000\": {\n"
+              + "      \"key\": \"9a2025738dde19ff44cd30b9d2967000\",\n"
+              + "      \"enabled\": true,\n"
+              + "      \"variationType\": \"BOOLEAN\",\n"
+              + "      \"variations\": {\n"
+              + "        \"b24=\": {\n"
+              + "          \"key\": \"b24=\",\n"
+              + "          \"value\": \"dHJ1ZQ==\"\n"
+              + "        }\n"
+              + "      },\n"
+              + "      \"allocations\": [\n"
+              + "        {\n"
+              + "          \"key\": \"b24=\",\n"
+              + "          \"doLog\": true,\n"
+              + "          \"splits\": [\n"
+              + "            {\n"
+              + "              \"variationKey\": \"b24=\",\n"
+              + "              \"shards\": []\n"
+              + "            }\n"
+              + "          ]\n"
+              + "        }\n"
+              + "      ],\n"
+              + "      \"totalShards\": 10000\n"
+              + "    }\n"
+              + "  }\n"
+              + "}")
+          .getBytes();
 }

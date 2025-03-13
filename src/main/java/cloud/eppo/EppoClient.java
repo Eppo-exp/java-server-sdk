@@ -1,11 +1,13 @@
 package cloud.eppo;
 
+import cloud.eppo.api.Configuration;
 import cloud.eppo.api.IAssignmentCache;
 import cloud.eppo.cache.ExpiringInMemoryAssignmentCache;
 import cloud.eppo.cache.LRUInMemoryAssignmentCache;
 import cloud.eppo.logging.AssignmentLogger;
 import cloud.eppo.logging.BanditLogger;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -79,6 +81,7 @@ public class EppoClient extends BaseEppoClient {
     private boolean forceReinitialize = DEFAULT_FORCE_REINITIALIZE;
     private long pollingIntervalMs = DEFAULT_POLLING_INTERVAL_MS;
     private String apiBaseUrl = null;
+    @Nullable private Consumer<Configuration> configChangeCallback;
 
     // Assignment and bandit caching on by default. To disable, call
     // `builder.assignmentCache(null).banditAssignmentCache(null);`
@@ -156,6 +159,14 @@ public class EppoClient extends BaseEppoClient {
       return this;
     }
 
+    /**
+     * Registers a callback for when a new configuration is applied to the `EppoClient` instance.
+     */
+    public Builder onConfigurationChange(Consumer<Configuration> configChangeCallback) {
+      this.configChangeCallback = configChangeCallback;
+      return this;
+    }
+
     public EppoClient buildAndInit() {
       AppDetails appDetails = AppDetails.getInstance();
       String sdkName = appDetails.getName();
@@ -185,6 +196,10 @@ public class EppoClient extends BaseEppoClient {
               isGracefulMode,
               assignmentCache,
               banditAssignmentCache);
+
+      if (configChangeCallback != null) {
+        instance.onConfigurationChange(configChangeCallback);
+      }
 
       // Fetch first configuration
       instance.loadConfiguration();
