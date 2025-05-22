@@ -4,10 +4,11 @@ import cloud.eppo.api.Configuration;
 import cloud.eppo.api.IAssignmentCache;
 import cloud.eppo.cache.ExpiringInMemoryAssignmentCache;
 import cloud.eppo.cache.LRUInMemoryAssignmentCache;
+import cloud.eppo.dto.adapters.JacksonJsonDeserializer;
 import cloud.eppo.logging.AssignmentLogger;
 import cloud.eppo.logging.BanditLogger;
+import cloud.eppo.util.JavaBase64Codec;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -20,6 +21,11 @@ import org.slf4j.LoggerFactory;
  * assignments and bandit actions.
  */
 public class EppoClient extends BaseEppoClient {
+  static {
+    Utils.setBase64Codec(new JavaBase64Codec());
+    Utils.setJsonDeserializer(new JacksonJsonDeserializer());
+  }
+
   private static final Logger log = LoggerFactory.getLogger(EppoClient.class);
 
   private static final boolean DEFAULT_IS_GRACEFUL_MODE = true;
@@ -50,13 +56,11 @@ public class EppoClient extends BaseEppoClient {
         sdkKey,
         sdkName,
         sdkVersion,
-        null,
         baseUrl,
         assignmentLogger,
         banditLogger,
         null,
         isGracefulMode,
-        false,
         true,
         null,
         assignmentCache,
@@ -81,7 +85,7 @@ public class EppoClient extends BaseEppoClient {
     private boolean forceReinitialize = DEFAULT_FORCE_REINITIALIZE;
     private long pollingIntervalMs = DEFAULT_POLLING_INTERVAL_MS;
     private String apiBaseUrl = null;
-    @Nullable private Consumer<Configuration> configChangeCallback;
+    @Nullable private Configuration.Callback configChangeCallback;
 
     // Assignment and bandit caching on by default. To disable, call
     // `builder.assignmentCache(null).banditAssignmentCache(null);`
@@ -162,7 +166,7 @@ public class EppoClient extends BaseEppoClient {
     /**
      * Registers a callback for when a new configuration is applied to the `EppoClient` instance.
      */
-    public Builder onConfigurationChange(Consumer<Configuration> configChangeCallback) {
+    public Builder onConfigurationChange(Configuration.Callback configChangeCallback) {
       this.configChangeCallback = configChangeCallback;
       return this;
     }
@@ -202,7 +206,7 @@ public class EppoClient extends BaseEppoClient {
       }
 
       // Fetch first configuration
-      instance.loadConfiguration();
+      instance.fetchAndActivateConfiguration();
 
       // start polling, if enabled.
       if (pollingIntervalMs > 0) {

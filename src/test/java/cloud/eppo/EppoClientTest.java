@@ -27,7 +27,6 @@ import java.io.File;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Stream;
 import org.apache.commons.io.FileUtils;
@@ -307,29 +306,19 @@ public class EppoClientTest {
     when(mockHttpClient.get(anyString())).thenReturn(BOOL_FLAG_CONFIG);
 
     // Trigger a reload of the client
-    eppoClient.loadConfiguration();
+    eppoClient.fetchAndActivateConfiguration();
 
     assertEquals(2, received.size());
 
     // Reload the client again; the config hasn't changed, but Java doesn't check eTag (yet)
-    eppoClient.loadConfiguration();
+    eppoClient.fetchAndActivateConfiguration();
 
     assertEquals(3, received.size());
   }
 
   public static void mockHttpError() {
-    // Create a mock instance of EppoHttpClient
-    EppoHttpClient mockHttpClient = mock(EppoHttpClient.class);
-
-    // Mock sync get
-    when(mockHttpClient.get(anyString())).thenThrow(new RuntimeException("Intentional Error"));
-
-    // Mock async get
-    CompletableFuture<byte[]> mockAsyncResponse = new CompletableFuture<>();
-    when(mockHttpClient.getAsync(anyString())).thenReturn(mockAsyncResponse);
-    mockAsyncResponse.completeExceptionally(new RuntimeException("Intentional Error"));
-
-    setBaseClientHttpClientOverrideField(mockHttpClient);
+    IEppoHttpClient throwingClient = new TestUtils.ThrowingHttpClient();
+    setBaseClientHttpClientOverrideField(throwingClient);
   }
 
   @SuppressWarnings("SameParameterValue")
@@ -388,7 +377,7 @@ public class EppoClientTest {
     }
   }
 
-  public static void setBaseClientHttpClientOverrideField(EppoHttpClient httpClient) {
+  public static void setBaseClientHttpClientOverrideField(IEppoHttpClient httpClient) {
     // Uses reflection to set a static override field used for tests (e.g., httpClientOverride)
     try {
       Field httpClientOverrideField = BaseEppoClient.class.getDeclaredField("httpClientOverride");
