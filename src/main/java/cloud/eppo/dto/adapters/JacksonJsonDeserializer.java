@@ -18,7 +18,8 @@ import org.slf4j.LoggerFactory;
 public class JacksonJsonDeserializer implements Utils.JsonDeserializer {
 
   private static final Logger log = LoggerFactory.getLogger(JacksonJsonDeserializer.class);
-  private final ObjectMapper mapper = new ObjectMapper().registerModule(EppoModule.eppoModule());
+  public static final ObjectMapper mapper =
+      new ObjectMapper().registerModule(EppoModule.eppoModule());
 
   @Override
   public FlagConfigResponse parseFlagConfigResponse(byte[] jsonString) throws JsonParsingException {

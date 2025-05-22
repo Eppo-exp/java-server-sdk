@@ -1,13 +1,19 @@
 package cloud.eppo;
 
+import cloud.eppo.api.Attributes;
 import cloud.eppo.api.Configuration;
+import cloud.eppo.api.EppoValue;
 import cloud.eppo.api.IAssignmentCache;
 import cloud.eppo.cache.ExpiringInMemoryAssignmentCache;
 import cloud.eppo.cache.LRUInMemoryAssignmentCache;
 import cloud.eppo.dto.adapters.JacksonJsonDeserializer;
 import cloud.eppo.logging.AssignmentLogger;
 import cloud.eppo.logging.BanditLogger;
+import cloud.eppo.ufc.dto.VariationType;
 import cloud.eppo.util.JavaBase64Codec;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.concurrent.TimeUnit;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -25,6 +31,8 @@ public class EppoClient extends BaseEppoClient {
     Utils.setBase64Codec(new JavaBase64Codec());
     Utils.setJsonDeserializer(new JacksonJsonDeserializer());
   }
+
+  private final ObjectMapper mapper = JacksonJsonDeserializer.mapper;
 
   private static final Logger log = LoggerFactory.getLogger(EppoClient.class);
 
@@ -65,6 +73,54 @@ public class EppoClient extends BaseEppoClient {
         null,
         assignmentCache,
         banditAssignmentCache);
+  }
+
+  /**
+   * Returns the assignment for the provided feature flag key and subject key as a {@link JsonNode}.
+   * If the flag is not found, does not match the requested type or is disabled, defaultValue is
+   * returned.
+   *
+   * @param flagKey the feature flag key
+   * @param subjectKey the subject key
+   * @param defaultValue the default value to return if the flag is not found
+   * @return the JSON string value of the assignment
+   */
+  public JsonNode getJSONAssignment(String flagKey, String subjectKey, JsonNode defaultValue) {
+    return getJSONAssignment(flagKey, subjectKey, new Attributes(), defaultValue);
+  }
+
+  /**
+   * Returns the assignment for the provided feature flag key and subject key as a {@link JsonNode}.
+   * If the flag is not found, does not match the requested type or is disabled, defaultValue is
+   * returned.
+   *
+   * @param flagKey the feature flag key
+   * @param subjectKey the subject key
+   * @param defaultValue the default value to return if the flag is not found
+   * @return the JSON string value of the assignment
+   */
+  public JsonNode getJSONAssignment(
+      String flagKey, String subjectKey, Attributes subjectAttributes, JsonNode defaultValue) {
+    try {
+      EppoValue value =
+          this.getTypedAssignment(
+              flagKey,
+              subjectKey,
+              subjectAttributes,
+              EppoValue.valueOf(defaultValue.toString()),
+              VariationType.JSON);
+      return parseJsonString(value.stringValue());
+    } catch (Exception e) {
+      return throwIfNotGraceful(e, defaultValue);
+    }
+  }
+
+  private JsonNode parseJsonString(String jsonString) {
+    try {
+      return mapper.readTree(jsonString);
+    } catch (JsonProcessingException e) {
+      return null;
+    }
   }
 
   /**
