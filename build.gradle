@@ -1,7 +1,7 @@
 plugins {
   id 'java-library'
   id 'maven-publish'
-  id 'signing'
+  id 'org.jreleaser' version '1.18.0'
   id "com.diffplug.spotless" version "6.13.0"
 }
 
@@ -86,7 +86,8 @@ java {
 
 publishing {
   publications {
-    mavenJava(MavenPublication) {
+    maven(MavenPublication) {
+      groupId = 'cloud.eppo'
       artifactId = 'eppo-server-sdk'
       from components.java
       versionMapping {
@@ -123,13 +124,7 @@ publishing {
   }
   repositories {
     maven {
-      def releasesRepoUrl = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
-      def snapshotsRepoUrl = "https://s01.oss.sonatype.org/content/repositories/snapshots/"
-      url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
-      credentials {
-        username = project.properties.containsKey("ossrhUsername") ? project.properties["ossrhUsername"] : ""
-        password = project.properties.containsKey("ossrhPassword") ? project.properties["ossrhPassword"] : ""
-      }
+      url = layout.buildDirectory.dir('staging-deploy')
     }
   }
 }
