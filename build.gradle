@@ -11,7 +11,7 @@ java {
 }
 
 group = 'cloud.eppo'
-version = '5.2.1-SNAPSHOT'
+version = '5.2.1'
 ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
 
 import org.apache.tools.ant.filters.ReplaceTokens
@@ -159,6 +159,29 @@ jreleaser {
       }
     }
   }
+}
+
+
+// Custom task to ensure we can conditionally publish either a release or snapshot artifact
+// based on a command line switch. See github workflow files for more details on usage.
+tasks.register('checkVersion') {
+  doLast {
+    if (!project.hasProperty('release') && !project.hasProperty('snapshot')) {
+      throw new GradleException("You must specify either -Prelease or -Psnapshot")
+    }
+    if (project.hasProperty('release') && project.version.endsWith('SNAPSHOT')) {
+      throw new GradleException("You cannot specify -Prelease with a SNAPSHOT version")
+    }
+    if (project.hasProperty('snapshot') && !project.version.endsWith('SNAPSHOT')) {
+      throw new GradleException("You cannot specify -Psnapshot with a non-SNAPSHOT version")
+    }
+    project.ext.shouldPublish = true
+  }
+}
+
+// Ensure checkVersion runs before publishing
+tasks.named('publish').configure {
+  dependsOn checkVersion
 }
 
 javadoc {
