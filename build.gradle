@@ -41,7 +41,7 @@ dependencies {
   implementation 'org.jetbrains:annotations:26.0.2'
 
   testImplementation 'cloud.eppo:sdk-common-jvm:3.5.4:tests'
-  testImplementation platform('org.junit:junit-bom:5.11.4')
+  testImplementation platform('org.junit:junit-bom:5.13.0')
   testImplementation 'org.junit.jupiter:junit-jupiter'
   testImplementation 'com.github.tomakehurst:wiremock-jre8:2.35.2'
   testImplementation 'org.mockito:mockito-core:4.11.0'
