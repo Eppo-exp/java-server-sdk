@@ -2,7 +2,7 @@ name: Publish SDK Snapshot artifact
 
 on:
   push:
-    branches: [main]
+    branches: [main, tp/test]
 
 env:
   CI: true
@@ -43,3 +43,19 @@ jobs:
 
       - name: Deploy to Maven Central
         run: ./gradlew jreleaserDeploy
+
+      - name: Upload build artifacts and logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs-and-artifacts-${{ github.run_number }}
+          path: |
+            build/reports/problems/**
+            eppo/build/reports/**
+            **/build/reports/**
+            build/jreleaser/**
+            eppo/build/staging-deploy/**
+            **/build/staging-deploy/**
+            **/build/libs/**
+            **/hs_err_pid*.log
+          retention-days: 7
