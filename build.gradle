@@ -11,7 +11,7 @@ java {
 }
 
 group = 'cloud.eppo'
-version = '5.3.1-SNAPSHOT'
+version = '5.3.1'
 ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
 
 import org.apache.tools.ant.filters.ReplaceTokens
@@ -30,7 +30,7 @@ repositories {
 }
 
 dependencies {
-  api 'cloud.eppo:sdk-common-jvm:3.12.0'
+  api 'cloud.eppo:sdk-common-jvm:3.12.1'
 
   implementation 'com.github.zafarkhaja:java-semver:0.10.2'
   implementation 'com.fasterxml.jackson.core:jackson-databind:2.19.0'
