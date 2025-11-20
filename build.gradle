@@ -33,7 +33,7 @@ dependencies {
   api 'cloud.eppo:sdk-common-jvm:3.12.1'
 
   implementation 'com.github.zafarkhaja:java-semver:0.10.2'
-  implementation 'com.fasterxml.jackson.core:jackson-databind:2.19.0'
+  implementation 'com.fasterxml.jackson.core:jackson-databind:2.20.1'
   implementation 'org.ehcache:ehcache:3.10.8'
   implementation 'org.slf4j:slf4j-api:2.0.17'
   implementation 'org.jetbrains:annotations:26.0.2'
