@@ -39,7 +39,7 @@ dependencies {
   implementation 'org.jetbrains:annotations:26.0.2'
 
   // Logback classic 1.3.x is compatible with java 8 - only needed for tests
-  testImplementation 'ch.qos.logback:logback-classic:1.3.15'
+  testImplementation 'ch.qos.logback:logback-classic:1.3.16'
   testImplementation 'cloud.eppo:sdk-common-jvm:3.5.4:tests'
   testImplementation platform('org.junit:junit-bom:5.11.4')
   testImplementation 'org.junit.jupiter:junit-jupiter'
