@@ -4,8 +4,11 @@ import cloud.eppo.api.Configuration;
 import cloud.eppo.api.IAssignmentCache;
 import cloud.eppo.cache.ExpiringInMemoryAssignmentCache;
 import cloud.eppo.cache.LRUInMemoryAssignmentCache;
+import cloud.eppo.http.EppoConfigurationClient;
 import cloud.eppo.logging.AssignmentLogger;
 import cloud.eppo.logging.BanditLogger;
+import cloud.eppo.parser.ConfigurationParser;
+import com.fasterxml.jackson.databind.JsonNode;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import org.jetbrains.annotations.NotNull;
@@ -19,7 +22,7 @@ import org.slf4j.LoggerFactory;
  * buildAndInit() method. Then call getInstance() to access the singleton and call methods to get
  * assignments and bandit actions.
  */
-public class EppoClient extends BaseEppoClient {
+public class EppoClient extends BaseEppoClient<JsonNode> {
   private static final Logger log = LoggerFactory.getLogger(EppoClient.class);
 
   private static final boolean DEFAULT_IS_GRACEFUL_MODE = true;
@@ -45,12 +48,13 @@ public class EppoClient extends BaseEppoClient {
       @Nullable BanditLogger banditLogger,
       boolean isGracefulMode,
       @Nullable IAssignmentCache assignmentCache,
-      @Nullable IAssignmentCache banditAssignmentCache) {
+      @Nullable IAssignmentCache banditAssignmentCache,
+      ConfigurationParser<JsonNode> configurationParser,
+      EppoConfigurationClient configurationClient) {
     super(
         sdkKey,
         sdkName,
         sdkVersion,
-        null,
         baseUrl,
         assignmentLogger,
         banditLogger,
@@ -60,7 +64,9 @@ public class EppoClient extends BaseEppoClient {
         true,
         null,
         assignmentCache,
-        banditAssignmentCache);
+        banditAssignmentCache,
+        configurationParser,
+        configurationClient);
   }
 
   /**
@@ -195,7 +201,9 @@ public class EppoClient extends BaseEppoClient {
               banditLogger,
               isGracefulMode,
               assignmentCache,
-              banditAssignmentCache);
+              banditAssignmentCache,
+              new JacksonConfigurationParser(),
+              new OkHttpEppoClient());
 
       if (configChangeCallback != null) {
         instance.onConfigurationChange(configChangeCallback);
