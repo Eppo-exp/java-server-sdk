@@ -9,7 +9,7 @@
 
 ```groovy
 dependencies {
-  implementation 'cloud.eppo:eppo-server-sdk:5.3.3'
+  implementation 'cloud.eppo:eppo-server-sdk:6.0.0'
 }
 ```
 
@@ -54,10 +54,10 @@ Snapshots are published automatically after each push to `main` branch.
 
 ```groovy
 repositories {
-  maven { url "https://central.sonatype.com/repository/maven-snapshot" }
+  maven { url "https://central.sonatype.com/repository/maven-snapshots/" }
 }
 
 dependencies {
-  implementation 'cloud.eppo:eppo-server-sdk:4.0.1-SNAPSHOT'
+  implementation 'cloud.eppo:eppo-server-sdk:6.0.0-SNAPSHOT'
 }
 ```
