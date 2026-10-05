@@ -15,6 +15,25 @@ dependencies {
 
 Refer to our [SDK documentation](https://docs.geteppo.com/sdks/server-sdks/java/) for how to install and use the SDK.
 
+## Upgrading to 6.0.0
+
+Version 6.0.0 adopts common SDK 4.0.1. The common SDK is exposed as an API
+dependency, so applications that use its types must account for these breaking
+changes:
+
+- Update imports from `cloud.eppo.ufc.dto` to `cloud.eppo.api.dto`.
+- `cloud.eppo.EppoHttpClient` has been removed. Integrations that directly use it
+  must migrate to the v4 HTTP-client API; this is not a drop-in class rename.
+
+The client also exposes typed `get*AssignmentDetails()` methods and
+`getBanditActionDetails()` for inspecting evaluation results.
+
+Starting in common 4.0.0, strict mode (graceful mode disabled) throws when a JSON
+flag contains malformed JSON. Common 3.13.2 returned the supplied non-null default
+for this case. Graceful mode continues to return the default. This applies to both
+parsed JSON and JSON-string assignments. Common 4.0.1 fixes successful JSON-string
+assignments while retaining this strict-mode behaviour.
+
 ## Contributing
 
 Java 8 is required to locally compile the SDK.
