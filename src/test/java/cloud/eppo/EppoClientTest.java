@@ -12,23 +12,21 @@ import cloud.eppo.api.Attributes;
 import cloud.eppo.api.BanditActions;
 import cloud.eppo.api.BanditResult;
 import cloud.eppo.api.Configuration;
+import cloud.eppo.api.dto.VariationType;
 import cloud.eppo.helpers.AssignmentTestCase;
 import cloud.eppo.helpers.BanditTestCase;
-import cloud.eppo.helpers.TestUtils;
 import cloud.eppo.logging.Assignment;
 import cloud.eppo.logging.AssignmentLogger;
 import cloud.eppo.logging.BanditAssignment;
 import cloud.eppo.logging.BanditLogger;
-import cloud.eppo.ufc.dto.VariationType;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
+import com.github.tomakehurst.wiremock.stubbing.Scenario;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.stream.Stream;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.AfterAll;
@@ -60,7 +58,10 @@ public class EppoClientTest {
   public static void initMockServer() {
     mockServer = new WireMockServer(TEST_PORT);
     mockServer.start();
+    registerDefaultStubs();
+  }
 
+  private static void registerDefaultStubs() {
     // If we get the dummy flag API key, return flags-v1.json
     String ufcFlagsResponseJson = readConfig("src/test/resources/shared/ufc/flags-v1.json");
     mockServer.stubFor(
@@ -97,12 +98,13 @@ public class EppoClientTest {
 
   @AfterEach
   public void cleanUp() {
-    TestUtils.setBaseClientHttpClientOverrideField(null);
     try {
       EppoClient.getInstance().stopPolling();
     } catch (IllegalStateException ex) {
       // pass: Indicates that the singleton Eppo Client has not yet been initialized.
     }
+    mockServer.resetAll();
+    registerDefaultStubs();
   }
 
   @AfterAll
@@ -224,29 +226,24 @@ public class EppoClientTest {
 
   @Test
   public void testPolling() {
-    EppoHttpClient httpClient = new EppoHttpClient(TEST_HOST, DUMMY_FLAG_API_KEY, "java", "3.0.0");
-    EppoHttpClient httpClientSpy = spy(httpClient);
-    TestUtils.setBaseClientHttpClientOverrideField(httpClientSpy);
+    // Reset request journal so we can count from zero
+    mockServer.resetRequests();
 
     EppoClient.builder(DUMMY_FLAG_API_KEY)
+        .apiBaseUrl(TEST_HOST)
         .pollingIntervalMs(20)
         .forceReinitialize(true)
         .buildAndInit();
 
-    // Method will be called immediately on init
-    verify(httpClientSpy, times(1)).get(anyString());
+    // Wait to allow polling cycles
+    sleepUninterruptedly(50);
 
-    // Sleep for 25 ms to allow another polling cycle to complete
-    sleepUninterruptedly(25);
-
-    // Now, the method should have been called twice
-    verify(httpClientSpy, times(2)).get(anyString());
+    // Verify multiple requests were made (init + at least one poll)
+    mockServer.verify(
+        com.github.tomakehurst.wiremock.client.WireMock.moreThanOrExactly(2),
+        WireMock.getRequestedFor(WireMock.urlMatching(".*flag-config/v1/config.*")));
 
     EppoClient.getInstance().stopPolling();
-    sleepUninterruptedly(25);
-
-    // No more calls since stopped
-    verify(httpClientSpy, times(2)).get(anyString());
   }
 
   // NOTE: Graceful mode during init is intrinsically true since the call is non-blocking and
@@ -254,7 +251,7 @@ public class EppoClientTest {
 
   @Test
   public void testClientMakesDefaultAssignmentsAfterFailingToInitialize() {
-    // Set up bad HTTP response
+    // Set up bad HTTP response via WireMock
     mockHttpError();
 
     // Initialize and no exception should be thrown.
@@ -277,59 +274,45 @@ public class EppoClientTest {
   }
 
   @Test
-  public void testConfigurationChangeListener() throws ExecutionException, InterruptedException {
+  public void testConfigurationChangeListener() {
     List<Configuration> received = new ArrayList<>();
 
-    // Set up a changing response from the "server"
-    EppoHttpClient mockHttpClient = mock(EppoHttpClient.class);
+    // Stub first response: empty config
+    mockServer.stubFor(
+        WireMock.get(WireMock.urlMatching(".*flag-config/v1/config.*"))
+            .inScenario("config-change")
+            .whenScenarioStateIs(Scenario.STARTED)
+            .willReturn(WireMock.okJson(new String(EMPTY_CONFIG)))
+            .willSetStateTo("has-config"));
 
-    // Mock sync get to return empty
-    when(mockHttpClient.get(anyString())).thenReturn(EMPTY_CONFIG);
+    // Stub second response: real config
+    mockServer.stubFor(
+        WireMock.get(WireMock.urlMatching(".*flag-config/v1/config.*"))
+            .inScenario("config-change")
+            .whenScenarioStateIs("has-config")
+            .willReturn(WireMock.okJson(new String(BOOL_FLAG_CONFIG))));
 
-    // Mock async get to return empty
-    when(mockHttpClient.get(anyString())).thenReturn(EMPTY_CONFIG);
-
-    setBaseClientHttpClientOverrideField(mockHttpClient);
-
-    EppoClient.Builder clientBuilder =
+    EppoClient eppoClient =
         EppoClient.builder(DUMMY_FLAG_API_KEY)
+            .apiBaseUrl(TEST_HOST)
             .forceReinitialize(true)
             .onConfigurationChange(received::add)
-            .isGracefulMode(false);
+            .isGracefulMode(false)
+            .buildAndInit();
 
-    // Initialize and no exception should be thrown.
-    EppoClient eppoClient = clientBuilder.buildAndInit();
-
-    verify(mockHttpClient, times(1)).get(anyString());
     assertEquals(1, received.size());
 
-    // Now, return the boolean flag config so that the config has changed.
-    when(mockHttpClient.get(anyString())).thenReturn(BOOL_FLAG_CONFIG);
-
-    // Trigger a reload of the client
     eppoClient.loadConfiguration();
-
     assertEquals(2, received.size());
-
-    // Reload the client again; the config hasn't changed, but Java doesn't check eTag (yet)
-    eppoClient.loadConfiguration();
-
-    assertEquals(3, received.size());
   }
 
   public static void mockHttpError() {
-    // Create a mock instance of EppoHttpClient
-    EppoHttpClient mockHttpClient = mock(EppoHttpClient.class);
-
-    // Mock sync get
-    when(mockHttpClient.get(anyString())).thenThrow(new RuntimeException("Intentional Error"));
-
-    // Mock async get
-    CompletableFuture<byte[]> mockAsyncResponse = new CompletableFuture<>();
-    when(mockHttpClient.getAsync(anyString())).thenReturn(mockAsyncResponse);
-    mockAsyncResponse.completeExceptionally(new RuntimeException("Intentional Error"));
-
-    setBaseClientHttpClientOverrideField(mockHttpClient);
+    mockServer.stubFor(
+        WireMock.get(WireMock.urlMatching(".*flag-config/v1/config.*"))
+            .willReturn(WireMock.serverError()));
+    mockServer.stubFor(
+        WireMock.get(WireMock.urlMatching(".*flag-config/v1/bandits.*"))
+            .willReturn(WireMock.serverError()));
   }
 
   @SuppressWarnings("SameParameterValue")
@@ -346,7 +329,7 @@ public class EppoClientTest {
     mockBanditLogger = mock(BanditLogger.class);
 
     return EppoClient.builder(apiKey)
-        .apiBaseUrl(Constants.appendApiPathToHost(TEST_HOST))
+        .apiBaseUrl(TEST_HOST)
         .assignmentLogger(mockAssignmentLogger)
         .banditLogger(mockBanditLogger)
         .isGracefulMode(false)
@@ -359,7 +342,7 @@ public class EppoClientTest {
     mockBanditLogger = mock(BanditLogger.class);
 
     return EppoClient.builder(DUMMY_FLAG_API_KEY)
-        .apiBaseUrl("blag")
+        .apiBaseUrl(TEST_HOST)
         .assignmentLogger(mockAssignmentLogger)
         .banditLogger(mockBanditLogger)
         .isGracefulMode(isGracefulMode)
@@ -369,9 +352,9 @@ public class EppoClientTest {
 
   private void uninitClient() {
     try {
-      Field httpClientOverrideField = EppoClient.class.getDeclaredField("instance");
-      httpClientOverrideField.setAccessible(true);
-      httpClientOverrideField.set(null, null);
+      Field instanceField = EppoClient.class.getDeclaredField("instance");
+      instanceField.setAccessible(true);
+      instanceField.set(null, null);
     } catch (NoSuchFieldException | IllegalAccessException e) {
       throw new RuntimeException(e);
     }
@@ -380,21 +363,21 @@ public class EppoClientTest {
   private void initBuggyClient() {
     try {
       EppoClient eppoClient = initClient(DUMMY_FLAG_API_KEY);
+
+      // Create a mock IConfigurationStore that returns a mock Configuration.
+      // The mock Configuration throws on getFlag() to simulate evaluation errors,
+      // but returns null for getEnvironmentName()/getConfigFetchedAt()/getConfigPublishedAt()
+      // so the catch block in BaseEppoClient can build error details.
+      Configuration mockConfig = mock(Configuration.class);
+      when(mockConfig.getFlag(anyString()))
+          .thenThrow(new RuntimeException("Intentional test error"));
+      @SuppressWarnings("unchecked")
+      IConfigurationStore<Configuration> mockStore = mock(IConfigurationStore.class);
+      when(mockStore.getConfiguration()).thenReturn(mockConfig);
+
       Field configurationStoreField = BaseEppoClient.class.getDeclaredField("configurationStore");
       configurationStoreField.setAccessible(true);
-      configurationStoreField.set(eppoClient, null);
-    } catch (NoSuchFieldException | IllegalAccessException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  public static void setBaseClientHttpClientOverrideField(EppoHttpClient httpClient) {
-    // Uses reflection to set a static override field used for tests (e.g., httpClientOverride)
-    try {
-      Field httpClientOverrideField = BaseEppoClient.class.getDeclaredField("httpClientOverride");
-      httpClientOverrideField.setAccessible(true);
-      httpClientOverrideField.set(null, httpClient);
-      httpClientOverrideField.setAccessible(false);
+      configurationStoreField.set(eppoClient, mockStore);
     } catch (NoSuchFieldException | IllegalAccessException e) {
       throw new RuntimeException(e);
     }

@@ -6,6 +6,7 @@ import cloud.eppo.cache.ExpiringInMemoryAssignmentCache;
 import cloud.eppo.cache.LRUInMemoryAssignmentCache;
 import cloud.eppo.logging.AssignmentLogger;
 import cloud.eppo.logging.BanditLogger;
+import com.fasterxml.jackson.databind.JsonNode;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import org.jetbrains.annotations.NotNull;
@@ -19,7 +20,7 @@ import org.slf4j.LoggerFactory;
  * buildAndInit() method. Then call getInstance() to access the singleton and call methods to get
  * assignments and bandit actions.
  */
-public class EppoClient extends BaseEppoClient {
+public class EppoClient extends BaseEppoClient<Configuration, JsonNode> {
   private static final Logger log = LoggerFactory.getLogger(EppoClient.class);
 
   private static final boolean DEFAULT_IS_GRACEFUL_MODE = true;
@@ -50,17 +51,18 @@ public class EppoClient extends BaseEppoClient {
         sdkKey,
         sdkName,
         sdkVersion,
-        null,
         baseUrl,
         assignmentLogger,
         banditLogger,
-        null,
+        new MemoryOnlyConfigurationStore(),
         isGracefulMode,
         false,
         true,
         null,
         assignmentCache,
-        banditAssignmentCache);
+        banditAssignmentCache,
+        new JacksonConfigurationParser(),
+        new OkHttpEppoClient());
   }
 
   /**
