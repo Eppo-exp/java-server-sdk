@@ -9,3 +9,7 @@ updates:
     directory: "/" # Location of package manifests
     schedule:
       interval: "weekly"
+    ignore:
+      # Gradle 9 requires Java 17 to run. CI runs Gradle on Java 8 and 11.
+      - dependency-name: "gradle-wrapper"
+        update-types: ["version-update:semver-major"]
