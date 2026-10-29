@@ -37,8 +37,11 @@ changes:
   JacksonConfigurationParser parser = new JacksonConfigurationParser();
   Configuration config = parser.buildConfig(parser.parseFlagConfig(flagJson), null, null, null);
   ```
-- `cloud.eppo.EppoHttpClient` has been removed. Integrations that directly use it
-  must migrate to the v4 HTTP-client API; this is not a drop-in class rename.
+- `cloud.eppo.EppoHttpClient` has been removed. To supply your own HTTP client,
+  implement `cloud.eppo.http.EppoConfigurationClient` and pass it to
+  `EppoClient.builder(sdkKey).configurationClient(...)`. The default is
+  `OkHttpEppoClient`; pass `new OkHttpEppoClient(okHttpClient)` to reuse your own
+  OkHttp settings.
 
 Version 6.0.0 adds typed `get*AssignmentDetails()` methods and
 `getBanditActionDetails()` for inspecting evaluation results.

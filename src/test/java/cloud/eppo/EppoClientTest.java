@@ -378,6 +378,25 @@ public class EppoClientTest {
     assertNotNull(recovered.getAction());
   }
 
+  @Test
+  public void testCustomConfigurationClientIsUsed() {
+    OkHttpEppoClient delegate = new OkHttpEppoClient();
+    List<String> requestedPaths = new ArrayList<>();
+    EppoClient eppoClient =
+        EppoClient.builder(DUMMY_FLAG_API_KEY)
+            .apiBaseUrl(TEST_HOST)
+            .configurationClient(
+                request -> {
+                  requestedPaths.add(request.getResourcePath());
+                  return delegate.execute(request);
+                })
+            .forceReinitialize(true)
+            .buildAndInit();
+
+    assertFalse(requestedPaths.isEmpty());
+    assertNotNull(eppoClient.getConfiguration().getFlag("numeric_flag"));
+  }
+
   public static void mockHttpError() {
     mockServer.stubFor(
         WireMock.get(WireMock.urlMatching(".*flag-config/v1/config.*"))
