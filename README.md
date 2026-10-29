@@ -21,12 +21,31 @@ Version 6.0.0 adopts common SDK 4.0.2. The common SDK is exposed as an API
 dependency, so applications that use its types must account for these breaking
 changes:
 
-- Update imports from `cloud.eppo.ufc.dto` to `cloud.eppo.api.dto`.
+- Update imports of the flag and bandit DTOs, for example `VariationType`,
+  `FlagConfig` and `BanditParameters`, from `cloud.eppo.ufc.dto` to
+  `cloud.eppo.api.dto`. `cloud.eppo.model.ShardRange` moves to
+  `cloud.eppo.api.dto.ShardRange`. `cloud.eppo.ufc.dto.adapters.EppoModule` keeps
+  its package.
+- `Configuration.builder(byte[])`, `Configuration.builder(byte[], boolean)`,
+  `Configuration.serializeFlagConfigToBytes()`,
+  `Configuration.serializeBanditParamsToBytes()`,
+  `Attributes.serializeNonNullAttributesToJSONString()` and
+  `cloud.eppo.exception.InvalidApiKeyException` have been removed. To build a
+  `Configuration` from flag JSON, use `JacksonConfigurationParser`:
+
+  ```java
+  JacksonConfigurationParser parser = new JacksonConfigurationParser();
+  Configuration config = parser.buildConfig(parser.parseFlagConfig(flagJson), null, null, null);
+  ```
 - `cloud.eppo.EppoHttpClient` has been removed. Integrations that directly use it
   must migrate to the v4 HTTP-client API; this is not a drop-in class rename.
 
-The client also exposes typed `get*AssignmentDetails()` methods and
+Version 6.0.0 adds typed `get*AssignmentDetails()` methods and
 `getBanditActionDetails()` for inspecting evaluation results.
+
+Polling now sends `If-None-Match`. When the configuration has not changed (HTTP
+304), the client keeps its configuration and does not call `onConfigurationChange`
+callbacks. 5.x called them after every successful poll.
 
 Starting in common 4.0.0, strict mode (graceful mode disabled) throws when a JSON
 flag contains malformed JSON. Common 3.13.2 returned the supplied non-null default
@@ -39,9 +58,12 @@ Common 4.0.2 changes how the client handles bandit failures:
 - A failed bandit fetch no longer blocks flag updates. The client applies the new
   flags, keeps its loaded bandit models, and retries the bandits on the next poll.
 - When bandit evaluation fails, for example because the models are not loaded yet,
-  `getBanditAction` returns the default value with a null action. Common 3.13.2
-  returned the bandit variation. `getBanditActionDetails` reports evaluation code
-  `BANDIT_ERROR`.
+  graceful mode (the default) makes `getBanditAction` return the default value with
+  a null action, and `getBanditActionDetails` reports evaluation code `BANDIT_ERROR`.
+  Common 3.13.2 returned the bandit variation. The assignment logger has already
+  recorded the flag's bandit variation for that call, so the logged variation can
+  differ from the value your code receives. With graceful mode disabled, both
+  methods throw, as in 5.x.
 
 ## Contributing
 
@@ -76,7 +98,8 @@ Once you have the prerequisites, follow the steps below to release a new version
 
 If you would like to live on the bleeding edge, you can try running against a snapshot build. Keep in mind that snapshots
 represent the most recent changes on master and may contain bugs.
-Snapshots are published automatically after each push to `main` branch.
+Snapshots are published automatically after each push to the `main` branch while `build.gradle` has a
+`-SNAPSHOT` version.
 
 ### build.gradle:
 
@@ -86,6 +109,6 @@ repositories {
 }
 
 dependencies {
-  implementation 'cloud.eppo:eppo-server-sdk:6.0.0-SNAPSHOT'
+  implementation 'cloud.eppo:eppo-server-sdk:X.Y.Z-SNAPSHOT'
 }
 ```
