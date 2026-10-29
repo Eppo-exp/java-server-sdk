@@ -17,7 +17,7 @@ Refer to our [SDK documentation](https://docs.geteppo.com/sdks/server-sdks/java/
 
 ## Upgrading to 6.0.0
 
-Version 6.0.0 adopts common SDK 4.0.1. The common SDK is exposed as an API
+Version 6.0.0 adopts common SDK 4.0.2. The common SDK is exposed as an API
 dependency, so applications that use its types must account for these breaking
 changes:
 
@@ -33,6 +33,15 @@ flag contains malformed JSON. Common 3.13.2 returned the supplied non-null defau
 for this case. Graceful mode continues to return the default. This applies to both
 parsed JSON and JSON-string assignments. Common 4.0.1 fixes successful JSON-string
 assignments while retaining this strict-mode behaviour.
+
+Common 4.0.2 changes how the client handles bandit failures:
+
+- A failed bandit fetch no longer blocks flag updates. The client applies the new
+  flags, keeps its loaded bandit models, and retries the bandits on the next poll.
+- When bandit evaluation fails, for example because the models are not loaded yet,
+  `getBanditAction` returns the default value with a null action. Common 3.13.2
+  returned the bandit variation. `getBanditActionDetails` reports evaluation code
+  `BANDIT_ERROR`.
 
 ## Contributing
 
