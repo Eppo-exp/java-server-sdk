@@ -2,7 +2,7 @@ buildscript {
   dependencies {
     // jreleaser 1.26.0 pulls older versions with known advisories. Remove once it pulls these.
     constraints {
-      classpath 'com.fasterxml.jackson.core:jackson-databind:2.22.3'
+      classpath 'com.fasterxml.jackson.core:jackson-databind:2.22.4'
       classpath 'org.apache.httpcomponents.client5:httpclient5:5.6.3'
       classpath 'org.codehaus.plexus:plexus-utils:3.6.1'
     }
@@ -43,7 +43,7 @@ repositories {
 dependencies {
   api 'cloud.eppo:sdk-common-jvm:4.0.3'
 
-  implementation 'com.fasterxml.jackson.core:jackson-databind:2.22.3'
+  implementation 'com.fasterxml.jackson.core:jackson-databind:2.22.4'
   implementation 'org.slf4j:slf4j-api:2.0.17'
   implementation 'org.jetbrains:annotations:26.1.0'
 
