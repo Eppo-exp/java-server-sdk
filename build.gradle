@@ -1,7 +1,18 @@
+buildscript {
+  dependencies {
+    // jreleaser 1.26.0 pulls older versions with known advisories. Remove once it pulls these.
+    constraints {
+      classpath 'com.fasterxml.jackson.core:jackson-databind:2.22.3'
+      classpath 'org.apache.httpcomponents.client5:httpclient5:5.6.3'
+      classpath 'org.codehaus.plexus:plexus-utils:3.6.1'
+    }
+  }
+}
+
 plugins {
   id 'java-library'
   id 'maven-publish'
-  id 'org.jreleaser' version '1.21.0'
+  id 'org.jreleaser' version '1.26.0'
   id "com.diffplug.spotless" version "6.13.0"
 }
 
@@ -38,11 +49,11 @@ dependencies {
   implementation 'org.slf4j:slf4j-api:2.0.17'
   implementation 'org.jetbrains:annotations:26.1.0'
 
-  // Logback classic 1.3.x is compatible with java 8 - only needed for tests
   testImplementation 'cloud.eppo:eppo-sdk-framework:0.1.0-SNAPSHOT:tests'
-  testImplementation 'ch.qos.logback:logback-classic:1.3.16'
-  testImplementation platform('org.junit:junit-bom:5.11.4')
+  testImplementation 'org.slf4j:slf4j-simple:2.0.17'
+  testImplementation platform('org.junit:junit-bom:5.14.4')
   testImplementation 'org.junit.jupiter:junit-jupiter'
+  testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
   testImplementation 'com.github.tomakehurst:wiremock-jre8:2.35.2'
   testImplementation 'org.mockito:mockito-core:4.11.0'
   testImplementation 'com.squareup.okhttp3:okhttp:4.12.0'
