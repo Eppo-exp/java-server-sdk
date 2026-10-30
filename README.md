@@ -15,46 +15,51 @@ dependencies {
 
 Refer to our [SDK documentation](https://docs.geteppo.com/sdks/server-sdks/java/) for how to install and use the SDK.
 
-## Upgrading to 6.0.0
+## Upgrading from 5.x to 6.0.0
 
-Version 6.0.0 adopts common SDK 4.0.2. The common SDK is exposed as an API
-dependency, so applications that use its types must account for these breaking
-changes:
+6.0.0 moves the `cloud.eppo:sdk-common-jvm` API dependency from 3.13.2 to 4.0.3.
+Common 4.0.3 adds `cloud.eppo:eppo-sdk-framework` 0.1.3 as an API dependency.
+Recompile code that you built against 5.x.
 
-- Update imports of the flag and bandit DTOs, for example `VariationType`,
-  `FlagConfig` and `BanditParameters`, from `cloud.eppo.ufc.dto` to
-  `cloud.eppo.api.dto`. `cloud.eppo.model.ShardRange` moves to
-  `cloud.eppo.api.dto.ShardRange`. `cloud.eppo.ufc.dto.adapters.EppoModule` keeps
-  its package.
-- `Configuration.builder(byte[])`, `Configuration.builder(byte[], boolean)`,
-  `Configuration.serializeFlagConfigToBytes()`,
-  `Configuration.serializeBanditParamsToBytes()`,
-  `Attributes.serializeNonNullAttributesToJSONString()` and
-  `cloud.eppo.exception.InvalidApiKeyException` have been removed. To build a
-  `Configuration` from flag JSON, use `JacksonConfigurationParser`:
+If your code uses common SDK types directly:
 
-  ```java
-  JacksonConfigurationParser parser = new JacksonConfigurationParser();
-  Configuration config = parser.buildConfig(parser.parseFlagConfig(flagJson), null, null, null);
-  ```
-- `cloud.eppo.EppoHttpClient` has been removed. To supply your own HTTP client,
+- DTOs moved from `cloud.eppo.ufc.dto` to `cloud.eppo.api.dto`. Except for the
+  enums, they are now interfaces. Replace constructors such as
+  `new FlagConfig(...)` with `new FlagConfig.Default(...)`. `BanditAttributeCoefficients` has no `Default`
+  implementation; supply an implementation if you construct it directly.
+- `cloud.eppo.ufc.dto.adapters.EppoModule` and `EppoValueDeserializer` did not
+  move. The other adapters are no longer public.
+- `cloud.eppo.model.ShardRange` is now `cloud.eppo.api.dto.ShardRange`.
+- `Configuration.builder(byte[])` and `builder(byte[], boolean)` were removed. Use
+  `Configuration.builder(new JacksonConfigurationParser().parseFlagConfig(bytes))`,
+  or `new Configuration.Builder(flagConfigResponse, isConfigObfuscated)` to set the
+  obfuscation flag yourself.
+- `Configuration.serializeFlagConfigToBytes()`,
+  `Configuration.serializeBanditParamsToBytes()` and
+  `Attributes.serializeNonNullAttributesToJSONString()` were removed.
+  `cloud.eppo.exception.InvalidApiKeyException` was also removed.
+- `cloud.eppo.EppoHttpClient` was removed. To supply your own HTTP client,
   implement `cloud.eppo.http.EppoConfigurationClient` and pass it to
   `EppoClient.builder(sdkKey).configurationClient(...)`. The default is
   `OkHttpEppoClient`; pass `new OkHttpEppoClient(okHttpClient)` to reuse your own
-  OkHttp settings.
+  OkHttp settings. To point tests at a stub server, use `apiBaseUrl(...)`.
 
-Version 6.0.0 adds typed `get*AssignmentDetails()` methods and
-`getBanditActionDetails()` for inspecting evaluation results.
+Behaviour changes:
 
-Polling now sends `If-None-Match`. When the configuration has not changed (HTTP
-304), the client keeps its configuration and does not call `onConfigurationChange`
-callbacks. 5.x called them after every successful poll.
+- With `isGracefulMode(false)`, `getJSONAssignment()`, `getJSONStringAssignment()`
+  and their `*Details()` variants throw when the assigned variation is not valid
+  JSON. 5.x returned the default (for `getJSONAssignment()`, only a non-null
+  default). Graceful mode still returns the default.
+- Once the client saves a configuration that came with an ETag, polls send
+  `If-None-Match`. When the server answers 304 Not Modified, the client keeps its
+  configuration and `onConfigurationChange` does not fire. In 5.x it fired after
+  every successful poll.
 
-Starting in common 4.0.0, strict mode (graceful mode disabled) throws when a JSON
-flag contains malformed JSON. Common 3.13.2 returned the supplied non-null default
-for this case. Graceful mode continues to return the default. This applies to both
-parsed JSON and JSON-string assignments. Common 4.0.1 fixes successful JSON-string
-assignments while retaining this strict-mode behaviour.
+New: `get*AssignmentDetails()` and `getBanditActionDetails()` return evaluation
+details with the value.
+
+The SDK no longer brings Ehcache and its supporting libraries transitively.
+If your application uses Ehcache directly, declare its dependency explicitly.
 
 Common 4.0.2 changes how the client handles bandit failures:
 

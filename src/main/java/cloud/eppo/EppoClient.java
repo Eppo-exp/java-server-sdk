@@ -1,5 +1,6 @@
 package cloud.eppo;
 
+import cloud.eppo.api.Attributes;
 import cloud.eppo.api.Configuration;
 import cloud.eppo.api.IAssignmentCache;
 import cloud.eppo.cache.ExpiringInMemoryAssignmentCache;
@@ -65,6 +66,23 @@ public class EppoClient extends BaseEppoClient<Configuration, JsonNode> {
         banditAssignmentCache,
         new JacksonConfigurationParser(),
         configurationClient != null ? configurationClient : new OkHttpEppoClient());
+  }
+
+  // Preserve concrete method descriptors used by callers compiled against server 5.x.
+  @Override
+  public Configuration getConfiguration() {
+    return super.getConfiguration();
+  }
+
+  @Override
+  public JsonNode getJSONAssignment(String flagKey, String subjectKey, JsonNode defaultValue) {
+    return super.getJSONAssignment(flagKey, subjectKey, defaultValue);
+  }
+
+  @Override
+  public JsonNode getJSONAssignment(
+      String flagKey, String subjectKey, Attributes subjectAttributes, JsonNode defaultValue) {
+    return super.getJSONAssignment(flagKey, subjectKey, subjectAttributes, defaultValue);
   }
 
   /**

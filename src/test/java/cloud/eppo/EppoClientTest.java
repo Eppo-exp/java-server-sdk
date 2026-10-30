@@ -509,4 +509,69 @@ public class EppoClientTest {
               + "  }\n"
               + "}")
           .getBytes();
+
+  @Test
+  public void testNotModifiedDoesNotNotifyConfigurationChange() {
+    mockServer.resetAll();
+    mockServer.stubFor(
+        WireMock.get(WireMock.urlMatching(".*flag-config/v1/config.*"))
+            .willReturn(WireMock.okJson(new String(BOOL_FLAG_CONFIG)).withHeader("ETag", "v1")));
+    mockServer.stubFor(
+        WireMock.get(WireMock.urlMatching(".*flag-config/v1/config.*"))
+            .withHeader("If-None-Match", WireMock.equalTo("v1"))
+            .willReturn(WireMock.aResponse().withStatus(304)));
+    List<Configuration> received = new ArrayList<>();
+    EppoClient client =
+        EppoClient.builder(DUMMY_FLAG_API_KEY)
+            .apiBaseUrl(TEST_HOST)
+            .pollingIntervalMs(0)
+            .forceReinitialize(true)
+            .onConfigurationChange(received::add)
+            .isGracefulMode(false)
+            .buildAndInit();
+    Configuration initial = client.getConfiguration();
+    client.loadConfiguration();
+    assertEquals(1, received.size());
+    assertSame(initial, client.getConfiguration());
+    mockServer.verify(
+        1,
+        WireMock.getRequestedFor(WireMock.urlMatching(".*flag-config/v1/config.*"))
+            .withHeader("If-None-Match", WireMock.equalTo("v1")));
+  }
+
+  @Test
+  public void testDocumentedConfigurationBuilderMigration() throws Exception {
+    byte[] bytes = readConfig("src/test/resources/shared/ufc/flags-v1.json").getBytes("UTF-8");
+    cloud.eppo.api.dto.FlagConfigResponse response =
+        new JacksonConfigurationParser().parseFlagConfig(bytes);
+    Configuration inferred = Configuration.builder(response).build();
+    Configuration explicit = new Configuration.Builder(response, false).build();
+    assertNotNull(inferred.getFlag("numeric_flag"));
+    assertNotNull(explicit.getFlag("numeric_flag"));
+  }
+
+  @Test
+  public void testKeepsVersion5MethodDescriptors() throws NoSuchMethodException {
+    assertEquals(
+        Configuration.class, EppoClient.class.getMethod("getConfiguration").getReturnType());
+    assertEquals(
+        com.fasterxml.jackson.databind.JsonNode.class,
+        EppoClient.class
+            .getMethod(
+                "getJSONAssignment",
+                String.class,
+                String.class,
+                com.fasterxml.jackson.databind.JsonNode.class)
+            .getReturnType());
+    assertEquals(
+        com.fasterxml.jackson.databind.JsonNode.class,
+        EppoClient.class
+            .getMethod(
+                "getJSONAssignment",
+                String.class,
+                String.class,
+                cloud.eppo.api.Attributes.class,
+                com.fasterxml.jackson.databind.JsonNode.class)
+            .getReturnType());
+  }
 }
