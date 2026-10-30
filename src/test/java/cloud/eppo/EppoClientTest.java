@@ -2,6 +2,7 @@ package cloud.eppo;
 
 import static cloud.eppo.helpers.AssignmentTestCase.parseTestCaseFile;
 import static cloud.eppo.helpers.AssignmentTestCase.runTestCase;
+import static cloud.eppo.helpers.AssignmentTestCase.runTestCaseWithDetails;
 import static cloud.eppo.helpers.BanditTestCase.parseBanditTestCaseFile;
 import static cloud.eppo.helpers.BanditTestCase.runBanditTestCase;
 import static org.junit.jupiter.api.Assertions.*;
@@ -120,6 +121,14 @@ public class EppoClientTest {
     AssignmentTestCase testCase = parseTestCaseFile(testFile);
     EppoClient eppoClient = initClient(DUMMY_FLAG_API_KEY);
     runTestCase(testCase, eppoClient);
+  }
+
+  @ParameterizedTest
+  @MethodSource("getAssignmentTestData")
+  public void testUnobfuscatedAssignmentsWithDetails(File testFile) {
+    AssignmentTestCase testCase = parseTestCaseFile(testFile);
+    EppoClient eppoClient = initClient(DUMMY_FLAG_API_KEY);
+    runTestCaseWithDetails(testCase, eppoClient);
   }
 
   private static Stream<Arguments> getAssignmentTestData() {
@@ -306,6 +315,88 @@ public class EppoClientTest {
     assertEquals(2, received.size());
   }
 
+  // The first bandit fetch fails. The flags still apply, bandit flags return the default with
+  // BANDIT_ERROR, and the next poll sends no ETag, retries the bandits and serves the bandit.
+  @Test
+  public void testBanditFetchFailureAppliesFlagsAndRetriesOnNextPoll() {
+    String flags = readConfig("src/test/resources/shared/ufc/bandit-flags-v1.json");
+    String models = readConfig("src/test/resources/shared/ufc/bandit-models-v1.json");
+    mockServer.resetAll();
+    mockServer.stubFor(
+        WireMock.get(WireMock.urlMatching(".*flag-config/v1/config.*"))
+            .withHeader("If-None-Match", WireMock.equalTo("\"v1\""))
+            .willReturn(WireMock.aResponse().withStatus(304)));
+    mockServer.stubFor(
+        WireMock.get(WireMock.urlMatching(".*flag-config/v1/config.*"))
+            .withHeader("If-None-Match", WireMock.absent())
+            .willReturn(WireMock.okJson(flags).withHeader("ETag", "\"v1\"")));
+    mockServer.stubFor(
+        WireMock.get(WireMock.urlMatching(".*flag-config/v1/bandits.*"))
+            .inScenario("bandits")
+            .whenScenarioStateIs(Scenario.STARTED)
+            .willReturn(WireMock.serverError())
+            .willSetStateTo("up"));
+    mockServer.stubFor(
+        WireMock.get(WireMock.urlMatching(".*flag-config/v1/bandits.*"))
+            .inScenario("bandits")
+            .whenScenarioStateIs("up")
+            .willReturn(WireMock.okJson(models)));
+    mockAssignmentLogger = mock(AssignmentLogger.class);
+    mockBanditLogger = mock(BanditLogger.class);
+    EppoClient client =
+        EppoClient.builder(DUMMY_BANDIT_API_KEY)
+            .apiBaseUrl(TEST_HOST)
+            .assignmentLogger(mockAssignmentLogger)
+            .banditLogger(mockBanditLogger)
+            .pollingIntervalMs(0)
+            .forceReinitialize(true)
+            .buildAndInit();
+    Attributes bob = new Attributes();
+    bob.put("age", 25);
+    bob.put("country", "USA");
+    BanditActions actions = new BanditActions();
+    actions.put("nike", new Attributes());
+    actions.put("adidas", new Attributes());
+
+    assertNotNull(client.getConfiguration().getFlag("banner_bandit_flag"));
+    BanditResult fallback =
+        client.getBanditAction("banner_bandit_flag", "bob", bob, actions, "control");
+    assertEquals("control", fallback.getVariation());
+    assertNull(fallback.getAction());
+    assertEquals(
+        cloud.eppo.api.FlagEvaluationCode.BANDIT_ERROR,
+        client
+            .getBanditActionDetails("banner_bandit_flag", "bob", bob, actions, "control")
+            .getEvaluationDetails()
+            .getFlagEvaluationCode());
+    verify(mockBanditLogger, never()).logBanditAssignment(any());
+
+    client.loadConfiguration();
+    BanditResult recovered =
+        client.getBanditAction("banner_bandit_flag", "bob", bob, actions, "control");
+    assertEquals("banner_bandit", recovered.getVariation());
+    assertNotNull(recovered.getAction());
+  }
+
+  @Test
+  public void testCustomConfigurationClientIsUsed() {
+    OkHttpEppoClient delegate = new OkHttpEppoClient();
+    List<String> requestedPaths = new ArrayList<>();
+    EppoClient eppoClient =
+        EppoClient.builder(DUMMY_FLAG_API_KEY)
+            .apiBaseUrl(TEST_HOST)
+            .configurationClient(
+                request -> {
+                  requestedPaths.add(request.getResourcePath());
+                  return delegate.execute(request);
+                })
+            .forceReinitialize(true)
+            .buildAndInit();
+
+    assertFalse(requestedPaths.isEmpty());
+    assertNotNull(eppoClient.getConfiguration().getFlag("numeric_flag"));
+  }
+
   public static void mockHttpError() {
     mockServer.stubFor(
         WireMock.get(WireMock.urlMatching(".*flag-config/v1/config.*"))
@@ -418,4 +509,69 @@ public class EppoClientTest {
               + "  }\n"
               + "}")
           .getBytes();
+
+  @Test
+  public void testNotModifiedDoesNotNotifyConfigurationChange() {
+    mockServer.resetAll();
+    mockServer.stubFor(
+        WireMock.get(WireMock.urlMatching(".*flag-config/v1/config.*"))
+            .willReturn(WireMock.okJson(new String(BOOL_FLAG_CONFIG)).withHeader("ETag", "v1")));
+    mockServer.stubFor(
+        WireMock.get(WireMock.urlMatching(".*flag-config/v1/config.*"))
+            .withHeader("If-None-Match", WireMock.equalTo("v1"))
+            .willReturn(WireMock.aResponse().withStatus(304)));
+    List<Configuration> received = new ArrayList<>();
+    EppoClient client =
+        EppoClient.builder(DUMMY_FLAG_API_KEY)
+            .apiBaseUrl(TEST_HOST)
+            .pollingIntervalMs(0)
+            .forceReinitialize(true)
+            .onConfigurationChange(received::add)
+            .isGracefulMode(false)
+            .buildAndInit();
+    Configuration initial = client.getConfiguration();
+    client.loadConfiguration();
+    assertEquals(1, received.size());
+    assertSame(initial, client.getConfiguration());
+    mockServer.verify(
+        1,
+        WireMock.getRequestedFor(WireMock.urlMatching(".*flag-config/v1/config.*"))
+            .withHeader("If-None-Match", WireMock.equalTo("v1")));
+  }
+
+  @Test
+  public void testDocumentedConfigurationBuilderMigration() throws Exception {
+    byte[] bytes = readConfig("src/test/resources/shared/ufc/flags-v1.json").getBytes("UTF-8");
+    cloud.eppo.api.dto.FlagConfigResponse response =
+        new JacksonConfigurationParser().parseFlagConfig(bytes);
+    Configuration inferred = Configuration.builder(response).build();
+    Configuration explicit = new Configuration.Builder(response, false).build();
+    assertNotNull(inferred.getFlag("numeric_flag"));
+    assertNotNull(explicit.getFlag("numeric_flag"));
+  }
+
+  @Test
+  public void testKeepsVersion5MethodDescriptors() throws NoSuchMethodException {
+    assertEquals(
+        Configuration.class, EppoClient.class.getMethod("getConfiguration").getReturnType());
+    assertEquals(
+        com.fasterxml.jackson.databind.JsonNode.class,
+        EppoClient.class
+            .getMethod(
+                "getJSONAssignment",
+                String.class,
+                String.class,
+                com.fasterxml.jackson.databind.JsonNode.class)
+            .getReturnType());
+    assertEquals(
+        com.fasterxml.jackson.databind.JsonNode.class,
+        EppoClient.class
+            .getMethod(
+                "getJSONAssignment",
+                String.class,
+                String.class,
+                cloud.eppo.api.Attributes.class,
+                com.fasterxml.jackson.databind.JsonNode.class)
+            .getReturnType());
+  }
 }

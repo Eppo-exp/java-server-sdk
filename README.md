@@ -15,6 +15,64 @@ dependencies {
 
 Refer to our [SDK documentation](https://docs.geteppo.com/sdks/server-sdks/java/) for how to install and use the SDK.
 
+## Upgrading from 5.x to 6.0.0
+
+6.0.0 moves the `cloud.eppo:sdk-common-jvm` API dependency from 3.13.2 to 4.0.3.
+Common 4.0.3 adds `cloud.eppo:eppo-sdk-framework` 0.1.3 as an API dependency.
+Recompile code that you built against 5.x.
+
+If your code uses common SDK types directly:
+
+- DTOs moved from `cloud.eppo.ufc.dto` to `cloud.eppo.api.dto`. Except for the
+  enums, they are now interfaces. Replace constructors such as
+  `new FlagConfig(...)` with `new FlagConfig.Default(...)`. `BanditAttributeCoefficients` has no `Default`
+  implementation; supply an implementation if you construct it directly.
+- `cloud.eppo.ufc.dto.adapters.EppoModule` and `EppoValueDeserializer` did not
+  move. The other adapters are no longer public.
+- `cloud.eppo.model.ShardRange` is now `cloud.eppo.api.dto.ShardRange`.
+- `Configuration.builder(byte[])` and `builder(byte[], boolean)` were removed. Use
+  `Configuration.builder(new JacksonConfigurationParser().parseFlagConfig(bytes))`,
+  or `new Configuration.Builder(flagConfigResponse, isConfigObfuscated)` to set the
+  obfuscation flag yourself.
+- `Configuration.serializeFlagConfigToBytes()`,
+  `Configuration.serializeBanditParamsToBytes()` and
+  `Attributes.serializeNonNullAttributesToJSONString()` were removed.
+  `cloud.eppo.exception.InvalidApiKeyException` was also removed.
+- `cloud.eppo.EppoHttpClient` was removed. To supply your own HTTP client,
+  implement `cloud.eppo.http.EppoConfigurationClient` and pass it to
+  `EppoClient.builder(sdkKey).configurationClient(...)`. The default is
+  `OkHttpEppoClient`; pass `new OkHttpEppoClient(okHttpClient)` to reuse your own
+  OkHttp settings. To point tests at a stub server, use `apiBaseUrl(...)`.
+
+Behaviour changes:
+
+- With `isGracefulMode(false)`, `getJSONAssignment()`, `getJSONStringAssignment()`
+  and their `*Details()` variants throw when the assigned variation is not valid
+  JSON. 5.x returned the default (for `getJSONAssignment()`, only a non-null
+  default). Graceful mode still returns the default.
+- Once the client saves a configuration that came with an ETag, polls send
+  `If-None-Match`. When the server answers 304 Not Modified, the client keeps its
+  configuration and `onConfigurationChange` does not fire. In 5.x it fired after
+  every successful poll.
+
+New: `get*AssignmentDetails()` and `getBanditActionDetails()` return evaluation
+details with the value.
+
+The SDK no longer brings Ehcache and its supporting libraries transitively.
+If your application uses Ehcache directly, declare its dependency explicitly.
+
+Common 4.0.2 changes how the client handles bandit failures:
+
+- A failed bandit fetch no longer blocks flag updates. The client applies the new
+  flags, keeps its loaded bandit models, and retries the bandits on the next poll.
+- When bandit evaluation fails, for example because the models are not loaded yet,
+  graceful mode (the default) makes `getBanditAction` return the default value with
+  a null action, and `getBanditActionDetails` reports evaluation code `BANDIT_ERROR`.
+  Common 3.13.2 returned the bandit variation. The assignment logger has already
+  recorded the flag's bandit variation for that call, so the logged variation can
+  differ from the value your code receives. With graceful mode disabled, both
+  methods throw, as in 5.x.
+
 ## Contributing
 
 Java 8 is required to locally compile the SDK.
@@ -48,7 +106,8 @@ Once you have the prerequisites, follow the steps below to release a new version
 
 If you would like to live on the bleeding edge, you can try running against a snapshot build. Keep in mind that snapshots
 represent the most recent changes on master and may contain bugs.
-Snapshots are published automatically after each push to `main` branch.
+Snapshots are published automatically after each push to the `main` branch while `build.gradle` has a
+`-SNAPSHOT` version.
 
 ### build.gradle:
 
@@ -58,6 +117,6 @@ repositories {
 }
 
 dependencies {
-  implementation 'cloud.eppo:eppo-server-sdk:6.0.0-SNAPSHOT'
+  implementation 'cloud.eppo:eppo-server-sdk:X.Y.Z-SNAPSHOT'
 }
 ```

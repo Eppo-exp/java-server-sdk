@@ -1,9 +1,11 @@
 package cloud.eppo;
 
+import cloud.eppo.api.Attributes;
 import cloud.eppo.api.Configuration;
 import cloud.eppo.api.IAssignmentCache;
 import cloud.eppo.cache.ExpiringInMemoryAssignmentCache;
 import cloud.eppo.cache.LRUInMemoryAssignmentCache;
+import cloud.eppo.http.EppoConfigurationClient;
 import cloud.eppo.logging.AssignmentLogger;
 import cloud.eppo.logging.BanditLogger;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -46,7 +48,8 @@ public class EppoClient extends BaseEppoClient<Configuration, JsonNode> {
       @Nullable BanditLogger banditLogger,
       boolean isGracefulMode,
       @Nullable IAssignmentCache assignmentCache,
-      @Nullable IAssignmentCache banditAssignmentCache) {
+      @Nullable IAssignmentCache banditAssignmentCache,
+      @Nullable EppoConfigurationClient configurationClient) {
     super(
         sdkKey,
         sdkName,
@@ -62,7 +65,24 @@ public class EppoClient extends BaseEppoClient<Configuration, JsonNode> {
         assignmentCache,
         banditAssignmentCache,
         new JacksonConfigurationParser(),
-        new OkHttpEppoClient());
+        configurationClient != null ? configurationClient : new OkHttpEppoClient());
+  }
+
+  // Preserve concrete method descriptors used by callers compiled against server 5.x.
+  @Override
+  public Configuration getConfiguration() {
+    return super.getConfiguration();
+  }
+
+  @Override
+  public JsonNode getJSONAssignment(String flagKey, String subjectKey, JsonNode defaultValue) {
+    return super.getJSONAssignment(flagKey, subjectKey, defaultValue);
+  }
+
+  @Override
+  public JsonNode getJSONAssignment(
+      String flagKey, String subjectKey, Attributes subjectAttributes, JsonNode defaultValue) {
+    return super.getJSONAssignment(flagKey, subjectKey, subjectAttributes, defaultValue);
   }
 
   /**
@@ -84,6 +104,7 @@ public class EppoClient extends BaseEppoClient<Configuration, JsonNode> {
     private long pollingIntervalMs = DEFAULT_POLLING_INTERVAL_MS;
     private String apiBaseUrl = null;
     @Nullable private Consumer<Configuration> configChangeCallback;
+    @Nullable private EppoConfigurationClient configurationClient;
 
     // Assignment and bandit caching on by default. To disable, call
     // `builder.assignmentCache(null).banditAssignmentCache(null);`
@@ -169,6 +190,17 @@ public class EppoClient extends BaseEppoClient<Configuration, JsonNode> {
       return this;
     }
 
+    /**
+     * Supplies the HTTP client that fetches configurations, for example to add custom networking,
+     * authentication or logging. The default is an {@link OkHttpEppoClient}; to reuse your own
+     * OkHttp settings, pass {@code new OkHttpEppoClient(okHttpClient)}. See {@link
+     * EppoConfigurationClient} for the contract.
+     */
+    public Builder configurationClient(@NotNull EppoConfigurationClient configurationClient) {
+      this.configurationClient = configurationClient;
+      return this;
+    }
+
     public EppoClient buildAndInit() {
       AppDetails appDetails = AppDetails.getInstance();
       String sdkName = appDetails.getName();
@@ -197,7 +229,8 @@ public class EppoClient extends BaseEppoClient<Configuration, JsonNode> {
               banditLogger,
               isGracefulMode,
               assignmentCache,
-              banditAssignmentCache);
+              banditAssignmentCache,
+              configurationClient);
 
       if (configChangeCallback != null) {
         instance.onConfigurationChange(configChangeCallback);
