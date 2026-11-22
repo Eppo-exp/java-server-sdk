@@ -256,7 +256,9 @@ public class EppoClientTest {
     try {
       EppoClient eppoClient = initFailingGracefulClient(true);
       Thread.sleep(25); // Sleep to allow the async config fetch call to happen (and fail)
-      assertEquals("default", eppoClient.getStringAssignment("experiment1", "subject1", "default"));
+      // With a loaded configuration, bob gets "non_empty" for this flag.
+      assertEquals(
+          "default", eppoClient.getStringAssignment("empty_string_flag", "bob", "default"));
     } catch (Exception e) {
       fail("Unexpected exception: " + e);
     }
