@@ -20,32 +20,28 @@ import cloud.eppo.logging.Assignment;
 import cloud.eppo.logging.AssignmentLogger;
 import cloud.eppo.logging.BanditAssignment;
 import cloud.eppo.logging.BanditLogger;
-import com.github.tomakehurst.wiremock.WireMockServer;
-import com.github.tomakehurst.wiremock.client.WireMock;
-import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
-import com.github.tomakehurst.wiremock.stubbing.Scenario;
 import java.io.File;
 import java.lang.reflect.Field;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
-import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 
-@ExtendWith(WireMockExtension.class)
 public class EppoClientTest {
 
   private static final int TEST_PORT = 4001;
   private static final String TEST_HOST = "http://localhost:" + TEST_PORT;
-  private static WireMockServer mockServer;
+  private static StubServer mockServer;
 
   private static final String DUMMY_FLAG_API_KEY = "dummy-flags-api-key"; // Will load flags-v1
   private static final String DUMMY_BANDIT_API_KEY =
@@ -57,41 +53,36 @@ public class EppoClientTest {
 
   @BeforeAll
   public static void initMockServer() {
-    mockServer = new WireMockServer(TEST_PORT);
-    mockServer.start();
+    mockServer = new StubServer();
+    mockServer.start(TEST_PORT);
     registerDefaultStubs();
   }
 
   private static void registerDefaultStubs() {
     // If we get the dummy flag API key, return flags-v1.json
     String ufcFlagsResponseJson = readConfig("src/test/resources/shared/ufc/flags-v1.json");
-    mockServer.stubFor(
-        WireMock.get(
-                WireMock.urlMatching(
-                    ".*flag-config/v1/config\\?.*apiKey=" + DUMMY_FLAG_API_KEY + ".*"))
-            .willReturn(WireMock.okJson(ufcFlagsResponseJson)));
+    mockServer.stub(
+        ".*flag-config/v1/config\\?.*apiKey=" + DUMMY_FLAG_API_KEY + ".*",
+        () -> StubServer.okJson(ufcFlagsResponseJson));
 
     // If we get the dummy bandit API key, return bandit-flags-v1.json
     String banditFlagsResponseJson =
         readConfig("src/test/resources/shared/ufc/bandit-flags-v1.json");
-    mockServer.stubFor(
-        WireMock.get(
-                WireMock.urlMatching(
-                    ".*flag-config/v1/config\\?.*apiKey=" + DUMMY_BANDIT_API_KEY + ".*"))
-            .willReturn(WireMock.okJson(banditFlagsResponseJson)));
+    mockServer.stub(
+        ".*flag-config/v1/config\\?.*apiKey=" + DUMMY_BANDIT_API_KEY + ".*",
+        () -> StubServer.okJson(banditFlagsResponseJson));
 
     // Return bandit models (no need to switch on API key)
     String banditModelsResponseJson =
         readConfig("src/test/resources/shared/ufc/bandit-models-v1.json");
-    mockServer.stubFor(
-        WireMock.get(WireMock.urlMatching(".*flag-config/v1/bandits\\?.*"))
-            .willReturn(WireMock.okJson(banditModelsResponseJson)));
+    mockServer.stub(
+        ".*flag-config/v1/bandits\\?.*", () -> StubServer.okJson(banditModelsResponseJson));
   }
 
   private static String readConfig(String jsonToReturnFilePath) {
-    File mockResponseFile = new File(jsonToReturnFilePath);
     try {
-      return FileUtils.readFileToString(mockResponseFile, "UTF8");
+      return new String(
+          Files.readAllBytes(Paths.get(jsonToReturnFilePath)), StandardCharsets.UTF_8);
     } catch (Exception e) {
       throw new RuntimeException("Error reading mock data: " + e.getMessage(), e);
     }
@@ -248,9 +239,7 @@ public class EppoClientTest {
     sleepUninterruptedly(50);
 
     // Verify multiple requests were made (init + at least one poll)
-    mockServer.verify(
-        com.github.tomakehurst.wiremock.client.WireMock.moreThanOrExactly(2),
-        WireMock.getRequestedFor(WireMock.urlMatching(".*flag-config/v1/config.*")));
+    assertTrue(mockServer.count(".*flag-config/v1/config.*", request -> true) >= 2);
 
     EppoClient.getInstance().stopPolling();
   }
@@ -260,14 +249,16 @@ public class EppoClientTest {
 
   @Test
   public void testClientMakesDefaultAssignmentsAfterFailingToInitialize() {
-    // Set up bad HTTP response via WireMock
+    // Set up bad HTTP response via the stub server
     mockHttpError();
 
     // Initialize and no exception should be thrown.
     try {
       EppoClient eppoClient = initFailingGracefulClient(true);
       Thread.sleep(25); // Sleep to allow the async config fetch call to happen (and fail)
-      assertEquals("default", eppoClient.getStringAssignment("experiment1", "subject1", "default"));
+      // With a loaded configuration, bob gets "non_empty" for this flag.
+      assertEquals(
+          "default", eppoClient.getStringAssignment("empty_string_flag", "bob", "default"));
     } catch (Exception e) {
       fail("Unexpected exception: " + e);
     }
@@ -286,20 +277,12 @@ public class EppoClientTest {
   public void testConfigurationChangeListener() {
     List<Configuration> received = new ArrayList<>();
 
-    // Stub first response: empty config
-    mockServer.stubFor(
-        WireMock.get(WireMock.urlMatching(".*flag-config/v1/config.*"))
-            .inScenario("config-change")
-            .whenScenarioStateIs(Scenario.STARTED)
-            .willReturn(WireMock.okJson(new String(EMPTY_CONFIG)))
-            .willSetStateTo("has-config"));
-
-    // Stub second response: real config
-    mockServer.stubFor(
-        WireMock.get(WireMock.urlMatching(".*flag-config/v1/config.*"))
-            .inScenario("config-change")
-            .whenScenarioStateIs("has-config")
-            .willReturn(WireMock.okJson(new String(BOOL_FLAG_CONFIG))));
+    // First response: empty config. Later responses: real config.
+    mockServer.stub(
+        ".*flag-config/v1/config.*",
+        StubServer.firstThen(
+            () -> StubServer.okJson(new String(EMPTY_CONFIG)),
+            () -> StubServer.okJson(new String(BOOL_FLAG_CONFIG))));
 
     EppoClient eppoClient =
         EppoClient.builder(DUMMY_FLAG_API_KEY)
@@ -322,25 +305,17 @@ public class EppoClientTest {
     String flags = readConfig("src/test/resources/shared/ufc/bandit-flags-v1.json");
     String models = readConfig("src/test/resources/shared/ufc/bandit-models-v1.json");
     mockServer.resetAll();
-    mockServer.stubFor(
-        WireMock.get(WireMock.urlMatching(".*flag-config/v1/config.*"))
-            .withHeader("If-None-Match", WireMock.equalTo("\"v1\""))
-            .willReturn(WireMock.aResponse().withStatus(304)));
-    mockServer.stubFor(
-        WireMock.get(WireMock.urlMatching(".*flag-config/v1/config.*"))
-            .withHeader("If-None-Match", WireMock.absent())
-            .willReturn(WireMock.okJson(flags).withHeader("ETag", "\"v1\"")));
-    mockServer.stubFor(
-        WireMock.get(WireMock.urlMatching(".*flag-config/v1/bandits.*"))
-            .inScenario("bandits")
-            .whenScenarioStateIs(Scenario.STARTED)
-            .willReturn(WireMock.serverError())
-            .willSetStateTo("up"));
-    mockServer.stubFor(
-        WireMock.get(WireMock.urlMatching(".*flag-config/v1/bandits.*"))
-            .inScenario("bandits")
-            .whenScenarioStateIs("up")
-            .willReturn(WireMock.okJson(models)));
+    mockServer.stub(
+        ".*flag-config/v1/config.*",
+        StubServer.header("If-None-Match", "\"v1\""),
+        () -> StubServer.status(304));
+    mockServer.stub(
+        ".*flag-config/v1/config.*",
+        StubServer.noHeader("If-None-Match"),
+        () -> StubServer.okJson(flags).setHeader("ETag", "\"v1\""));
+    mockServer.stub(
+        ".*flag-config/v1/bandits.*",
+        StubServer.firstThen(() -> StubServer.status(500), () -> StubServer.okJson(models)));
     mockAssignmentLogger = mock(AssignmentLogger.class);
     mockBanditLogger = mock(BanditLogger.class);
     EppoClient client =
@@ -398,12 +373,8 @@ public class EppoClientTest {
   }
 
   public static void mockHttpError() {
-    mockServer.stubFor(
-        WireMock.get(WireMock.urlMatching(".*flag-config/v1/config.*"))
-            .willReturn(WireMock.serverError()));
-    mockServer.stubFor(
-        WireMock.get(WireMock.urlMatching(".*flag-config/v1/bandits.*"))
-            .willReturn(WireMock.serverError()));
+    mockServer.stub(".*flag-config/v1/config.*", () -> StubServer.status(500));
+    mockServer.stub(".*flag-config/v1/bandits.*", () -> StubServer.status(500));
   }
 
   @SuppressWarnings("SameParameterValue")
@@ -513,13 +484,13 @@ public class EppoClientTest {
   @Test
   public void testNotModifiedDoesNotNotifyConfigurationChange() {
     mockServer.resetAll();
-    mockServer.stubFor(
-        WireMock.get(WireMock.urlMatching(".*flag-config/v1/config.*"))
-            .willReturn(WireMock.okJson(new String(BOOL_FLAG_CONFIG)).withHeader("ETag", "v1")));
-    mockServer.stubFor(
-        WireMock.get(WireMock.urlMatching(".*flag-config/v1/config.*"))
-            .withHeader("If-None-Match", WireMock.equalTo("v1"))
-            .willReturn(WireMock.aResponse().withStatus(304)));
+    mockServer.stub(
+        ".*flag-config/v1/config.*",
+        () -> StubServer.okJson(new String(BOOL_FLAG_CONFIG)).setHeader("ETag", "v1"));
+    mockServer.stub(
+        ".*flag-config/v1/config.*",
+        StubServer.header("If-None-Match", "v1"),
+        () -> StubServer.status(304));
     List<Configuration> received = new ArrayList<>();
     EppoClient client =
         EppoClient.builder(DUMMY_FLAG_API_KEY)
@@ -533,10 +504,8 @@ public class EppoClientTest {
     client.loadConfiguration();
     assertEquals(1, received.size());
     assertSame(initial, client.getConfiguration());
-    mockServer.verify(
-        1,
-        WireMock.getRequestedFor(WireMock.urlMatching(".*flag-config/v1/config.*"))
-            .withHeader("If-None-Match", WireMock.equalTo("v1")));
+    assertEquals(
+        1, mockServer.count(".*flag-config/v1/config.*", StubServer.header("If-None-Match", "v1")));
   }
 
   @Test
